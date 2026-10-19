@@ -1,6 +1,6 @@
 # Czytająca Wioska — „Nowy dom Kitka”
 
-Aktualna specyfikacja: `docs/WORK_BRIEF.md`, 2026-10-19. Zastępuje dawny plan sylab i 12 ćwiczeń. Kitek, roślinność, kamera i sterowanie są zachowane. Nowy kod powstaje na `feat/new-home-story`; publiczna gra pozostaje przy poprzednim wydaniu.
+Aktualna specyfikacja: `docs/WORK_BRIEF.md`, 2026-10-19. Zastępuje dawny plan sylab i 12 ćwiczeń. Kitek, roślinność, kamera i sterowanie są zachowane. Nowy kod powstaje na `feat/new-home-story`; wersja P0–P2 została opublikowana na GitHub Pages 2026-10-19 za zgodą użytkownika.
 
 ## P0 — przyjazd, dom i list
 
@@ -39,6 +39,6 @@ Aktualna specyfikacja: `docs/WORK_BRIEF.md`, 2026-10-19. Zastępuje dawny plan s
 - [ ] Pixel 8: dotyk, orientacja, płynność i pamięć.
 - [ ] Fizyczny 8BitDo, ponowne połączenie i układ przycisków.
 - [ ] Czytelność i zrozumiałość historii w zabawie z dzieckiem.
-- [ ] Publikacja wyłącznie po wyraźnej zgodzie użytkownika.
+- [x] Publikacja P0–P2 na GitHub Pages po wyraźnym poleceniu użytkownika „wdrażaj” (2026-10-19).
 
 Proceduralne modele i animacje są prototypami. Lista docelowych assetów: `docs/ASSETS.md`.

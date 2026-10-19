@@ -2,7 +2,7 @@
 
 Przytulna przygodowa gra 3D po polsku. Kitek poznaje sąsiadów, czyta listy i urządza nowy dom. Krótkie zdania prowadzą do działań w świecie: rozmów, odwiedzin, przenoszenia rzeczy. Nie ma quizów, sylab, punktów za czytanie ani przegrywania.
 
-**Gałąź robocza:** `feat/new-home-story`. Nowa specyfikacja z 2026-10-19 jest w [docs/WORK_BRIEF.md](docs/WORK_BRIEF.md). Wersja fabularna nie została opublikowana; GitHub Pages pozostaje przy poprzednim wydaniu. Kitek, kamera, sterowanie i szczegółowa roślinność są zachowane. Modele i animacje są proceduralnymi prototypami, nie gotowymi assetami z ilustracji.
+**Gałąź robocza:** `feat/new-home-story`. Nowa specyfikacja z 2026-10-19 jest w [docs/WORK_BRIEF.md](docs/WORK_BRIEF.md). Wersja fabularna P0–P2 została opublikowana 2026-10-19 za zgodą użytkownika: https://miszqr.github.io/Czytajaca-Wioska/. Raport wydania: [reports/story-deployment.md](reports/story-deployment.md). Kitek, kamera, sterowanie i szczegółowa roślinność są zachowane. Modele i animacje są proceduralnymi prototypami, nie gotowymi assetami z ilustracji.
 
 ## Uruchomienie
 
