@@ -3,6 +3,8 @@ import {createVillage} from './world';
 import {CONFIG} from './config';
 import {movementVector,moveWithSlide,blocked,terrainHeight,turnTowards} from './movement';
 import type {ContentPack} from '../content/types';
+import {createShapes} from './shapes';
+import {drawItem} from './story-world';
 import {createStoryWorld} from './story-world';
 import {homeSolids} from '../housing/model';
 import {matches,findNode} from '../story/engine';
@@ -17,7 +19,7 @@ export class VillageGame {
   private input=new Input();private pose:PlayerPose;private cameraPose:CameraPose;private paused=true;private disposed=false;
   private vx=0;private vz=0;private time=0;private saveTime=0;private infoTime=0;private celebrateUntil=0;private cameraLength:number;
   private pointer:{id:number;x:number;y:number}|null=null;private observer:ResizeObserver;private pad=false;
-  private followHeading=false;private state:SaveState;private storyWorld:ReturnType<typeof createStoryWorld>;
+  private followHeading=false;private carriedCrate:import('./babylon').TransformNode|null=null;private state:SaveState;private storyWorld:ReturnType<typeof createStoryWorld>;
   private reduced=window.matchMedia('(prefers-reduced-motion: reduce)');
   constructor(private canvas:HTMLCanvasElement,state:SaveState,private callbacks:RuntimeCallbacks,private content:ContentPack){
     this.state=state;
@@ -25,6 +27,7 @@ export class VillageGame {
     this.engine.setHardwareScalingLevel(1/Math.min(window.devicePixelRatio||1,1.5));
     this.scene=new Scene(this.engine);
     try{this.world=createVillage(this.scene,content.characters)}catch(error){this.input.dispose();this.scene.dispose();this.engine.dispose();throw error}
+    const crateItem=content.items.find(i=>i.id==='crate');if(crateItem){this.carriedCrate=drawItem(createShapes(this.scene),this.world.kitek.root,crateItem,0,.42);this.carriedCrate.scaling.setAll(.65);this.carriedCrate.position.y=.4;this.carriedCrate.setEnabled(!!state.inventory.crate)}
     this.storyWorld=createStoryWorld(this.scene,content);this.storyWorld.sync(state);this.world.environment.setEnabled(state.location==='village');this.world.ground.setEnabled(state.location==='village');
     this.camera=new FreeCamera('behind-kitek',new Vector3(0,2,-4),this.scene);this.camera.minZ=.08;this.camera.maxZ=160;this.camera.fov=.92;this.scene.activeCamera=this.camera;
     this.pose={...state.player};if(blocked(this.pose,this.solids))this.pose=state.location==='home'?{x:0,z:-2.5,heading:0}:{...CONFIG.spawn};
@@ -94,7 +97,7 @@ export class VillageGame {
         this.saveTime+=dt;if(this.saveTime>2){this.saveTime=0;this.flush()}
       }else this.world.kitek.animate(this.time,0,this.time<this.celebrateUntil,this.reduced.matches);
       for(const npc of this.world.npcs){
-        npc.character.root.setEnabled(this.state.location==='village');if(this.state.location!=='village')continue;
+        npc.character.root.setEnabled(this.state.location==='village'||!!this.state.flags.hosting);if(this.state.location==='home'){const pos=this.guestPosition(npc.definition.id);npc.character.root.position.set(pos.x,0,pos.z);continue;}
         const others=this.world.solids.filter(s=>s!==npc.solid);
         const {motion,speed}=advanceNpc(npc.motion,npc.definition.behavior,dt,others,this.pose,this.paused);
         npc.motion=motion;npc.solid.x=motion.x;npc.solid.z=motion.z;
@@ -109,18 +112,19 @@ export class VillageGame {
       }
     }catch(error){this.engine.stopRenderLoop(this.frame);this.callbacks.onError(error)}
   };
-  private get solids(){return this.state.location==='home'?homeSolids(this.state,this.content):this.world.solids}
+  private guestPosition(id:string){const spots=[{x:-2,z:-.8},{x:2,z:-.7},{x:-1,z:2.8},{x:0,z:2.8}];return spots[Math.max(0,this.world.npcs.findIndex(n=>n.definition.id===id))%spots.length]}
+  private get solids(){return this.state.location==='home'?[...homeSolids(this.state,this.content),...(this.state.flags.hosting?this.world.npcs.map(n=>({id:n.definition.id,type:'circle' as const,...this.guestPosition(n.definition.id),radius:.42})):[])]:this.world.solids}
   private height(x:number,z:number){return this.state.location==='home'?0:terrainHeight(x,z)}
   private targets(){return [
-    ...(this.state.location==='village'?this.world.npcs.map(n=>({id:n.definition.id,label:n.definition.name,x:n.motion.x,z:n.motion.z})):[]),
+    ...(this.state.location==='village'||this.state.flags.hosting?this.world.npcs.map(n=>({id:n.definition.id,label:n.definition.name,...(this.state.location==='home'?this.guestPosition(n.definition.id):{x:n.motion.x,z:n.motion.z})})):[]),
     ...this.content.interactions.filter(t=>t.location===this.state.location&&matches(this.state,t.when)).map(t=>({id:t.id,label:t.label,...t.position}))
   ].filter(t=>findNode(this.content,this.state,t.id))}
   nearestTarget(){return this.targets().sort((a,b)=>Math.hypot(this.pose.x-a.x,this.pose.z-a.z)-Math.hypot(this.pose.x-b.x,this.pose.z-b.z))[0]}
   snapshot():WorldSnapshot{return {player:{...this.pose},camera:{...this.cameraPose},location:this.state.location}}
-  syncState(state:SaveState){const travel=state.location!==this.state.location;this.state=state;this.storyWorld.sync(state);this.world.environment.setEnabled(state.location==='village');this.world.ground.setEnabled(state.location==='village');if(travel){this.pose={...state.player};this.cameraPose={...state.camera};this.cameraLength=this.cameraPose.distance;this.placePlayer();this.updateCamera(1);this.infoTime=1}}
+  syncState(state:SaveState){const travel=state.location!==this.state.location;this.state=state;this.carriedCrate?.setEnabled(!!state.inventory.crate);this.storyWorld.sync(state);this.world.environment.setEnabled(state.location==='village');this.world.ground.setEnabled(state.location==='village');if(travel){this.pose={...state.player};this.cameraPose={...state.camera};this.cameraLength=this.cameraPose.distance;this.placePlayer();this.updateCamera(1);this.infoTime=1}}
   previewFurniture(f:import('../content/types').Furniture|null){this.storyWorld.preview(f)}
   setPaused(value:boolean){this.paused=value;this.pointer=null;this.followHeading=false;this.input.clear();this.vx=this.vz=0;if(value)this.world.kitek.root.setEnabled(true)}
-  faceTarget(id:string){const target=this.targets().find(t=>t.id===id);if(!target||Math.hypot(this.pose.x-target.x,this.pose.z-target.z)>CONFIG.interactionRadius)return false;this.pose.heading=Math.atan2(target.x-this.pose.x,target.z-this.pose.z);this.placePlayer();const npc=this.world.npcs.find(n=>n.definition.id===id);if(npc){npc.motion.heading=Math.atan2(this.pose.x-npc.motion.x,this.pose.z-npc.motion.z);npc.character.root.rotation.y=npc.motion.heading}this.flush();return true}
+  faceTarget(id:string){const target=this.targets().find(t=>t.id===id);if(!target||Math.hypot(this.pose.x-target.x,this.pose.z-target.z)>CONFIG.interactionRadius)return false;this.pose.heading=Math.atan2(target.x-this.pose.x,target.z-this.pose.z);this.placePlayer();const npc=this.world.npcs.find(n=>n.definition.id===id);if(npc){npc.motion.heading=Math.atan2(this.pose.x-target.x,this.pose.z-target.z);npc.character.root.rotation.y=npc.motion.heading}this.flush();return true}
 
   celebrate(){this.celebrateUntil=this.time+2.5}
   moveTouch(x:number,y:number){this.input.setTouch(x,y)}

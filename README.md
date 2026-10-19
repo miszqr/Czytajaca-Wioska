@@ -33,7 +33,7 @@ npm run preview -- --port 4173
 | Etap | Zakres | Stan |
 | --- | --- | --- |
 | P0 | Bruno na placu → dom przy stawie → list Feli → dziennik i zapis | Zaimplementowany, 26 testów i build zakończone powodzeniem |
-| P1 | Lampa, szafka, skrzynka, klucz, Tola, Miluś i spotkanie | W realizacji |
+| P1 | Lampa, szafka, skrzynka, klucz, Tola, Miluś i spotkanie | Zaimplementowany, 28 testów i build zakończone powodzeniem |
 | P2 | Edytor domu, dekoracje, swobodna zabawa i oprawa | Zaplanowany |
 
 P0: wybierz „Ruszamy”, podejdź do Brunona na placu i naciśnij E. Dom Kitka stoi po prawej stronie wioski, przed stawem; ma niebieską tabliczkę. Podejdź do drzwi od strony ścieżki, wejdź i otwórz kopertę na stole. List pozostanie w dzienniku. Można wyjść na spacer, zamknąć grę i wznowić stan w domu.

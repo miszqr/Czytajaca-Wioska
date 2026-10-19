@@ -12,5 +12,59 @@
     "behavior": {
       "type": "idle"
     }
+  },
+  {
+    "id": "fela",
+    "name": "Fela",
+    "role": "Sklepikarka",
+    "model": "fela",
+    "position": {
+      "x": 10.5,
+      "z": 4.8,
+      "heading": 3.14159
+    },
+    "behavior": {
+      "type": "patrol",
+      "speed": 0.5,
+      "pauseSeconds": 2,
+      "waypoints": [
+        {
+          "x": 9.5,
+          "z": 4.8
+        },
+        {
+          "x": 11.5,
+          "z": 4.8
+        }
+      ]
+    }
+  },
+  {
+    "id": "tola",
+    "name": "Tola",
+    "role": "Bibliotekarka",
+    "model": "tola",
+    "position": {
+      "x": 0,
+      "z": 18.2,
+      "heading": 3.14159
+    },
+    "behavior": {
+      "type": "idle"
+    }
+  },
+  {
+    "id": "milus",
+    "name": "Miluś",
+    "role": "Listonosz",
+    "model": "milus",
+    "position": {
+      "x": 13,
+      "z": -15.8,
+      "heading": 3.14159
+    },
+    "behavior": {
+      "type": "idle"
+    }
   }
 ]

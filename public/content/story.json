@@ -20,6 +20,156 @@
           "value": true
         }
       ]
+    },
+    {
+      "id": "letter",
+      "title": "List Feli",
+      "objective": "Fela zaprosiła mnie do sklepu z czerwonym dachem.",
+      "when": [
+        {
+          "type": "flag",
+          "key": "read-fela-letter",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "gift",
+      "title": "Prezent do domu",
+      "objective": "Postawię lampę od Feli przy łóżku.",
+      "when": [
+        {
+          "type": "flag",
+          "key": "lamp-received",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "note",
+      "title": "Zamknięta szafka",
+      "objective": "Przy szafce jest kartka. Ciekawe, co na niej napisano.",
+      "when": [
+        {
+          "type": "flag",
+          "key": "lamp-placed",
+          "value": true
+        }
+      ],
+      "updates": [
+        {
+          "when": [
+            {
+              "type": "flag",
+              "key": "read-cabinet-note",
+              "value": true
+            }
+          ],
+          "objective": "Bruno ma klucz do szafki. Zapytam go o niego."
+        }
+      ]
+    },
+    {
+      "id": "help",
+      "title": "Pomoc Brunonowi",
+      "objective": "Przeniosę skrzynkę na miejsce obok grządek. Potem wrócę do Brunona.",
+      "when": [
+        {
+          "type": "flag",
+          "key": "crate-requested",
+          "value": true
+        }
+      ],
+      "updates": [
+        {
+          "when": [
+            {
+              "type": "flag",
+              "key": "crate-delivered",
+              "value": true
+            }
+          ],
+          "objective": "Skrzynka stoi w ogrodzie. Wrócę do Brunona po klucz."
+        }
+      ]
+    },
+    {
+      "id": "secret",
+      "title": "Tajemnica szafki",
+      "objective": "Otworzę szafkę w domu i sprawdzę, co jest w środku.",
+      "when": [
+        {
+          "type": "flag",
+          "key": "key-received",
+          "value": true
+        }
+      ],
+      "updates": [
+        {
+          "when": [
+            {
+              "type": "flag",
+              "key": "met-tola",
+              "value": true
+            }
+          ],
+          "objective": "Miluś pomoże mi przygotować zaproszenia. Czeka przy swoim domu."
+        },
+        {
+          "when": [
+            {
+              "type": "flag",
+              "key": "book-found",
+              "value": true
+            }
+          ],
+          "objective": "Tola zna historię książeczki. Odwiedzę bibliotekę."
+        }
+      ]
+    },
+    {
+      "id": "meeting",
+      "title": "Pierwsze spotkanie",
+      "objective": "Zaproszę Brunona, Felę i Tolę. Potem zadzwonię dzwonkiem w domu.",
+      "when": [
+        {
+          "type": "flag",
+          "key": "invitations-received",
+          "value": true
+        }
+      ],
+      "updates": [
+        {
+          "when": [
+            {
+              "type": "flag",
+              "key": "invited-bruno",
+              "value": true
+            },
+            {
+              "type": "flag",
+              "key": "invited-fela",
+              "value": true
+            },
+            {
+              "type": "flag",
+              "key": "invited-tola",
+              "value": true
+            }
+          ],
+          "objective": "Wszyscy są zaproszeni. Zadzwoń dzwonkiem w domu."
+        },
+        {
+          "when": [
+            {
+              "type": "flag",
+              "key": "hosting",
+              "value": true
+            }
+          ],
+          "objective": "Przyjaciele są u mnie. Mogę z nimi porozmawiać."
+        }
+      ]
     }
   ],
   "documents": [
@@ -29,6 +179,37 @@
       "lines": [
         "Cześć, Kitku! Mam coś dla ciebie.",
         "Przyjdź do sklepu. Fela."
+      ]
+    },
+    {
+      "id": "cabinet-note",
+      "title": "Notatka przy szafce",
+      "lines": [
+        "Klucz ma Bruno. Zapytaj go o szafkę."
+      ]
+    },
+    {
+      "id": "home-book",
+      "title": "Książeczka o domu",
+      "lines": [
+        "W tym domu spotykali się przyjaciele. Każdy przynosił opowieść.",
+        "Tola zna dalszą część historii. Znajdziesz ją w bibliotece."
+      ]
+    },
+    {
+      "id": "invitation-plan",
+      "title": "Lista gości",
+      "lines": [
+        "Zanieś zaproszenia Brunonowi, Feli i Toli.",
+        "Ja też przyjdę! Gdy wrócisz do domu, zadzwoń dzwonkiem. Miluś."
+      ]
+    },
+    {
+      "id": "first-meeting",
+      "title": "Mój dom jest pełen przyjaciół",
+      "lines": [
+        "Dziś odwiedzili mnie sąsiedzi. Rozmawialiśmy i śmialiśmy się razem.",
+        "Ten dom jest już naprawdę mój. Jutro znów pójdę na spacer."
       ]
     }
   ],
@@ -239,6 +420,1140 @@
         {
           "id": "go",
           "label": "Idę dalej.",
+          "effects": []
+        }
+      ]
+    },
+    {
+      "id": "fela-gift",
+      "target": "fela",
+      "event": "interact",
+      "priority": 50,
+      "once": true,
+      "when": [
+        {
+          "type": "flag",
+          "key": "read-fela-letter",
+          "value": true
+        },
+        {
+          "type": "flag",
+          "key": "lamp-received",
+          "value": false
+        }
+      ],
+      "speaker": "fela",
+      "lines": [
+        "Witaj, Kitku! Czekałam na ciebie.",
+        "To lampa do twojego pokoju. Postaw ją przy łóżku."
+      ],
+      "choices": [
+        {
+          "id": "take",
+          "label": "Dziękuję. Wezmę lampę.",
+          "effects": [
+            {
+              "type": "giveItem",
+              "itemId": "lamp",
+              "quantity": 1
+            },
+            {
+              "type": "flag",
+              "key": "lamp-received",
+              "value": true
+            },
+            {
+              "type": "complete",
+              "sceneId": "letter"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fela-remind",
+      "target": "fela",
+      "event": "interact",
+      "priority": 40,
+      "once": false,
+      "when": [
+        {
+          "type": "flag",
+          "key": "lamp-received",
+          "value": true
+        },
+        {
+          "type": "flag",
+          "key": "lamp-placed",
+          "value": false
+        }
+      ],
+      "speaker": "fela",
+      "lines": [
+        "Lampa będzie ładnie wyglądać przy twoim łóżku.",
+        "W domu znajdziesz dla niej miejsce."
+      ],
+      "choices": [
+        {
+          "id": "go",
+          "label": "Wrócę do domu.",
+          "effects": []
+        }
+      ]
+    },
+    {
+      "id": "fela-chat",
+      "target": "fela",
+      "event": "interact",
+      "priority": 0,
+      "once": false,
+      "when": [],
+      "speaker": "fela",
+      "lines": [
+        "Dzień dobry, Kitku! Jak ci się mieszka w wiosce?",
+        "Mój sklep jest zawsze otwarty."
+      ],
+      "choices": [
+        {
+          "id": "bye",
+          "label": "Miło cię widzieć!",
+          "effects": []
+        }
+      ]
+    },
+    {
+      "id": "place-gift",
+      "target": "bedside",
+      "event": "interact",
+      "priority": 10,
+      "once": true,
+      "when": [
+        {
+          "type": "item",
+          "itemId": "lamp",
+          "quantity": 1
+        },
+        {
+          "type": "flag",
+          "key": "lamp-placed",
+          "value": false
+        }
+      ],
+      "speaker": "Kitek",
+      "lines": [
+        "Tu jest miejsce na lampę od Feli."
+      ],
+      "choices": [
+        {
+          "id": "place",
+          "label": "Postaw lampę.",
+          "effects": [
+            {
+              "type": "placeFurniture",
+              "id": "fela-lamp",
+              "itemId": "lamp",
+              "x": -1.5,
+              "z": 1.5,
+              "rotation": 0
+            },
+            {
+              "type": "flag",
+              "key": "lamp-placed",
+              "value": true
+            },
+            {
+              "type": "complete",
+              "sceneId": "gift"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lamp-near-bed",
+      "target": "lamp",
+      "event": "place",
+      "priority": 10,
+      "once": true,
+      "when": [
+        {
+          "type": "flag",
+          "key": "lamp-placed",
+          "value": false
+        }
+      ],
+      "speaker": "Kitek",
+      "lines": [],
+      "choices": [
+        {
+          "id": "placed",
+          "label": "Lampa jest przy łóżku.",
+          "effects": [
+            {
+              "type": "flag",
+              "key": "lamp-placed",
+              "value": true
+            },
+            {
+              "type": "complete",
+              "sceneId": "gift"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "read-cabinet-note",
+      "target": "cabinet",
+      "event": "interact",
+      "priority": 10,
+      "once": true,
+      "when": [
+        {
+          "type": "flag",
+          "key": "cabinet-open",
+          "value": false
+        }
+      ],
+      "speaker": "Notatka",
+      "lines": [
+        "Szafka jest zamknięta. Na drzwiach wisi notatka.",
+        "Klucz ma Bruno. Zapytaj go o szafkę."
+      ],
+      "choices": [
+        {
+          "id": "keep",
+          "label": "Zapytam Brunona.",
+          "effects": [
+            {
+              "type": "flag",
+              "key": "read-cabinet-note",
+              "value": true
+            },
+            {
+              "type": "read",
+              "documentId": "cabinet-note"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cabinet-locked",
+      "target": "cabinet",
+      "event": "interact",
+      "priority": 0,
+      "once": false,
+      "when": [
+        {
+          "type": "flag",
+          "key": "cabinet-open",
+          "value": false
+        }
+      ],
+      "speaker": "Kitek",
+      "lines": [
+        "Klucz ma Bruno. Zapytam go o szafkę."
+      ],
+      "choices": [
+        {
+          "id": "go",
+          "label": "Pójdę do Brunona.",
+          "effects": []
+        }
+      ]
+    },
+    {
+      "id": "bruno-offer",
+      "target": "bruno",
+      "event": "interact",
+      "priority": 80,
+      "once": true,
+      "when": [
+        {
+          "type": "flag",
+          "key": "read-cabinet-note",
+          "value": true
+        },
+        {
+          "type": "flag",
+          "key": "crate-requested",
+          "value": false
+        }
+      ],
+      "speaker": "bruno",
+      "lines": [
+        "Mam klucz do twojej szafki.",
+        "Najpierw pomóż mi przenieść skrzynkę. Postaw ją obok grządek."
+      ],
+      "choices": [
+        {
+          "id": "help",
+          "label": "Pomogę ci.",
+          "effects": [
+            {
+              "type": "flag",
+              "key": "crate-requested",
+              "value": true
+            },
+            {
+              "type": "complete",
+              "sceneId": "note"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "bruno-crate-reminder",
+      "target": "bruno",
+      "event": "interact",
+      "priority": 70,
+      "once": false,
+      "when": [
+        {
+          "type": "flag",
+          "key": "crate-requested",
+          "value": true
+        },
+        {
+          "type": "flag",
+          "key": "crate-delivered",
+          "value": false
+        }
+      ],
+      "speaker": "bruno",
+      "lines": [
+        "Skrzynka stoi przy placu. W ogrodzie czeka na nią wolne miejsce."
+      ],
+      "choices": [
+        {
+          "id": "go",
+          "label": "Zaraz ją przyniosę.",
+          "effects": []
+        }
+      ]
+    },
+    {
+      "id": "pickup-crate",
+      "target": "bruno-crate",
+      "event": "interact",
+      "priority": 10,
+      "once": true,
+      "when": [
+        {
+          "type": "flag",
+          "key": "crate-requested",
+          "value": true
+        }
+      ],
+      "speaker": "Kitek",
+      "lines": [
+        "To skrzynka Brunona. Przeniosę ją do ogrodu."
+      ],
+      "choices": [
+        {
+          "id": "pick",
+          "label": "Podnieś skrzynkę.",
+          "effects": [
+            {
+              "type": "giveItem",
+              "itemId": "crate",
+              "quantity": 1
+            },
+            {
+              "type": "flag",
+              "key": "crate-picked",
+              "value": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "deliver-crate",
+      "target": "garden-drop",
+      "event": "interact",
+      "priority": 20,
+      "once": true,
+      "when": [
+        {
+          "type": "item",
+          "itemId": "crate",
+          "quantity": 1
+        }
+      ],
+      "speaker": "Kitek",
+      "lines": [
+        "Tu skrzynka będzie blisko grządek."
+      ],
+      "choices": [
+        {
+          "id": "put",
+          "label": "Postaw skrzynkę.",
+          "effects": [
+            {
+              "type": "takeItem",
+              "itemId": "crate",
+              "quantity": 1
+            },
+            {
+              "type": "flag",
+              "key": "crate-delivered",
+              "value": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "garden-reminder",
+      "target": "garden-drop",
+      "event": "interact",
+      "priority": 0,
+      "once": false,
+      "when": [],
+      "speaker": "Kitek",
+      "lines": [
+        "Tutaj Bruno potrzebuje swojej skrzynki."
+      ],
+      "choices": [
+        {
+          "id": "back",
+          "label": "Rozejrzę się.",
+          "effects": []
+        }
+      ]
+    },
+    {
+      "id": "garden-crate-chat",
+      "target": "garden-crate",
+      "event": "interact",
+      "priority": 0,
+      "once": false,
+      "when": [],
+      "speaker": "Kitek",
+      "lines": [
+        "Skrzynka już stoi przy grządkach."
+      ],
+      "choices": [
+        {
+          "id": "go",
+          "label": "Idę dalej.",
+          "effects": []
+        }
+      ]
+    },
+    {
+      "id": "bruno-key",
+      "target": "bruno",
+      "event": "interact",
+      "priority": 90,
+      "once": true,
+      "when": [
+        {
+          "type": "flag",
+          "key": "crate-delivered",
+          "value": true
+        },
+        {
+          "type": "flag",
+          "key": "key-received",
+          "value": false
+        }
+      ],
+      "speaker": "bruno",
+      "lines": [
+        "Dziękuję za pomoc, Kitku.",
+        "Oto klucz. W szafce czeka mała pamiątka."
+      ],
+      "choices": [
+        {
+          "id": "take",
+          "label": "Dziękuję za klucz.",
+          "effects": [
+            {
+              "type": "giveItem",
+              "itemId": "key",
+              "quantity": 1
+            },
+            {
+              "type": "flag",
+              "key": "key-received",
+              "value": true
+            },
+            {
+              "type": "complete",
+              "sceneId": "help"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "open-cabinet",
+      "target": "cabinet",
+      "event": "interact",
+      "priority": 50,
+      "once": true,
+      "when": [
+        {
+          "type": "item",
+          "itemId": "key",
+          "quantity": 1
+        },
+        {
+          "type": "flag",
+          "key": "cabinet-open",
+          "value": false
+        }
+      ],
+      "speaker": "Kitek",
+      "lines": [
+        "Klucz pasuje. W środku leży książeczka.",
+        "Na okładce jest rysunek twojego domu."
+      ],
+      "choices": [
+        {
+          "id": "open",
+          "label": "Otwórz szafkę i weź książeczkę.",
+          "effects": [
+            {
+              "type": "takeItem",
+              "itemId": "key",
+              "quantity": 1
+            },
+            {
+              "type": "giveItem",
+              "itemId": "book",
+              "quantity": 1
+            },
+            {
+              "type": "flag",
+              "key": "cabinet-open",
+              "value": true
+            },
+            {
+              "type": "flag",
+              "key": "book-found",
+              "value": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cabinet-book",
+      "target": "cabinet",
+      "event": "interact",
+      "priority": 40,
+      "once": false,
+      "when": [
+        {
+          "type": "flag",
+          "key": "cabinet-open",
+          "value": true
+        }
+      ],
+      "speaker": "Książeczka",
+      "lines": [
+        "W tym domu spotykali się przyjaciele. Każdy przynosił opowieść.",
+        "Tola zna dalszą część historii. Znajdziesz ją w bibliotece."
+      ],
+      "choices": [
+        {
+          "id": "keep",
+          "label": "Zapytam Tolę.",
+          "effects": [
+            {
+              "type": "read",
+              "documentId": "home-book"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "tola-story",
+      "target": "tola",
+      "event": "interact",
+      "priority": 50,
+      "once": true,
+      "when": [
+        {
+          "type": "flag",
+          "key": "book-found",
+          "value": true
+        },
+        {
+          "type": "flag",
+          "key": "met-tola",
+          "value": false
+        }
+      ],
+      "speaker": "tola",
+      "lines": [
+        "Ta książeczka należała do dawnych mieszkańców twojego domu.",
+        "Lubili zapraszać przyjaciół. Ty też możesz! Miluś pomoże z zaproszeniami."
+      ],
+      "choices": [
+        {
+          "id": "go",
+          "label": "Porozmawiam z Milusiem.",
+          "effects": [
+            {
+              "type": "flag",
+              "key": "met-tola",
+              "value": true
+            },
+            {
+              "type": "read",
+              "documentId": "home-book"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "tola-remind",
+      "target": "tola",
+      "event": "interact",
+      "priority": 40,
+      "once": false,
+      "when": [
+        {
+          "type": "flag",
+          "key": "met-tola",
+          "value": true
+        },
+        {
+          "type": "flag",
+          "key": "invitations-received",
+          "value": false
+        }
+      ],
+      "speaker": "tola",
+      "lines": [
+        "Miluś czeka przy swoim domu. Ma torbę na listy.",
+        "Opowiedz mu o swoim pomyśle na spotkanie."
+      ],
+      "choices": [
+        {
+          "id": "go",
+          "label": "Poszukam Milusia.",
+          "effects": []
+        }
+      ]
+    },
+    {
+      "id": "tola-chat",
+      "target": "tola",
+      "event": "interact",
+      "priority": 0,
+      "once": false,
+      "when": [],
+      "speaker": "tola",
+      "lines": [
+        "Witaj w bibliotece, Kitku.",
+        "Każdy dom ma swoją opowieść. Twój też."
+      ],
+      "choices": [
+        {
+          "id": "bye",
+          "label": "Do zobaczenia!",
+          "effects": []
+        }
+      ]
+    },
+    {
+      "id": "milus-invitations",
+      "target": "milus",
+      "event": "interact",
+      "priority": 50,
+      "once": true,
+      "when": [
+        {
+          "type": "flag",
+          "key": "met-tola",
+          "value": true
+        },
+        {
+          "type": "flag",
+          "key": "invitations-received",
+          "value": false
+        }
+      ],
+      "speaker": "milus",
+      "lines": [
+        "Mam trzy zaproszenia. Zanieś je Brunonowi, Feli i Toli.",
+        "Ja też przyjdę! Potem wróć do domu i zadzwoń dzwonkiem."
+      ],
+      "choices": [
+        {
+          "id": "take",
+          "label": "Zaniosę zaproszenia.",
+          "effects": [
+            {
+              "type": "giveItem",
+              "itemId": "invitation",
+              "quantity": 3
+            },
+            {
+              "type": "flag",
+              "key": "invitations-received",
+              "value": true
+            },
+            {
+              "type": "read",
+              "documentId": "invitation-plan"
+            },
+            {
+              "type": "complete",
+              "sceneId": "secret"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "milus-reminder",
+      "target": "milus",
+      "event": "interact",
+      "priority": 40,
+      "once": false,
+      "when": [
+        {
+          "type": "flag",
+          "key": "invitations-received",
+          "value": true
+        },
+        {
+          "type": "flag",
+          "key": "story-complete",
+          "value": false
+        }
+      ],
+      "speaker": "milus",
+      "lines": [
+        "Lista gości jest w twoim dzienniku.",
+        "Gdy zaprosisz wszystkich, zadzwoń dzwonkiem w domu."
+      ],
+      "choices": [
+        {
+          "id": "bye",
+          "label": "Do zobaczenia u mnie!",
+          "effects": []
+        }
+      ]
+    },
+    {
+      "id": "milus-chat",
+      "target": "milus",
+      "event": "interact",
+      "priority": 0,
+      "once": false,
+      "when": [],
+      "speaker": "milus",
+      "lines": [
+        "Cześć, Kitku! Lubię roznosić dobre wiadomości."
+      ],
+      "choices": [
+        {
+          "id": "bye",
+          "label": "Miłego dnia!",
+          "effects": []
+        }
+      ]
+    },
+    {
+      "id": "start-meeting",
+      "target": "home-bell",
+      "event": "interact",
+      "priority": 50,
+      "once": true,
+      "when": [
+        {
+          "type": "flag",
+          "key": "invited-bruno",
+          "value": true
+        },
+        {
+          "type": "flag",
+          "key": "invited-fela",
+          "value": true
+        },
+        {
+          "type": "flag",
+          "key": "invited-tola",
+          "value": true
+        },
+        {
+          "type": "flag",
+          "key": "story-complete",
+          "value": false
+        }
+      ],
+      "speaker": "Kitek",
+      "lines": [
+        "Wszyscy są zaproszeni. Czas otworzyć dom dla przyjaciół."
+      ],
+      "choices": [
+        {
+          "id": "ring",
+          "label": "Zadzwoń dzwonkiem.",
+          "effects": [
+            {
+              "type": "flag",
+              "key": "hosting",
+              "value": true
+            },
+            {
+              "type": "flag",
+              "key": "story-complete",
+              "value": true
+            },
+            {
+              "type": "complete",
+              "sceneId": "meeting"
+            },
+            {
+              "type": "read",
+              "documentId": "first-meeting"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "bell-quiet",
+      "target": "home-bell",
+      "event": "interact",
+      "priority": 0,
+      "once": false,
+      "when": [
+        {
+          "type": "flag",
+          "key": "story-complete",
+          "value": false
+        }
+      ],
+      "speaker": "Kitek",
+      "lines": [
+        "To dzwonek na spotkania z przyjaciółmi.",
+        "Najpierw zaniosę im zaproszenia."
+      ],
+      "choices": [
+        {
+          "id": "go",
+          "label": "Jeszcze się rozejrzę.",
+          "effects": []
+        }
+      ]
+    },
+    {
+      "id": "meeting-end",
+      "target": "home-bell",
+      "event": "interact",
+      "priority": 70,
+      "once": false,
+      "when": [
+        {
+          "type": "flag",
+          "key": "hosting",
+          "value": true
+        }
+      ],
+      "speaker": "Kitek",
+      "lines": [
+        "Dobrze było spotkać się razem. Sąsiedzi wrócą teraz do swoich zajęć."
+      ],
+      "choices": [
+        {
+          "id": "bye",
+          "label": "Do zobaczenia, przyjaciele!",
+          "effects": [
+            {
+              "type": "flag",
+              "key": "hosting",
+              "value": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "meeting-again",
+      "target": "home-bell",
+      "event": "interact",
+      "priority": 60,
+      "once": false,
+      "when": [
+        {
+          "type": "flag",
+          "key": "story-complete",
+          "value": true
+        },
+        {
+          "type": "flag",
+          "key": "hosting",
+          "value": false
+        }
+      ],
+      "speaker": "Kitek",
+      "lines": [
+        "Mogę znów zaprosić sąsiadów na chwilę rozmowy."
+      ],
+      "choices": [
+        {
+          "id": "ring",
+          "label": "Zaproś sąsiadów.",
+          "effects": [
+            {
+              "type": "flag",
+              "key": "hosting",
+              "value": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "invite-bruno",
+      "target": "bruno",
+      "event": "interact",
+      "priority": 100,
+      "once": true,
+      "when": [
+        {
+          "type": "flag",
+          "key": "invitations-received",
+          "value": true
+        },
+        {
+          "type": "item",
+          "itemId": "invitation",
+          "quantity": 1
+        },
+        {
+          "type": "flag",
+          "key": "invited-bruno",
+          "value": false
+        }
+      ],
+      "speaker": "bruno",
+      "lines": [
+        "Chętnie przyjdę, Kitku!",
+        "Do zobaczenia w twoim domu."
+      ],
+      "choices": [
+        {
+          "id": "give",
+          "label": "Przekaż zaproszenie.",
+          "effects": [
+            {
+              "type": "takeItem",
+              "itemId": "invitation",
+              "quantity": 1
+            },
+            {
+              "type": "flag",
+              "key": "invited-bruno",
+              "value": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "invite-fela",
+      "target": "fela",
+      "event": "interact",
+      "priority": 100,
+      "once": true,
+      "when": [
+        {
+          "type": "flag",
+          "key": "invitations-received",
+          "value": true
+        },
+        {
+          "type": "item",
+          "itemId": "invitation",
+          "quantity": 1
+        },
+        {
+          "type": "flag",
+          "key": "invited-fela",
+          "value": false
+        }
+      ],
+      "speaker": "fela",
+      "lines": [
+        "Chętnie przyjdę, Kitku!",
+        "Do zobaczenia w twoim domu."
+      ],
+      "choices": [
+        {
+          "id": "give",
+          "label": "Przekaż zaproszenie.",
+          "effects": [
+            {
+              "type": "takeItem",
+              "itemId": "invitation",
+              "quantity": 1
+            },
+            {
+              "type": "flag",
+              "key": "invited-fela",
+              "value": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "invite-tola",
+      "target": "tola",
+      "event": "interact",
+      "priority": 100,
+      "once": true,
+      "when": [
+        {
+          "type": "flag",
+          "key": "invitations-received",
+          "value": true
+        },
+        {
+          "type": "item",
+          "itemId": "invitation",
+          "quantity": 1
+        },
+        {
+          "type": "flag",
+          "key": "invited-tola",
+          "value": false
+        }
+      ],
+      "speaker": "tola",
+      "lines": [
+        "Chętnie przyjdę, Kitku!",
+        "Do zobaczenia w twoim domu."
+      ],
+      "choices": [
+        {
+          "id": "give",
+          "label": "Przekaż zaproszenie.",
+          "effects": [
+            {
+              "type": "takeItem",
+              "itemId": "invitation",
+              "quantity": 1
+            },
+            {
+              "type": "flag",
+              "key": "invited-tola",
+              "value": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "guest-bruno",
+      "target": "bruno",
+      "event": "interact",
+      "priority": 200,
+      "once": false,
+      "when": [
+        {
+          "type": "flag",
+          "key": "hosting",
+          "value": true
+        }
+      ],
+      "speaker": "bruno",
+      "lines": [
+        "Lubię ten dom. Twoja lampa daje ciepłe światło."
+      ],
+      "choices": [
+        {
+          "id": "chat",
+          "label": "Cieszę się, że jesteś.",
+          "effects": []
+        }
+      ]
+    },
+    {
+      "id": "guest-fela",
+      "target": "fela",
+      "event": "interact",
+      "priority": 200,
+      "once": false,
+      "when": [
+        {
+          "type": "flag",
+          "key": "hosting",
+          "value": true
+        }
+      ],
+      "speaker": "fela",
+      "lines": [
+        "Jak miło tu u ciebie! Dziękuję za zaproszenie."
+      ],
+      "choices": [
+        {
+          "id": "chat",
+          "label": "Cieszę się, że jesteś.",
+          "effects": []
+        }
+      ]
+    },
+    {
+      "id": "guest-tola",
+      "target": "tola",
+      "event": "interact",
+      "priority": 200,
+      "once": false,
+      "when": [
+        {
+          "type": "flag",
+          "key": "hosting",
+          "value": true
+        }
+      ],
+      "speaker": "tola",
+      "lines": [
+        "Teraz ty dopisujesz nowy rozdział tej opowieści."
+      ],
+      "choices": [
+        {
+          "id": "chat",
+          "label": "Cieszę się, że jesteś.",
+          "effects": []
+        }
+      ]
+    },
+    {
+      "id": "guest-milus",
+      "target": "milus",
+      "event": "interact",
+      "priority": 200,
+      "once": false,
+      "when": [
+        {
+          "type": "flag",
+          "key": "hosting",
+          "value": true
+        }
+      ],
+      "speaker": "milus",
+      "lines": [
+        "Wszystkie zaproszenia dotarły. Dobrze być razem!"
+      ],
+      "choices": [
+        {
+          "id": "chat",
+          "label": "Cieszę się, że jesteś.",
           "effects": []
         }
       ]

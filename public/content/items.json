@@ -38,5 +38,55 @@
     "color": "#BA7665",
     "width": 0.3,
     "depth": 0.3
+  },
+  {
+    "id": "lamp",
+    "name": "Lampa od Feli",
+    "description": "Prezent do nowego domu. Postaw ją przy łóżku.",
+    "kind": "decoration",
+    "model": "lamp",
+    "color": "#E6BE76",
+    "width": 0.7,
+    "depth": 0.7
+  },
+  {
+    "id": "crate",
+    "name": "Skrzynka Brunona",
+    "description": "Przenieś ją na miejsce obok grządek.",
+    "kind": "usable",
+    "model": "crate",
+    "color": "#BB9164",
+    "width": 0.7,
+    "depth": 0.6
+  },
+  {
+    "id": "key",
+    "name": "Klucz do szafki",
+    "description": "Bruno dał mi klucz do domowej szafki.",
+    "kind": "usable",
+    "model": "key",
+    "color": "#CFAD65",
+    "width": 0.3,
+    "depth": 0.5
+  },
+  {
+    "id": "book",
+    "name": "Książeczka z szafki",
+    "description": "Tola zna historię tego domu.",
+    "kind": "usable",
+    "model": "book",
+    "color": "#8BA28E",
+    "width": 0.4,
+    "depth": 0.5
+  },
+  {
+    "id": "invitation",
+    "name": "Zaproszenie",
+    "description": "Zaproszenie do mojego nowego domu.",
+    "kind": "usable",
+    "model": "letter",
+    "color": "#ECD6B0",
+    "width": 0.4,
+    "depth": 0.3
   }
 ]

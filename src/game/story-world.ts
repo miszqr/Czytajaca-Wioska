@@ -28,6 +28,7 @@ export function createStoryWorld(scene:Scene,content:ContentPack){
  for(const [x,z,w,d] of [[-5,0,.16,8],[5,0,.16,8],[0,4,10,.16],[0,-4,10,.16]]){const wall=shape('box','home-wall','#EADCC1',home,x,1.4,z,w,2.8,d);wall.isPickable=true;wall.metadata={cameraObstacle:true}}
  shape('box','inside-door','#9F7855',home,0,1,-3.9,1.2,2,.08);
  shape('box','window-frame','#A58260',home,-1,1.8,3.88,1.6,1.4,.08);shape('box','window-sky','#B7D4C7',home,-1,1.8,3.82,1.4,1.2,.04);
+ shape('box','cabinet-note','#F5E6C5',home,3.3,1.35,2.65,.3,.35,.02);
  shape('box','cabinet-body','#9E7957',home,3.3,.85,3.15,1.4,1.7,.8);
  const cabinetDoor=shape('box','cabinet-door','#BF986B',home,3.3,.85,2.72,1.3,1.6,.07);shape('ball','cabinet-knob','#D6BD7F',home,3.75,.85,2.65,.04);
  const visuals=content.interactions.map(t=>{const g=group(t.id,objects,t.position.x,t.location==='home'?0:terrainHeight(t.position.x,t.position.z),t.position.z);

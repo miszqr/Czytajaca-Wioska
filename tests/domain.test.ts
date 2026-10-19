@@ -38,3 +38,18 @@ describe('zapis fabuły',()=>{
   await write({version:99,keep:'all'});await expect(store.load()).rejects.toThrow('Nie został nadpisany');expect(await read('p0')).toEqual({version:99,keep:'all'});await store.close();db.close();
  });
 });
+describe('P1 — pełna opowieść',()=>{
+ it('przechodzi wszystkie osiem scen, wznawia każdy krok i nie powiela przedmiotów',()=>{
+  let s=newSave();const route=['bruno','home-door','fela-letter','home-exit','fela','home-door','bedside','cabinet','home-exit','bruno','bruno-crate','garden-drop','bruno','home-door','cabinet','cabinet','home-exit','tola','milus','bruno','fela','tola','home-door','home-bell'];
+  for(const target of route){const n=findNode(p,s,target);expect(n,`target ${target}`).toBeDefined();const result=choose(p,s,n!.id,n!.choices[0].id);expect(result.message,`step ${target}: ${n!.id}`).toBe('');s=result.state;const restored=validateSave(structuredClone(s));expect(restored,`restore ${target}`).toEqual(s);s=restored!}
+  expect(s.completed).toEqual(p.story.scenes.map(s=>s.id));expect(s.flags.hosting).toBe(true);expect(s.flags['story-complete']).toBe(true);expect(s.inventory).toEqual({book:1});expect(s.furniture.filter(f=>f.itemId==='lamp')).toHaveLength(1);expect(s.read).toContain('first-meeting');
+  for(const npc of ['bruno','fela','tola','milus']){expect(findNode(p,s,npc)?.id).toBe('guest-'+npc);s=act(s,npc)}
+  s=act(s,'home-bell');expect(s.flags.hosting).toBe(false);s=act(s,'home-exit');for(const npc of ['bruno','fela','tola','milus'])s=act(s,npc);expect(s.inventory).toEqual({book:1});expect(s.furniture.filter(f=>f.itemId==='lamp')).toHaveLength(1);
+  s=act(s,'home-door');s=act(s,'home-bell');expect(s.flags.hosting).toBe(true);expect(s.read.filter(id=>id==='first-meeting')).toHaveLength(1);
+ });
+ it('wizyty poza kolejnością nie dają klucza ani zaproszeń; pełny plecak zachowuje prezent',()=>{
+  let s=newSave();for(const target of ['milus','tola','fela'])s=act(s,target);expect(s.inventory).toEqual({});
+  s=act(act(s,'home-door'),'fela-letter');s=act(s,'home-exit');s.inventory=Object.fromEntries(Array.from({length:12},(_,i)=>[`item-${i}`,1]));const n=findNode(p,s,'fela')!;const full=choose(p,s,n.id,n.choices[0].id);expect(full.state).toBe(s);expect(full.message).toContain('miejsca');expect(s.flags['lamp-received']).toBeUndefined();
+  delete s.inventory['item-0'];s=choose(p,s,n.id,n.choices[0].id).state;expect(s.inventory.lamp).toBe(1);expect(choose(p,s,n.id,n.choices[0].id).state).toBe(s);
+ });
+});

@@ -42,5 +42,110 @@
     },
     "model": "sign",
     "when": []
+  },
+  {
+    "id": "bedside",
+    "label": "Miejsce przy łóżku",
+    "location": "home",
+    "position": {
+      "x": -1.5,
+      "z": 1.5
+    },
+    "model": "none",
+    "when": [
+      {
+        "type": "item",
+        "itemId": "lamp",
+        "quantity": 1
+      },
+      {
+        "type": "flag",
+        "key": "lamp-placed",
+        "value": false
+      }
+    ]
+  },
+  {
+    "id": "cabinet",
+    "label": "Szafka i notatka",
+    "location": "home",
+    "position": {
+      "x": 3.3,
+      "z": 2.7
+    },
+    "model": "none",
+    "when": []
+  },
+  {
+    "id": "bruno-crate",
+    "label": "Skrzynka Brunona",
+    "location": "village",
+    "position": {
+      "x": -3.2,
+      "z": -0.2
+    },
+    "model": "crate",
+    "when": [
+      {
+        "type": "flag",
+        "key": "crate-requested",
+        "value": true
+      },
+      {
+        "type": "flag",
+        "key": "crate-picked",
+        "value": false
+      }
+    ]
+  },
+  {
+    "id": "garden-drop",
+    "label": "Miejsce obok grządek",
+    "location": "village",
+    "position": {
+      "x": -3.5,
+      "z": 5.2
+    },
+    "model": "garden",
+    "when": [
+      {
+        "type": "flag",
+        "key": "crate-requested",
+        "value": true
+      },
+      {
+        "type": "flag",
+        "key": "crate-delivered",
+        "value": false
+      }
+    ]
+  },
+  {
+    "id": "garden-crate",
+    "label": "Skrzynka w ogrodzie",
+    "location": "village",
+    "position": {
+      "x": -3.5,
+      "z": 5.2
+    },
+    "model": "crate",
+    "when": [
+      {
+        "type": "flag",
+        "key": "crate-delivered",
+        "value": true
+      }
+    ]
+  },
+  {
+    "id": "home-bell",
+    "label": "Dzwonek przy drzwiach",
+    "location": "home",
+    "position": {
+      "x": -1,
+      "z": -2.9
+    },
+    "model": "bell",
+    "when": []
   }
 ]

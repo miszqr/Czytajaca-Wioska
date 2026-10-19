@@ -15,14 +15,14 @@ Aktualna specyfikacja: `docs/WORK_BRIEF.md`, 2026-10-19. Zastępuje dawny plan s
 
 ## P1 — pełne osiem scen
 
-- [ ] Fela i przekazanie lampy; ustawienie przy łóżku.
-- [ ] Notatka przy szafce; rozmowa z Brunonem.
-- [ ] Podniesienie skrzynki i odłożenie jej w ogrodzie; klucz.
-- [ ] Otwarcie szafki; książeczka i wskazówka do Toli.
-- [ ] Tola i Miluś; zaproszenia dla mieszkańców.
-- [ ] Spotkanie w domu i zakończenie historii bez kończenia gry.
-- [ ] Warianty rozmów, naturalne przypomnienia i jednorazowe skutki.
-- [ ] Build, test pełnej historii i wznowienia po każdym kroku.
+- [x] Fela i przekazanie lampy; ustawienie przy łóżku.
+- [x] Notatka przy szafce; rozmowa z Brunonem.
+- [x] Podniesienie skrzynki i odłożenie jej w ogrodzie; klucz.
+- [x] Otwarcie szafki; książeczka i wskazówka do Toli.
+- [x] Tola i Miluś; zaproszenia dla mieszkańców.
+- [x] Spotkanie w domu i zakończenie historii bez kończenia gry.
+- [x] Warianty rozmów, naturalne przypomnienia i jednorazowe skutki.
+- [x] Build, test pełnej historii i wznowienia po każdym kroku.
 
 ## P2 — zabawa po historii i oprawa
 
