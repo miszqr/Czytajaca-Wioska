@@ -1,8 +1,8 @@
 import type {Scene,TransformNode} from '../game/babylon';
 import {createShapes} from '../game/shapes';
 // Original procedural prototype. The supplied turnaround is a reference, not a rigged asset.
-export function createCharacter(scene:Scene,kind:'kitek'|'bruno'){
-  const {group,shape}=createShapes(scene),fox=kind==='kitek',root=group(kind),body=group(`${kind}-body`,root),fur=fox?'#C98755':'#967052',cream='#FFE0BC',cloth=fox?'#77A8D7':'#8CA878';
+export function createCharacter(scene:Scene,kind:'kitek'|'bruno'|'fela'){
+  const {group,shape}=createShapes(scene),fox=kind!=='bruno',root=group(kind),body=group(`${kind}-body`,root),fur=fox?'#C98755':'#967052',cream='#FFE0BC',cloth=kind==='fela'?'#D19C9A':fox?'#77A8D7':'#8CA878';
   const limbs:TransformNode[]=[];
   for(const side of [-1,1]){
     const leg=group('leg',body,side*.105,.36,0);shape('cylinder','leg-fur',fur,leg,0,-.12,0,.07,.24,.07);shape('ball','boot','#705344',leg,0,-.28,.04,.09,.08,.13);limbs.push(leg);
@@ -34,12 +34,19 @@ export function createCharacter(scene:Scene,kind:'kitek'|'bruno'){
   if(fox){
     const t=shape('ball','fluffy-tail',fur,tail,.08,.06,-.35,.19,.18,.39);t.rotation.x=-.35;t.rotation.y=-.25;
     const tip=shape('ball','tail-tip',cream,tail,.18,.20,-.64,.135,.14,.20);tip.rotation.x=-.35;tip.rotation.y=-.25;
+    if(kind==='kitek'){
     const pack=group('backpack',body,0,.62,-.22);
     shape('box','pack-body','#AA805D',pack,0,0,-.06,.34,.39,.16);
     shape('ball','pack-flap','#B9916C',pack,0,.14,-.11,.18,.09,.08);
     for(const side of [-1,1]){shape('box','leather-strap','#806045',pack,side*.10,-.015,-.15,.035,.30,.025);shape('box','buckle','#E1BA68',pack,side*.10,-.04,-.17,.061,.061,.015);shape('box','buckle-hole','#806045',pack,side*.10,-.04,-.18,.035,.035,.01)}
     const roll=shape('cylinder','bedroll','#D1B18A',pack,0,.28,-.035,.085,.40,.085);roll.rotation.z=Math.PI/2;
     shape('ball','leaf-charm','#84A765',pack,.20,.02,-.06,.04,.072,.023);
+    }else{
+      shape('box','shop-apron','#F1DFC2',body,0,.51,.18,.30,.36,.035);
+      shape('box','shop-pocket','#B8817C',body,0,.50,.207,.17,.10,.018);
+      shape('ball','hair-bow','#B8817C',head,-.21,.22,.04,.17,.06,.06);
+      root.scaling.setAll(1.08);
+    }
   }else{
     shape('box','apron','#B0BB87',body,0,.51,.18,.30,.39,.035);shape('box','apron-pocket','#8E9E6D',body,0,.50,.207,.17,.10,.018);
     shape('cylinder','hat-brim','#D4B577',head,0,.23,-.01,.40,.045,.31);shape('cylinder','hat-top','#E5C78B',head,0,.31,-.01,.25,.17,.23);shape('cylinder','hat-band','#8A6B44',head,0,.26,-.01,.255,.055,.235);

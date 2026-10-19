@@ -2,10 +2,12 @@ import {Engine,Scene,FreeCamera,Vector3,Matrix,Viewport,Ray} from './babylon';
 import {createVillage} from './world';
 import {CONFIG} from './config';
 import {movementVector,moveWithSlide,blocked,terrainHeight,turnTowards} from './movement';
+import type {ContentPack} from '../content/types';
+import {advanceNpc} from './npc';
 import {Input,type Action} from './input';
 import type {SaveState,PlayerPose,CameraPose} from '../persistence/state';
 export type WorldSnapshot={player:PlayerPose;camera:CameraPose};
-export type NearInfo={near:boolean;distance:number;x:number;y:number;visible:boolean};
+export type NearInfo={npcId:string|null;near:boolean;distance:number;x:number;y:number;visible:boolean};
 export type RuntimeCallbacks={onReady:()=>void;onError:(error:unknown)=>void;onNear:(info:NearInfo)=>void;onSave:(snapshot:WorldSnapshot)=>void;onAction:(action:Action)=>void;onGamepad:(connected:boolean)=>void};
 export class VillageGame {
   readonly engine:Engine;readonly scene:Scene;readonly world:ReturnType<typeof createVillage>;readonly camera:FreeCamera;
@@ -14,10 +16,11 @@ export class VillageGame {
   private pointer:{id:number;x:number;y:number}|null=null;private observer:ResizeObserver;private pad=false;
   private followHeading=false;
   private reduced=window.matchMedia('(prefers-reduced-motion: reduce)');
-  constructor(private canvas:HTMLCanvasElement,state:SaveState,private callbacks:RuntimeCallbacks){
+  constructor(private canvas:HTMLCanvasElement,state:SaveState,private callbacks:RuntimeCallbacks,content:ContentPack){
     try{this.engine=new Engine(canvas,true,{powerPreference:'low-power',preserveDrawingBuffer:false,stencil:true},false)}catch(e){this.input.dispose();throw e}
     this.engine.setHardwareScalingLevel(1/Math.min(window.devicePixelRatio||1,1.5));
-    this.scene=new Scene(this.engine);this.world=createVillage(this.scene);
+    this.scene=new Scene(this.engine);
+    try{this.world=createVillage(this.scene,content.characters)}catch(error){this.input.dispose();this.scene.dispose();this.engine.dispose();throw error}
     this.camera=new FreeCamera('behind-kitek',new Vector3(0,2,-4),this.scene);this.camera.minZ=.08;this.camera.maxZ=160;this.camera.fov=.92;this.scene.activeCamera=this.camera;
     this.pose={...state.player};if(blocked(this.pose,this.world.solids))this.pose={...CONFIG.spawn};
     this.cameraPose={...state.camera};this.cameraLength=state.camera.distance;
@@ -85,15 +88,26 @@ export class VillageGame {
         this.pose.x=next.x;this.pose.z=next.z;this.placePlayer();this.world.kitek.animate(this.time,actualSpeed,this.time<this.celebrateUntil,this.reduced.matches);this.updateCamera(dt);
         this.saveTime+=dt;if(this.saveTime>2){this.saveTime=0;this.flush()}
       }else this.world.kitek.animate(this.time,0,this.time<this.celebrateUntil,this.reduced.matches);
-      this.world.bruno.animate(this.time+.5,0,false,this.reduced.matches);
+      for(const npc of this.world.npcs){
+        const others=this.world.solids.filter(s=>s!==npc.solid);
+        const {motion,speed}=advanceNpc(npc.motion,npc.definition.behavior,dt,others,this.pose,this.paused);
+        npc.motion=motion;npc.solid.x=motion.x;npc.solid.z=motion.z;
+        npc.character.root.position.set(motion.x,terrainHeight(motion.x,motion.z),motion.z);npc.character.root.rotation.y=motion.heading;
+        npc.character.animate(this.time+.5,speed,false,this.reduced.matches);
+      }
       this.scene.render();
-      this.infoTime+=dt;if(this.infoTime>.12){this.infoTime=0;const distance=this.distanceToBruno(),point=this.world.bruno.root.position.add(new Vector3(0,1.9,0));const p=Vector3.Project(point,Matrix.Identity(),this.camera.getTransformationMatrix(),new Viewport(0,0,this.canvas.clientWidth,this.canvas.clientHeight));this.callbacks.onNear({near:distance<=CONFIG.interactionRadius,distance,x:p.x,y:p.y,visible:p.z>0&&p.z<1&&p.x>0&&p.x<this.canvas.clientWidth&&p.y>0&&p.y<this.canvas.clientHeight})}
+      this.infoTime+=dt;if(this.infoTime>.12){
+        this.infoTime=0;const npc=this.nearestNpc();
+        if(npc){const distance=this.distanceToNpc(npc.definition.id),point=npc.character.root.position.add(new Vector3(0,1.9,0));const p=Vector3.Project(point,Matrix.Identity(),this.camera.getTransformationMatrix(),new Viewport(0,0,this.canvas.clientWidth,this.canvas.clientHeight));this.callbacks.onNear({npcId:npc.definition.id,near:distance<=CONFIG.interactionRadius,distance,x:p.x,y:p.y,visible:p.z>0&&p.z<1&&p.x>0&&p.x<this.canvas.clientWidth&&p.y>0&&p.y<this.canvas.clientHeight})}
+      }
     }catch(error){this.engine.stopRenderLoop(this.frame);this.callbacks.onError(error)}
   };
-  distanceToBruno(){return Math.hypot(this.pose.x-CONFIG.bruno.x,this.pose.z-CONFIG.bruno.z)}
+  distanceToNpc(id:string){const npc=this.world.npcs.find(n=>n.definition.id===id);return npc?Math.hypot(this.pose.x-npc.motion.x,this.pose.z-npc.motion.z):Infinity}
+  nearestNpc(){return this.world.npcs.reduce<(typeof this.world.npcs)[number]|undefined>((best,npc)=>!best||this.distanceToNpc(npc.definition.id)<this.distanceToNpc(best.definition.id)?npc:best,undefined)}
   snapshot():WorldSnapshot{return {player:{...this.pose},camera:{...this.cameraPose}}}
   setPaused(value:boolean){this.paused=value;this.pointer=null;this.followHeading=false;this.input.clear();this.vx=this.vz=0;if(value)this.world.kitek.root.setEnabled(true)}
-  faceBruno(){if(this.distanceToBruno()>CONFIG.interactionRadius)return false;this.pose.heading=Math.atan2(CONFIG.bruno.x-this.pose.x,CONFIG.bruno.z-this.pose.z);this.placePlayer();this.world.bruno.root.rotation.y=Math.atan2(this.pose.x-CONFIG.bruno.x,this.pose.z-CONFIG.bruno.z);this.flush();return true}
+  faceNpc(id:string){const npc=this.world.npcs.find(n=>n.definition.id===id);if(!npc||this.distanceToNpc(id)>CONFIG.interactionRadius)return false;this.pose.heading=Math.atan2(npc.motion.x-this.pose.x,npc.motion.z-this.pose.z);this.placePlayer();npc.motion.heading=Math.atan2(this.pose.x-npc.motion.x,this.pose.z-npc.motion.z);npc.character.root.rotation.y=npc.motion.heading;this.flush();return true}
+
   celebrate(){this.celebrateUntil=this.time+2.5}
   moveTouch(x:number,y:number){this.input.setTouch(x,y)}
   runTouch(value:boolean){this.input.setRun(value)}

@@ -14,13 +14,20 @@ export class SaveStore {
     }));
   }
   async load():Promise<SaveState|null>{
+    let value:unknown;
     try{
       const db=await this.open();
-      const value=await new Promise<unknown>((resolve,reject)=>{const r=db.transaction('saves').objectStore('saves').get(KEY);r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)});
-      this.mode='indexeddb';return validateSave(value);
+      value=await new Promise<unknown>((resolve,reject)=>{const r=db.transaction('saves').objectStore('saves').get(KEY);r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)});
+      this.mode='indexeddb';
     }catch{
-      try{this.mode='localStorage';return validateSave(JSON.parse(localStorage.getItem(FALLBACK)||'null'))}catch{this.mode='memory';return null}
+      let raw:string|null;
+      try{raw=localStorage.getItem(FALLBACK);this.mode='localStorage'}catch{this.mode='memory';return null}
+      try{value=JSON.parse(raw||'null')}catch{throw new Error('Zapis gry jest uszkodzony. Nie został nadpisany.')}
     }
+    if(value==null)return null;
+    const state=validateSave(value);
+    if(!state)throw new Error('Zapis gry ma nieobsługiwany lub uszkodzony format. Nie został nadpisany.');
+    return state;
   }
   save(state:SaveState):Promise<void>{
     const snapshot=structuredClone(state);snapshot.updatedAt=Date.now();

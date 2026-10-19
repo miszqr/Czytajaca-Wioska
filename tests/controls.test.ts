@@ -11,6 +11,7 @@ vi.mock('../src/game/babylon',async()=>{
     override stopRenderLoop(){loop.frame=null}
   }};
 });
+import {DEFAULT_CONTENT} from '../src/content/defaults';
 import {VillageGame} from '../src/game/runtime';
 import {newSave} from '../src/persistence/state';
 import type {SaveState} from '../src/persistence/state';
@@ -23,7 +24,7 @@ function frames(count=1){for(let i=0;i<count;i++)loop.frame!();expect(errors).no
 function start(state:SaveState=newSave()){
   const canvas=document.createElement('canvas');canvas.width=800;canvas.height=600;
   canvas.setPointerCapture=vi.fn();
-  game=new VillageGame(canvas,state,{onReady:vi.fn(),onError:errors,onNear:vi.fn(),onSave:vi.fn(),onAction:vi.fn(),onGamepad:vi.fn()});
+  game=new VillageGame(canvas,state,{onReady:vi.fn(),onError:errors,onNear:vi.fn(),onSave:vi.fn(),onAction:vi.fn(),onGamepad:vi.fn()},DEFAULT_CONTENT);
   // Exercise the real input, frame loop, collision rays and camera transforms;
   // only GPU rendering is skipped in this deterministic control test.
   vi.spyOn(game.scene,'render').mockImplementation(()=>{});

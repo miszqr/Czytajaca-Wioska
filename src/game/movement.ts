@@ -5,13 +5,13 @@ export function blocked(p:Point,solids:readonly Solid[],radius:number=CONFIG.pla
   if(Math.abs(p.x)>CONFIG.worldHalfSize-radius||Math.abs(p.z)>CONFIG.worldHalfSize-radius)return true;
   return solids.some(s=>s.type==='circle'?Math.hypot(p.x-s.x,p.z-s.z)<s.radius+radius:Math.hypot(Math.max(Math.abs(p.x-s.x)-s.halfX,0),Math.max(Math.abs(p.z-s.z)-s.halfZ,0))<radius);
 }
-export function moveWithSlide(p:Point,delta:Point,solids:readonly Solid[]):Point{
+export function moveWithSlide(p:Point,delta:Point,solids:readonly Solid[],radius:number=CONFIG.playerRadius):Point{
   const n=Math.max(1,Math.ceil(Math.hypot(delta.x,delta.z)/.1)),step={x:delta.x/n,z:delta.z/n};let result={...p};
   for(let i=0;i<n;i++){
     const next={x:result.x+step.x,z:result.z+step.z};
-    if(!blocked(next,solids)){result=next;continue}
-    const x={x:result.x+step.x,z:result.z};if(!blocked(x,solids))result=x;
-    const z={x:result.x,z:result.z+step.z};if(!blocked(z,solids))result=z;
+    if(!blocked(next,solids,radius)){result=next;continue}
+    const x={x:result.x+step.x,z:result.z};if(!blocked(x,solids,radius))result=x;
+    const z={x:result.x,z:result.z+step.z};if(!blocked(z,solids,radius))result=z;
   }return result;
 }
 export function movementVector(horizontal:number,forward:number,yaw:number):Point{

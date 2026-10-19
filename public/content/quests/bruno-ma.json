@@ -1,0 +1,45 @@
+{
+  "$schema": "../../../docs/quest.schema.json",
+  "version": 1,
+  "id": "bruno-ma",
+  "revision": 1,
+  "npcId": "bruno",
+  "title": "Pierwsze nasionko",
+  "description": "Odwiedź Brunona w ogrodzie.",
+  "requires": [],
+  "dialogue": {
+    "intro": [
+      "Cześć! Jestem Bruno. Dbam o nasz ogród.",
+      "Pomożesz mi znaleźć MA? Tak zaczyna się słowo MAK."
+    ],
+    "active": [
+      "Pomożesz mi znaleźć MA? Tak zaczyna się słowo MAK."
+    ],
+    "completed": [
+      "Miło cię widzieć, Kitku! Chcesz jeszcze raz znaleźć MA?"
+    ],
+    "acceptLabel": "Pomogę!",
+    "replayLabel": "Poćwiczmy"
+  },
+  "exercise": {
+    "id": "find-ma",
+    "type": "syllable-choice",
+    "prompt": "Znajdź sylabę MA.",
+    "target": "MA",
+    "choices": [
+      "LA",
+      "MA",
+      "TO"
+    ],
+    "hint": "Poszukaj liter M i A, które stoją obok siebie."
+  },
+  "feedback": {
+    "retry": "Poszukaj MA. Spróbuj jeszcze raz.",
+    "success": "Tak, to MA! Dziękuję, Kitku. To nasionko maku jest dla ciebie.",
+    "practice": "Miło było znowu poćwiczyć razem."
+  },
+  "reward": {
+    "itemId": "mak-seed",
+    "quantity": 1
+  }
+}

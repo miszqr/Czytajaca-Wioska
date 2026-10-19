@@ -2,9 +2,10 @@ import {Scene,Mesh,VertexData,VertexBuffer,CreateGround,Color3,Color4,Hemispheri
 import {createShapes} from './shapes';
 import {createCharacter} from '../characters/models';
 import {terrainHeight,blocked,type Solid} from './movement';
-import {CONFIG} from './config';
+import type {CharacterDefinition} from '../content/types';
+import type {NpcMotion} from './npc';
 import {createVegetation,type TreeKind} from './vegetation';
-export function createVillage(scene:Scene){
+export function createVillage(scene:Scene,characters:readonly CharacterDefinition[]){
   scene.clearColor=Color4.FromHexString('#DCE9DDFF');scene.fogMode=Scene.FOGMODE_EXP2;scene.fogDensity=.013;scene.fogColor=Color3.FromHexString('#DCE9DD');
   const sky=new HemisphericLight('warm-sky',new Vector3(0,1,0),scene);sky.intensity=.9;sky.groundColor=Color3.FromHexString('#71856C');
   const sun=new DirectionalLight('afternoon-sun',new Vector3(-.5,-1,.3),scene);sun.intensity=.65;sun.diffuse=Color3.FromHexString('#FFE5BC');
@@ -105,8 +106,15 @@ export function createVillage(scene:Scene){
   const batches=new Map<string,Mesh[]>();
   for(const mesh of environment.getChildMeshes() as Mesh[]){mesh.computeWorldMatrix(true);const key=mesh.material!.uniqueId+':'+!!mesh.metadata?.cameraObstacle;const list=batches.get(key)||[];list.push(mesh);batches.set(key,list)}
   for(const [key,meshes] of batches){const merged=Mesh.MergeMeshes(meshes,true,true,undefined,false,false);if(merged){merged.name='scenery-'+key;merged.parent=environment;merged.metadata={cameraObstacle:key.endsWith('true')};merged.isPickable=merged.metadata.cameraObstacle;merged.freezeWorldMatrix()}}
-  const kitek=createCharacter(scene,'kitek'),bruno=createCharacter(scene,'bruno');bruno.root.position.set(CONFIG.bruno.x,terrainHeight(CONFIG.bruno.x,CONFIG.bruno.z),CONFIG.bruno.z);bruno.root.rotation.y=Math.PI;
-  solids.push({id:'bruno',type:'circle',x:CONFIG.bruno.x,z:CONFIG.bruno.z,radius:.42});
-  for(const character of [kitek,bruno]){const shadow=shape('cylinder','contact-shadow','#66784F',character.root,0,.018,0,.31,.012,.22);shadow.material=material('#66784F')}
-  return {environment,ground,kitek,bruno,solids,water};
+  const kitek=createCharacter(scene,'kitek');
+  const npcs=characters.map(definition=>{
+    const {x,z,heading}=definition.position;
+    if(blocked({x,z},solids,.5))throw new Error(`characters.${definition.id}.position: postać znajduje się wewnątrz przeszkody.`);
+    if(definition.behavior.type==='patrol')for(const point of definition.behavior.waypoints)if(blocked(point,solids,.5))throw new Error(`characters.${definition.id}.behavior.waypoints: punkt znajduje się wewnątrz przeszkody.`);
+    const character=createCharacter(scene,definition.model);character.root.name=definition.id;character.root.position.set(x,terrainHeight(x,z),z);character.root.rotation.y=heading;
+    const solid:Solid={id:`npc:${definition.id}`,type:'circle',x,z,radius:.42};solids.push(solid);
+    const motion:NpcMotion={x,z,heading,waypoint:0,waiting:0,stuck:0};return {definition,character,solid,motion};
+  });
+  for(const character of [kitek,...npcs.map(npc=>npc.character)]){const shadow=shape('cylinder','contact-shadow','#66784F',character.root,0,.018,0,.31,.012,.22);shadow.material=material('#66784F')}
+  return {environment,ground,kitek,npcs,solids,water};
 }
