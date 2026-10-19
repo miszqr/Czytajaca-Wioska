@@ -1,0 +1,247 @@
+{
+  "version": 1,
+  "id": "new-home",
+  "title": "Nowy dom Kitka",
+  "scenes": [
+    {
+      "id": "arrival",
+      "title": "Przyjazd",
+      "objective": "Bruno czeka na placu. Twój dom stoi przy stawie.",
+      "when": []
+    },
+    {
+      "id": "home",
+      "title": "Nowy dom",
+      "objective": "Na stole w domu leży koperta.",
+      "when": [
+        {
+          "type": "flag",
+          "key": "entered-home",
+          "value": true
+        }
+      ]
+    }
+  ],
+  "documents": [
+    {
+      "id": "fela-letter",
+      "title": "List od Feli",
+      "lines": [
+        "Cześć, Kitku! Mam coś dla ciebie.",
+        "Przyjdź do sklepu. Fela."
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "id": "bruno-welcome",
+      "target": "bruno",
+      "event": "interact",
+      "priority": 10,
+      "once": true,
+      "when": [],
+      "speaker": "bruno",
+      "lines": [
+        "Witaj, Kitku! Twój dom stoi przy stawie.",
+        "Idź w prawo od placu. Dom ma niebieską tabliczkę."
+      ],
+      "choices": [
+        {
+          "id": "go",
+          "label": "Rozejrzę się.",
+          "effects": [
+            {
+              "type": "flag",
+              "key": "met-bruno",
+              "value": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "bruno-chat",
+      "target": "bruno",
+      "event": "interact",
+      "priority": 0,
+      "once": false,
+      "when": [],
+      "speaker": "bruno",
+      "lines": [
+        "Miło cię widzieć, Kitku.",
+        "Twój dom jest przy stawie. Wypatruj niebieskiej tabliczki."
+      ],
+      "choices": [
+        {
+          "id": "bye",
+          "label": "Do zobaczenia!",
+          "effects": []
+        }
+      ]
+    },
+    {
+      "id": "enter-home-first",
+      "target": "home-door",
+      "event": "interact",
+      "priority": 10,
+      "once": true,
+      "when": [],
+      "speaker": "Kitek",
+      "lines": [
+        "To twój dom. Na stole czeka koperta."
+      ],
+      "choices": [
+        {
+          "id": "open",
+          "label": "Otwieram drzwi.",
+          "effects": [
+            {
+              "type": "travel",
+              "location": "home",
+              "x": 0,
+              "z": -2.5,
+              "heading": 0
+            },
+            {
+              "type": "flag",
+              "key": "entered-home",
+              "value": true
+            },
+            {
+              "type": "complete",
+              "sceneId": "arrival"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "enter-home",
+      "target": "home-door",
+      "event": "interact",
+      "priority": 0,
+      "once": false,
+      "when": [],
+      "speaker": "Kitek",
+      "lines": [
+        "Wracasz do swojego domu."
+      ],
+      "choices": [
+        {
+          "id": "open",
+          "label": "Wejdź do domu.",
+          "effects": [
+            {
+              "type": "travel",
+              "location": "home",
+              "x": 0,
+              "z": -2.5,
+              "heading": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "exit-home",
+      "target": "home-exit",
+      "event": "interact",
+      "priority": 0,
+      "once": false,
+      "when": [],
+      "speaker": "Kitek",
+      "lines": [
+        "Wioska czeka za drzwiami."
+      ],
+      "choices": [
+        {
+          "id": "out",
+          "label": "Wyjdź na spacer.",
+          "effects": [
+            {
+              "type": "travel",
+              "location": "village",
+              "x": 18,
+              "z": 4.2,
+              "heading": 3.14159
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "read-fela-letter",
+      "target": "fela-letter",
+      "event": "interact",
+      "priority": 10,
+      "once": true,
+      "when": [],
+      "speaker": "List od Feli",
+      "lines": [
+        "Cześć, Kitku! Mam coś dla ciebie.",
+        "Przyjdź do sklepu. Fela."
+      ],
+      "choices": [
+        {
+          "id": "keep",
+          "label": "Zachowam ten list.",
+          "effects": [
+            {
+              "type": "flag",
+              "key": "read-fela-letter",
+              "value": true
+            },
+            {
+              "type": "read",
+              "documentId": "fela-letter"
+            },
+            {
+              "type": "complete",
+              "sceneId": "home"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "reread-fela-letter",
+      "target": "fela-letter",
+      "event": "interact",
+      "priority": 0,
+      "once": false,
+      "when": [],
+      "speaker": "List od Feli",
+      "lines": [
+        "Cześć, Kitku! Mam coś dla ciebie.",
+        "Przyjdź do sklepu. Fela."
+      ],
+      "choices": [
+        {
+          "id": "close",
+          "label": "Schowaj list.",
+          "effects": []
+        }
+      ]
+    },
+    {
+      "id": "read-village-sign",
+      "target": "village-sign",
+      "event": "interact",
+      "priority": 0,
+      "once": false,
+      "when": [],
+      "speaker": "Drogowskaz",
+      "lines": [
+        "Dom Kitka stoi przy stawie. Ma niebieską tabliczkę.",
+        "Sklep Feli ma czerwony dach. Ogród Brunona jest za płotem."
+      ],
+      "choices": [
+        {
+          "id": "go",
+          "label": "Idę dalej.",
+          "effects": []
+        }
+      ]
+    }
+  ]
+}

@@ -1,4 +1,42 @@
 [
-  {"id": "mak-seed", "name": "Nasionko maku", "icon": "seed"},
-  {"id": "apple", "name": "Jabłko od Feli", "icon": "apple"}
+  {
+    "id": "bed",
+    "name": "Łóżko Kitka",
+    "description": "Miękkie łóżko po długim spacerze.",
+    "kind": "decoration",
+    "model": "bed",
+    "color": "#8BA7BD",
+    "width": 1.6,
+    "depth": 2.5
+  },
+  {
+    "id": "table",
+    "name": "Drewniany stół",
+    "description": "Miejsce na listy i wspólne rozmowy.",
+    "kind": "decoration",
+    "model": "table",
+    "color": "#B88B61",
+    "width": 1.5,
+    "depth": 1.1
+  },
+  {
+    "id": "mak-seed",
+    "name": "Nasionko maku",
+    "description": "Pamiątka z pierwszej wizyty u Brunona.",
+    "kind": "usable",
+    "model": "seed",
+    "color": "#7E9A62",
+    "width": 0.3,
+    "depth": 0.3
+  },
+  {
+    "id": "apple",
+    "name": "Jabłko od Feli",
+    "description": "Pamiątka ze sklepiku.",
+    "kind": "usable",
+    "model": "apple",
+    "color": "#BA7665",
+    "width": 0.3,
+    "depth": 0.3
+  }
 ]

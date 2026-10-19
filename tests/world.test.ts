@@ -11,7 +11,7 @@ it('buduje rzeczywistą scenę Babylon, bezpieczny start, trzy modele i kolizje'
     const road=scene.meshes.find(m=>m.material?.name==='#D7C396')!;expect(road).toBeDefined();const normals=road.getVerticesData(VertexBuffer.NormalKind)!;for(let i=1;i<normals.length;i+=3)expect(normals[i]).toBeGreaterThan(.9);
     expect(blocked(CONFIG.spawn,world.solids)).toBe(false);expect(world.solids.some(s=>s.id==='pond')).toBe(true);
     expect(world.kitek.root.getChildMeshes().some(m=>m.name==='pack-body')).toBe(true);expect(world.npcs.find(n=>n.definition.id==='bruno')!.character.root.getChildMeshes().some(m=>m.name==='apron')).toBe(true);
-    expect(world.npcs.map(n=>n.definition.id)).toEqual(['bruno','fela']);expect(world.npcs[1].character.root.getChildMeshes().some(m=>m.name==='shop-apron')).toBe(true);
+    expect(world.npcs.map(n=>n.definition.id)).toEqual(['bruno']);
     expect(scene.meshes.filter(m=>m.name.startsWith('scenery-')).length).toBeLessThan(80);
     world.kitek.animate(.5,2.4);expect(world.kitek.limbs[0].rotation.x).not.toBe(0);
     await Promise.all(scene.meshes.filter(m=>m.material).map(m=>m.material!.forceCompilationAsync(m)));

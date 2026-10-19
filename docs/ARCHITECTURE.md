@@ -1,46 +1,47 @@
-# Architektura P0
+# Architektura opowieści
 
-Gra jest niezależna od Leśnego Labiryntu. Jednostka świata odpowiada orientacyjnie metrowi. Oś Y oznacza wysokość, +Z jest kierunkiem startowego spaceru; Babylon używa domyślnego układu lewoskrętnego.
-
-## Podział odpowiedzialności
+Babylon.js + TypeScript + React + Vite. Świat i grafika pozostają niezależne od treści. Historia „Nowy dom Kitka” zastępuje dawną mechanikę ćwiczeń.
 
 | Moduł | Odpowiedzialność |
 | --- | --- |
-| `game/world.ts` | Budowanie sceny i tej samej listy przeszkód dla ruchu. Stała geometria scalona według materiału i udziału w kolizjach kamery. |
-| `game/movement.ts` | Czyste funkcje: ruch względem kamery, limit obrotu, martwa strefa pada, wysokość terenu, kolizje. |
-| `game/runtime.ts` | Pętla renderowania, delta czasu, postacie, podążająca kamera, raycasty, animacje i callbacki do UI. |
-| `game/input.ts` | Klawiatura, Gamepad API, joystick; akcje pada są wykrywane na zboczu, bez wielokrotnego wyboru przez przytrzymanie. |
-| `characters/models.ts` | Modele z brył Babylon i proste animacje proceduralne, bez importowanego rigu. |
-| `reading/model.ts` | Ocena wyboru, historia prób i podpowiedzi. Bez importów Babylon, React lub przeglądarki. |
-| `quests/model.ts` | Stan available → active → completed; ukończenie i nagroda są idempotentne. |
-| `data/quests.ts` | Polski dialog, instrukcja, warianty odpowiedzi, podpowiedź i nagroda. |
-| `persistence/` | Walidowany SaveState v1, kolejka zapisów, IndexedDB i fallback. |
-| `ui/` | HUD i ręczne dialogi, focus trap, wybór sylaby, sterowanie dotykowe. |
-| `audio/speech.ts` | Opcjonalna synteza mowy, bez mikrofonu. |
+| `content/` | Typy i walidacja JSON; ładowanie całego pakietu przed startem gry |
+| `story/engine.ts` | Warunki, wybór dialogu, atomowe skutki, jednorazowe węzły i aktualny cel |
+| `game/runtime.ts` | Ruch, kamera, najbliższa interakcja, pauza i synchronizacja świata ze stanem |
+| `game/world.ts`, `vegetation.ts` | Wioska i stała geometria, wspólne partie materiałów |
+| `game/story-world.ts` | Wnętrze domu, przedmioty i wizualizacja trwałych zmian |
+| `game/npc.ts` | Stanie i spacer po punktach; pauza, zatrzymanie przy graczu, kolizje |
+| `housing/` | Kolizje i rozmieszczenie mebli |
+| `characters/` | Proceduralne prototypy modeli i animacji |
+| `ui/` | Dialogi, listy, dziennik, plecak, menu i dotyk |
+| `persistence/` | SaveState v3, migracja, kopia starszego zapisu, kolejka IndexedDB/fallback |
+| `audio/` | Odsłuch tekstu na żądanie, bez rozpoznawania mowy |
 
-```mermaid
-flowchart TD
-  Input[Klawiatura / pad / dotyk] --> Runtime[Świat Babylon]
-  Runtime --> UI[Interfejs React]
-  UI --> Quest[Stan zadania]
-  Quest --> Reading[Moduł czytania]
-  UI --> Save[Zapis lokalny]
-  Runtime --> Save
-  Save --> UI
-```
+Nie ma ReadingEngine ani komponentów quizowych. Silnik sprawdza działania w świecie, nigdy wpisaną odpowiedź dziecka.
 
-## Pętla ruchu i kamera
+## Zdarzenie i stan
 
-Strzałki mają osobne osie: lewo/prawo obracają postać z prędkością 144°/s, a góra/dół poruszają wzdłuż jej kierunku patrzenia; cofanie nie odwraca postaci. Przy równoczesnym użyciu urządzeń strzałki mają pierwszeństwo dla ruchu. WASD, pad i dotyk nadal obliczają ruch względem yaw kamery, normalizują przekątną i obracają model do wektora ruchu z limitem 540°/s. Docelowe prędkości: 2.4 i 4.0 jednostki/s. Rozpędzanie osiąga około 95% zadanej prędkości po 0.2 s. Delta klatki jest ograniczona do 50 ms, aby powrót z tła nie powodował teleportacji.
+1. Runtime wskazuje najbliższy dostępny obiekt w aktualnej lokalizacji. Działanie wymaga odległości do 2 jednostek.
+2. Silnik dobiera węzeł o najwyższym priorytecie, pasujących warunkach i niewykonanych skutkach jednorazowych.
+3. UI pokazuje krótkie wypowiedzi po jednej. Wybór wyraża zamiar, np. otwarcie drzwi lub zabranie listu.
+4. Silnik ponownie sprawdza dostępność węzła i atomowo stosuje skutki. Brak miejsca lub przedmiotu nie pozostawia częściowych zmian.
+5. React, świat Babylon i kolejka zapisu otrzymują ten sam nowy stan. Ponowne wykonanie starego, jednorazowego węzła jest odrzucane.
 
-Kolizje ruchu: deterministyczna kapsuła w rzucie poziomym (koło) przeciw kołom i prostokątom; segment ruchu dzieli się na kroki ≤0.1 jednostki. Osobne osie pozwalają przesuwać się wzdłuż przeszkody. Pozycja Y pochodzi z tej samej funkcji wysokości co geometria terenu. Nie ma skoków ani fizyki brył w P0.
+Flagę można ustawić, dać lub zabrać przedmiot, zapisać przeczytany list, ukończyć scenę i przejść między wioską a domem. Warunki sprawdzają flagi i zawartość plecaka. Pomyłki dziecka nie odbierają postępu. Dialog może zamiast tego zawierać przypomnienie.
 
-Kamera śledzi pozycję. Strzałki włączają podążanie za kierunkiem postaci: kamera otrzymuje ten sam przyrost obrotu, a pozostałe odchylenie po ręcznym rozglądaniu wygasza najkrótszą drogą, wykładniczo i niezależnie od liczby klatek. Wygaszanie kończy się również po puszczeniu strzałek. Przeciąganie kamery i prawy drążek mają pierwszeństwo; rozpoczęcie ruchu WASD/padem/dotykiem wyłącza podążanie, aby ruch względem kamery nie tworzył samonapędzającego się skrętu. Cztery raycasty przeciw oznaczonej geometrii zmniejszają dystans przed ścianą/drzewem. Przy bardzo małym dystansie model gracza jest chwilowo ukrywany, aby nie oglądać wnętrza głowy. Kamera i ruch są zatrzymane podczas czytania. To prototyp rozwiązania kolizji kamery; gęsty las wymaga odbioru wizualnego.
+## Świat i kamera
 
-## Zadanie i zapis
+Wioska ma orientacyjnie 100 × 100 jednostek. Wnętrze jest osobną lokalizacją w tej samej scenie: przy wejściu ukrywa się geometrię wioski i włącza pokój. Ruch używa odpowiedniej listy kolizji; wysokość terenu w domu wynosi zero. Położenie oraz lokalizacja zapisują się razem.
 
-Treści zadania są w `FIRST_QUEST`, kontrakt w `quest.schema.json`. Zła odpowiedź dopisuje próbę, bez utraty nagród i bez blokady ponowienia. Poprawna odpowiedź ustawia `reading.completed`, kończy zadanie i przyznaje boolowską, jednorazową nagrodę. Powtórka ćwiczenia dopisuje próby, ale nie zwiększa liczby nagród. Pełny system ekwipunku jest etapem P1.
+Zachowane parametry: chód 2.4, bieg 4.0 jednostki/s, rozpędzenie ok. 0.2 s, obrót względem ruchu do 540°/s, strzałki obracają Kitka z kamerą za plecami. WASD, joystick i pad pozostają zależne od kierunku kamery. Raycasty skracają dystans przed przeszkodami. Dialog i menu pauzują ruch.
 
-SaveState v1 zawiera `player`, `camera`, `quest`, `welcomed`, `updatedAt`. Historia przechowuje ostatnie 200 prób. Wczytywanie sprawdza wersję, zakres pozycji, skończone liczby i spójność ukończenia. Niepoprawne dane nie trafiają do renderera. Kolejka zapisów zachowuje kolejność; odczyt nie uruchamia zapisu przed zakończeniem hydratacji.
+Geometrię stałą wioski scalono według materiałów. Wnętrze, zmienne obiekty i meble są oddzielne; meble przebudowuje się tylko po zmianie rozmieszczenia, nie przy okresowym zapisie pozycji. NPC korzystają ze wspólnej geometrii kolizji, bez pełnej nawigacji wokół budynków.
 
-Przy rozbudowie: dodać rejestr zadań po ID, migrację v1→v2 i kolekcję postępów, zachowując niezależność modułu czytania. Dodać modele glTF z animacjami przez adapter postaci, bez zmieniania logiki ćwiczeń.
+## Zapis i migracja
+
+Format v3: `location`, `player`, `camera`, `flags`, `completed`, `seen`, `read`, `inventory`, `furniture`, `welcomed`, `updatedAt`. ID treści są trwałymi kluczami. Zmiana tekstu nie zmienia skutków już wykonanej sceny. Nie usuwa się nieznanych flag i przeczytanych ID tylko dlatego, że plik treści tymczasowo ich nie zawiera.
+
+Formaty v1/v2 są migrowane do nowej historii, z zachowaniem pozycji i pamiątek. Oryginał zostaje zapisany pod osobnym kluczem `legacy-v1`/`legacy-v2`; brak możliwości utworzenia kopii wstrzymuje migrację. Baza i dotychczasowy klucz pozostają te same. Zapis uszkodzony lub przyszłej wersji zatrzymuje start i nie jest zastępowany pustym stanem.
+
+## Dalsze rozszerzanie
+
+Nowe dialogi i sceny powstają w JSON. Nowy rodzaj skutku, zachowania, modelu lub interakcji wymaga rozszerzenia typów, walidatora i odpowiedniego handlera TypeScript. Pliki treści nie wykonują dowolnego JavaScript.

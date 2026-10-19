@@ -1,11 +1,15 @@
-import type {Exercise} from '../reading/model';
+export type Location='village'|'home';
 export type Behavior={type:'idle'}|{type:'patrol';speed:number;pauseSeconds:number;waypoints:{x:number;z:number}[]};
-export type CharacterDefinition={id:string;name:string;role:string;model:'bruno'|'fela';position:{x:number;z:number;heading:number};behavior:Behavior};
-export type ItemDefinition={id:string;name:string;icon:'seed'|'apple'};
-export type QuestDefinition={
-  version:1;id:string;revision:number;npcId:string;title:string;description:string;requires:string[];
-  dialogue:{intro:string[];active:string[];completed:string[];acceptLabel:string;replayLabel:string};
-  exercise:Exercise;feedback:{retry:string;success:string;practice:string};reward:{itemId:string;quantity:number};
-};
-export type ContentPack={characters:CharacterDefinition[];items:ItemDefinition[];quests:QuestDefinition[]};
-export type Manifest={version:1;characters:string;items:string;quests:string[]};
+export type CharacterDefinition={id:string;name:string;role:string;model:'bruno'|'fela'|'tola'|'milus';position:{x:number;z:number;heading:number};behavior:Behavior};
+export type ItemModel='seed'|'apple'|'letter'|'crate'|'key'|'book'|'lamp'|'chair'|'table'|'bed'|'rug'|'plant'|'shelf';
+export type ItemDefinition={id:string;name:string;description:string;kind:'usable'|'decoration';model:ItemModel;color:string;width:number;depth:number};
+export type Condition={type:'flag';key:string;value:boolean}|{type:'item';itemId:string;quantity:number};
+export type Effect={type:'flag';key:string;value:boolean}|{type:'giveItem'|'takeItem';itemId:string;quantity:number}|{type:'read';documentId:string}|{type:'complete';sceneId:string}|{type:'travel';location:Location;x:number;z:number;heading:number};
+export type InteractionDefinition={id:string;label:string;location:Location;position:{x:number;z:number};model:'none'|'letter'|'crate'|'sign'|'cabinet'|'garden'|'bell';when:Condition[]};
+export type StoryNode={id:string;target:string;event:'interact'|'place';priority:number;once:boolean;when:Condition[];speaker:string;lines:string[];choices:{id:string;label:string;effects:Effect[]}[]};
+export type StoryScene={id:string;title:string;objective:string;when:Condition[]};
+export type StoryDocument={id:string;title:string;lines:string[]};
+export type StoryDefinition={version:1;id:string;title:string;scenes:StoryScene[];documents:StoryDocument[];nodes:StoryNode[]};
+export type ContentPack={characters:CharacterDefinition[];items:ItemDefinition[];interactions:InteractionDefinition[];story:StoryDefinition};
+export type Manifest={version:2;characters:string;items:string;interactions:string;story:string};
+export type Furniture={id:string;itemId:string;x:number;z:number;rotation:0|1|2|3};

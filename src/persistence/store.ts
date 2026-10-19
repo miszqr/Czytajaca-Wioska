@@ -27,6 +27,13 @@ export class SaveStore {
     if(value==null)return null;
     const state=validateSave(value);
     if(!state)throw new Error('Zapis gry ma nieobsługiwany lub uszkodzony format. Nie został nadpisany.');
+    if(value&&typeof value==='object'&&'version' in value&&value.version!==3){
+      const backupKey=`legacy-v${value.version}`;
+      try{
+        if(this.mode==='indexeddb'){const db=await this.open();await new Promise<void>((resolve,reject)=>{const tx=db.transaction('saves','readwrite'),store=tx.objectStore('saves'),get=store.get(backupKey);get.onsuccess=()=>{if(get.result===undefined)store.put(value,backupKey)};tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error)})}
+        else if(this.mode==='localStorage'&&!localStorage.getItem(`${FALLBACK}-${backupKey}`))localStorage.setItem(`${FALLBACK}-${backupKey}`,JSON.stringify(value));
+      }catch{throw new Error('Nie udało się zachować kopii starszego zapisu. Oryginał nie został nadpisany.')}
+    }
     return state;
   }
   save(state:SaveState):Promise<void>{

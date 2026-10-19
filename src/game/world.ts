@@ -54,7 +54,9 @@ export function createVillage(scene:Scene,characters:readonly CharacterDefinitio
     shape('box','timber-beam','#84614B',g,0,3.28,-depth/2-.06,width,.15,.16);
     return g;
   }
-  cottage('Dom Kitka',-10,-9,5.5,4.8,'#F0DFC0','#A77459');
+  cottage('Dom Kitka',18,8,5.5,4.8,'#F0DFC0','#A77459');
+  shape('box','home-blue-sign','#77A8D7',environment,19.8,1.4,5.5,.7,.36,.10);
+  path([[0,0],[8,0],[15,1],[18,4.7]],2);
   cottage('Dom Brunona',-10,10,5.2,4.5,'#E8D9AA','#839265');
   cottage('Sklep Feli',10,9,6,5,'#E9CEAA','#B87960');
   cottage('Biblioteka Toli',0,23,7.4,5.5,'#E5DCC2','#768A93');

@@ -1,15 +1,16 @@
 [
   {
-    "id": "bruno", "name": "Bruno", "role": "Nasz sąsiad · ogrodnik", "model": "bruno",
-    "position": {"x": -3, "z": 3.5, "heading": 3.14159},
-    "behavior": {"type": "idle"}
-  },
-  {
-    "id": "fela", "name": "Fela", "role": "Nasza sąsiadka · sklepikarka", "model": "fela",
-    "position": {"x": 9, "z": 4.8, "heading": 3.14159},
+    "id": "bruno",
+    "name": "Bruno",
+    "role": "Ogrodnik",
+    "model": "bruno",
+    "position": {
+      "x": -2,
+      "z": 1.5,
+      "heading": 3.14159
+    },
     "behavior": {
-      "type": "patrol", "speed": 0.6, "pauseSeconds": 2,
-      "waypoints": [{"x": 8, "z": 4.8}, {"x": 11.5, "z": 4.8}]
+      "type": "idle"
     }
   }
 ]

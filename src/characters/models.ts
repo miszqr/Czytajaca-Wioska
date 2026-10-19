@@ -1,8 +1,8 @@
 import type {Scene,TransformNode} from '../game/babylon';
 import {createShapes} from '../game/shapes';
 // Original procedural prototype. The supplied turnaround is a reference, not a rigged asset.
-export function createCharacter(scene:Scene,kind:'kitek'|'bruno'|'fela'){
-  const {group,shape}=createShapes(scene),fox=kind!=='bruno',root=group(kind),body=group(`${kind}-body`,root),fur=fox?'#C98755':'#967052',cream='#FFE0BC',cloth=kind==='fela'?'#D19C9A':fox?'#77A8D7':'#8CA878';
+export function createCharacter(scene:Scene,kind:'kitek'|'bruno'|'fela'|'tola'|'milus'){
+  const {group,shape}=createShapes(scene),fox=kind==='kitek'||kind==='fela',root=group(kind),body=group(`${kind}-body`,root),fur=fox?'#C98755':'#967052',cream='#FFE0BC',cloth=kind==='fela'?'#D19C9A':fox?'#77A8D7':'#8CA878';
   const limbs:TransformNode[]=[];
   for(const side of [-1,1]){
     const leg=group('leg',body,side*.105,.36,0);shape('cylinder','leg-fur',fur,leg,0,-.12,0,.07,.24,.07);shape('ball','boot','#705344',leg,0,-.28,.04,.09,.08,.13);limbs.push(leg);

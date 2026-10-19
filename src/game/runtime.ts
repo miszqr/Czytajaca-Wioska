@@ -3,26 +3,31 @@ import {createVillage} from './world';
 import {CONFIG} from './config';
 import {movementVector,moveWithSlide,blocked,terrainHeight,turnTowards} from './movement';
 import type {ContentPack} from '../content/types';
+import {createStoryWorld} from './story-world';
+import {homeSolids} from '../housing/model';
+import {matches,findNode} from '../story/engine';
 import {advanceNpc} from './npc';
 import {Input,type Action} from './input';
 import type {SaveState,PlayerPose,CameraPose} from '../persistence/state';
-export type WorldSnapshot={player:PlayerPose;camera:CameraPose};
-export type NearInfo={npcId:string|null;near:boolean;distance:number;x:number;y:number;visible:boolean};
+export type WorldSnapshot={player:PlayerPose;camera:CameraPose;location:SaveState['location']};
+export type NearInfo={targetId:string|null;label:string;near:boolean;distance:number;x:number;y:number;visible:boolean};
 export type RuntimeCallbacks={onReady:()=>void;onError:(error:unknown)=>void;onNear:(info:NearInfo)=>void;onSave:(snapshot:WorldSnapshot)=>void;onAction:(action:Action)=>void;onGamepad:(connected:boolean)=>void};
 export class VillageGame {
   readonly engine:Engine;readonly scene:Scene;readonly world:ReturnType<typeof createVillage>;readonly camera:FreeCamera;
   private input=new Input();private pose:PlayerPose;private cameraPose:CameraPose;private paused=true;private disposed=false;
   private vx=0;private vz=0;private time=0;private saveTime=0;private infoTime=0;private celebrateUntil=0;private cameraLength:number;
   private pointer:{id:number;x:number;y:number}|null=null;private observer:ResizeObserver;private pad=false;
-  private followHeading=false;
+  private followHeading=false;private state:SaveState;private storyWorld:ReturnType<typeof createStoryWorld>;
   private reduced=window.matchMedia('(prefers-reduced-motion: reduce)');
-  constructor(private canvas:HTMLCanvasElement,state:SaveState,private callbacks:RuntimeCallbacks,content:ContentPack){
+  constructor(private canvas:HTMLCanvasElement,state:SaveState,private callbacks:RuntimeCallbacks,private content:ContentPack){
+    this.state=state;
     try{this.engine=new Engine(canvas,true,{powerPreference:'low-power',preserveDrawingBuffer:false,stencil:true},false)}catch(e){this.input.dispose();throw e}
     this.engine.setHardwareScalingLevel(1/Math.min(window.devicePixelRatio||1,1.5));
     this.scene=new Scene(this.engine);
     try{this.world=createVillage(this.scene,content.characters)}catch(error){this.input.dispose();this.scene.dispose();this.engine.dispose();throw error}
+    this.storyWorld=createStoryWorld(this.scene,content);this.storyWorld.sync(state);this.world.environment.setEnabled(state.location==='village');this.world.ground.setEnabled(state.location==='village');
     this.camera=new FreeCamera('behind-kitek',new Vector3(0,2,-4),this.scene);this.camera.minZ=.08;this.camera.maxZ=160;this.camera.fov=.92;this.scene.activeCamera=this.camera;
-    this.pose={...state.player};if(blocked(this.pose,this.world.solids))this.pose={...CONFIG.spawn};
+    this.pose={...state.player};if(blocked(this.pose,this.solids))this.pose=state.location==='home'?{x:0,z:-2.5,heading:0}:{...CONFIG.spawn};
     this.cameraPose={...state.camera};this.cameraLength=state.camera.distance;
     this.placePlayer();this.updateCamera(1);
     this.observer=new ResizeObserver(()=>this.engine.resize());this.observer.observe(canvas);this.engine.resize();
@@ -40,7 +45,7 @@ export class VillageGame {
   private blur=()=>{this.pointer=null;this.input.clear();this.vx=this.vz=0;this.flush()};
   private visibility=()=>{if(document.hidden)this.blur()};
   private flush=()=>{if(!this.disposed)this.callbacks.onSave(this.snapshot())};
-  private placePlayer(){this.world.kitek.root.position.set(this.pose.x,terrainHeight(this.pose.x,this.pose.z),this.pose.z);this.world.kitek.root.rotation.y=this.pose.heading}
+  private placePlayer(){this.world.kitek.root.position.set(this.pose.x,this.height(this.pose.x,this.pose.z),this.pose.z);this.world.kitek.root.rotation.y=this.pose.heading}
   private updateCamera(dt:number){
     const {yaw,pitch,distance}=this.cameraPose,target=this.world.kitek.root.position.add(new Vector3(0,CONFIG.cameraTargetHeight,0));
     const direction=new Vector3(-Math.sin(yaw)*Math.cos(pitch),Math.sin(pitch),-Math.cos(yaw)*Math.cos(pitch));
@@ -52,7 +57,7 @@ export class VillageGame {
     }
     this.cameraLength=allowed<this.cameraLength?allowed:this.cameraLength+(allowed-this.cameraLength)*(1-Math.exp(-dt*9));
     this.camera.position.copyFrom(target.add(direction.scale(this.cameraLength)));
-    this.camera.position.y=Math.max(this.camera.position.y,terrainHeight(this.camera.position.x,this.camera.position.z)+.24);
+    this.camera.position.y=Math.max(this.camera.position.y,this.height(this.camera.position.x,this.camera.position.z)+.24);
     this.camera.setTarget(target);this.camera.getViewMatrix(true);this.camera.getProjectionMatrix(true);
     // Avoid the inside of Kitek's head when an obstacle pushes the camera very close.
     this.world.kitek.root.setEnabled(this.cameraLength>.65);
@@ -79,7 +84,7 @@ export class VillageGame {
         }
         const intent=frame.characterControls?movementVector(0,frame.characterForward,this.pose.heading):movementVector(frame.horizontal,frame.forward,this.cameraPose.yaw),speed=frame.run?CONFIG.runSpeed:CONFIG.walkSpeed,factor=1-Math.exp(-dt*3/CONFIG.accelerationSeconds);
         this.vx+=(intent.x*speed-this.vx)*factor;this.vz+=(intent.z*speed-this.vz)*factor;
-        const next=moveWithSlide(this.pose,{x:this.vx*dt,z:this.vz*dt},this.world.solids),actualSpeed=Math.hypot(next.x-this.pose.x,next.z-this.pose.z)/dt;
+        const next=moveWithSlide(this.pose,{x:this.vx*dt,z:this.vz*dt},this.solids),actualSpeed=Math.hypot(next.x-this.pose.x,next.z-this.pose.z)/dt;
         if(!frame.characterControls&&Math.hypot(intent.x,intent.z)>.05)this.pose.heading=turnTowards(this.pose.heading,Math.atan2(intent.x,intent.z),CONFIG.turnSpeed*dt);
         if(this.followHeading){
           const offset=Math.atan2(Math.sin(this.pose.heading-this.cameraPose.yaw),Math.cos(this.pose.heading-this.cameraPose.yaw));
@@ -89,6 +94,7 @@ export class VillageGame {
         this.saveTime+=dt;if(this.saveTime>2){this.saveTime=0;this.flush()}
       }else this.world.kitek.animate(this.time,0,this.time<this.celebrateUntil,this.reduced.matches);
       for(const npc of this.world.npcs){
+        npc.character.root.setEnabled(this.state.location==='village');if(this.state.location!=='village')continue;
         const others=this.world.solids.filter(s=>s!==npc.solid);
         const {motion,speed}=advanceNpc(npc.motion,npc.definition.behavior,dt,others,this.pose,this.paused);
         npc.motion=motion;npc.solid.x=motion.x;npc.solid.z=motion.z;
@@ -97,16 +103,24 @@ export class VillageGame {
       }
       this.scene.render();
       this.infoTime+=dt;if(this.infoTime>.12){
-        this.infoTime=0;const npc=this.nearestNpc();
-        if(npc){const distance=this.distanceToNpc(npc.definition.id),point=npc.character.root.position.add(new Vector3(0,1.9,0));const p=Vector3.Project(point,Matrix.Identity(),this.camera.getTransformationMatrix(),new Viewport(0,0,this.canvas.clientWidth,this.canvas.clientHeight));this.callbacks.onNear({npcId:npc.definition.id,near:distance<=CONFIG.interactionRadius,distance,x:p.x,y:p.y,visible:p.z>0&&p.z<1&&p.x>0&&p.x<this.canvas.clientWidth&&p.y>0&&p.y<this.canvas.clientHeight})}
+        this.infoTime=0;const target=this.nearestTarget();
+        if(target){const distance=Math.hypot(this.pose.x-target.x,this.pose.z-target.z),point=new Vector3(target.x,this.height(target.x,target.z)+1.7,target.z),p=Vector3.Project(point,Matrix.Identity(),this.camera.getTransformationMatrix(),new Viewport(0,0,this.canvas.clientWidth,this.canvas.clientHeight));this.callbacks.onNear({targetId:target.id,label:target.label,near:distance<=CONFIG.interactionRadius,distance,x:p.x,y:p.y,visible:p.z>0&&p.z<1&&p.x>0&&p.x<this.canvas.clientWidth&&p.y>0&&p.y<this.canvas.clientHeight})}
+        else this.callbacks.onNear({targetId:null,label:'',near:false,distance:99,x:0,y:0,visible:false});
       }
     }catch(error){this.engine.stopRenderLoop(this.frame);this.callbacks.onError(error)}
   };
-  distanceToNpc(id:string){const npc=this.world.npcs.find(n=>n.definition.id===id);return npc?Math.hypot(this.pose.x-npc.motion.x,this.pose.z-npc.motion.z):Infinity}
-  nearestNpc(){return this.world.npcs.reduce<(typeof this.world.npcs)[number]|undefined>((best,npc)=>!best||this.distanceToNpc(npc.definition.id)<this.distanceToNpc(best.definition.id)?npc:best,undefined)}
-  snapshot():WorldSnapshot{return {player:{...this.pose},camera:{...this.cameraPose}}}
+  private get solids(){return this.state.location==='home'?homeSolids(this.state,this.content):this.world.solids}
+  private height(x:number,z:number){return this.state.location==='home'?0:terrainHeight(x,z)}
+  private targets(){return [
+    ...(this.state.location==='village'?this.world.npcs.map(n=>({id:n.definition.id,label:n.definition.name,x:n.motion.x,z:n.motion.z})):[]),
+    ...this.content.interactions.filter(t=>t.location===this.state.location&&matches(this.state,t.when)).map(t=>({id:t.id,label:t.label,...t.position}))
+  ].filter(t=>findNode(this.content,this.state,t.id))}
+  nearestTarget(){return this.targets().sort((a,b)=>Math.hypot(this.pose.x-a.x,this.pose.z-a.z)-Math.hypot(this.pose.x-b.x,this.pose.z-b.z))[0]}
+  snapshot():WorldSnapshot{return {player:{...this.pose},camera:{...this.cameraPose},location:this.state.location}}
+  syncState(state:SaveState){const travel=state.location!==this.state.location;this.state=state;this.storyWorld.sync(state);this.world.environment.setEnabled(state.location==='village');this.world.ground.setEnabled(state.location==='village');if(travel){this.pose={...state.player};this.cameraPose={...state.camera};this.cameraLength=this.cameraPose.distance;this.placePlayer();this.updateCamera(1);this.infoTime=1}}
+  previewFurniture(f:import('../content/types').Furniture|null){this.storyWorld.preview(f)}
   setPaused(value:boolean){this.paused=value;this.pointer=null;this.followHeading=false;this.input.clear();this.vx=this.vz=0;if(value)this.world.kitek.root.setEnabled(true)}
-  faceNpc(id:string){const npc=this.world.npcs.find(n=>n.definition.id===id);if(!npc||this.distanceToNpc(id)>CONFIG.interactionRadius)return false;this.pose.heading=Math.atan2(npc.motion.x-this.pose.x,npc.motion.z-this.pose.z);this.placePlayer();npc.motion.heading=Math.atan2(this.pose.x-npc.motion.x,this.pose.z-npc.motion.z);npc.character.root.rotation.y=npc.motion.heading;this.flush();return true}
+  faceTarget(id:string){const target=this.targets().find(t=>t.id===id);if(!target||Math.hypot(this.pose.x-target.x,this.pose.z-target.z)>CONFIG.interactionRadius)return false;this.pose.heading=Math.atan2(target.x-this.pose.x,target.z-this.pose.z);this.placePlayer();const npc=this.world.npcs.find(n=>n.definition.id===id);if(npc){npc.motion.heading=Math.atan2(this.pose.x-npc.motion.x,this.pose.z-npc.motion.z);npc.character.root.rotation.y=npc.motion.heading}this.flush();return true}
 
   celebrate(){this.celebrateUntil=this.time+2.5}
   moveTouch(x:number,y:number){this.input.setTouch(x,y)}

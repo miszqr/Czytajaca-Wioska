@@ -1,0 +1,46 @@
+[
+  {
+    "id": "home-door",
+    "label": "Dom Kitka — wejdź",
+    "location": "village",
+    "position": {
+      "x": 18,
+      "z": 4.7
+    },
+    "model": "none",
+    "when": []
+  },
+  {
+    "id": "home-exit",
+    "label": "Wyjdź do wioski",
+    "location": "home",
+    "position": {
+      "x": 0,
+      "z": -3.4
+    },
+    "model": "none",
+    "when": []
+  },
+  {
+    "id": "fela-letter",
+    "label": "Koperta na stole",
+    "location": "home",
+    "position": {
+      "x": 1.7,
+      "z": 1.2
+    },
+    "model": "letter",
+    "when": []
+  },
+  {
+    "id": "village-sign",
+    "label": "Drogowskaz",
+    "location": "village",
+    "position": {
+      "x": 2,
+      "z": 0
+    },
+    "model": "sign",
+    "when": []
+  }
+]

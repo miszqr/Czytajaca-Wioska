@@ -1,48 +1,41 @@
-import type {Manifest,ContentPack,CharacterDefinition,ItemDefinition,QuestDefinition} from './types';
+import type {Manifest,ContentPack,Condition,Effect} from './types';
 type Obj=Record<string,unknown>;
-function fail(path:string,message:string):never{throw new Error(`${path}: ${message}`)}
-function obj(v:unknown,p:string,keys:string[]):Obj{
-  if(!v||typeof v!=='object'||Array.isArray(v))fail(p,'oczekiwano obiektu');
-  for(const key of Object.keys(v))if(key!=='$schema'&&!keys.includes(key))fail(`${p}.${key}`,'nieznane pole');return v as Obj;
-}
-function text(v:unknown,p:string){if(typeof v!=='string'||!v.trim()||v.length>1200)fail(p,'wymagany tekst (1–1200 znaków)');return v}
-function id(v:unknown,p:string){const s=text(v,p);if(!/^[a-z][a-z0-9-]{0,63}$/.test(s)||['constructor','prototype'].includes(s))fail(p,'użyj małych liter, cyfr i myślników');return s}
-function number(v:unknown,p:string,min:number,max:number,integer=false){if(typeof v!=='number'||!Number.isFinite(v)||v<min||v>max||(integer&&!Number.isInteger(v)))fail(p,`wymagana ${integer?'całkowita ':''}liczba od ${min} do ${max}`);return v}
-function list(v:unknown,p:string,min=0,max=100):unknown[]{if(!Array.isArray(v)||v.length<min||v.length>max)fail(p,`wymagana lista o długości ${min}–${max}`);return v}
-function lines(v:unknown,p:string){return list(v,p,1,12).map((x,i)=>text(x,`${p}[${i}]`))}
-function unique(values:string[],p:string){if(new Set(values).size!==values.length)fail(p,'powtarzające się identyfikatory')}
-function position(v:unknown,p:string,heading=false){const o=obj(v,p,heading?['x','z','heading']:['x','z']);number(o.x,`${p}.x`,-48,48);number(o.z,`${p}.z`,-48,48);if(heading)number(o.heading,`${p}.heading`,-Math.PI*2,Math.PI*2)}
-function file(v:unknown,p:string){const s=text(v,p);if(!/^(?:[a-z0-9-]+\/)*[a-z0-9-]+\.json$/.test(s))fail(p,'wymagana względna ścieżka do JSON wewnątrz content');return s}
-export function validateManifest(v:unknown):Manifest{
-  const m=obj(v,'manifest',['version','characters','items','quests']);if(m.version!==1)fail('manifest.version','obsługiwana wersja: 1');
-  file(m.characters,'manifest.characters');file(m.items,'manifest.items');const quests=list(m.quests,'manifest.quests',1,100).map((x,i)=>file(x,`manifest.quests[${i}]`));unique(quests,'manifest.quests');return m as Manifest;
-}
-export function validateCharacters(v:unknown):CharacterDefinition[]{
-  const entries=list(v,'characters',1,20);
-  entries.forEach((value,i)=>{const p=`characters[${i}]`,c=obj(value,p,['id','name','role','model','position','behavior']);id(c.id,`${p}.id`);text(c.name,`${p}.name`);text(c.role,`${p}.role`);if(!['bruno','fela'].includes(String(c.model)))fail(`${p}.model`,'dostępne modele: bruno, fela');position(c.position,`${p}.position`,true);
-    const b=obj(c.behavior,`${p}.behavior`,['type','speed','pauseSeconds','waypoints']);
-    if(b.type==='idle'){obj(b,`${p}.behavior`,['type'])}else if(b.type==='patrol'){number(b.speed,`${p}.behavior.speed`,.1,1.5);number(b.pauseSeconds,`${p}.behavior.pauseSeconds`,0,30);list(b.waypoints,`${p}.behavior.waypoints`,2,12).forEach((w,j)=>position(w,`${p}.behavior.waypoints[${j}]`))}else fail(`${p}.behavior.type`,'dostępne zachowania: idle, patrol');
-  });const characters=entries as CharacterDefinition[];unique(characters.map(c=>c.id),'characters');return characters;
-}
-export function validateItems(v:unknown):ItemDefinition[]{const entries=list(v,'items',1,100);entries.forEach((x,i)=>{const p=`items[${i}]`,o=obj(x,p,['id','name','icon']);id(o.id,`${p}.id`);text(o.name,`${p}.name`);if(!['seed','apple'].includes(String(o.icon)))fail(`${p}.icon`,'dostępne ikony: seed, apple')});const items=entries as ItemDefinition[];unique(items.map(x=>x.id),'items');return items}
-export function validateQuest(v:unknown,path='quest'):QuestDefinition{
-  const q=obj(v,path,['version','id','revision','npcId','title','description','requires','dialogue','exercise','feedback','reward']);if(q.version!==1)fail(`${path}.version`,'obsługiwana wersja: 1');
-  id(q.id,`${path}.id`);id(q.npcId,`${path}.npcId`);number(q.revision,`${path}.revision`,1,9999,true);text(q.title,`${path}.title`);text(q.description,`${path}.description`);
-  const requires=list(q.requires,`${path}.requires`).map((x,i)=>id(x,`${path}.requires[${i}]`));unique(requires,`${path}.requires`);
-  const d=obj(q.dialogue,`${path}.dialogue`,['intro','active','completed','acceptLabel','replayLabel']);for(const k of ['intro','active','completed'])lines(d[k],`${path}.dialogue.${k}`);for(const k of ['acceptLabel','replayLabel'])text(d[k],`${path}.dialogue.${k}`);
-  const e=obj(q.exercise,`${path}.exercise`,['id','type','prompt','target','choices','hint','targetParts']);for(const k of ['prompt','target','hint'])text(e[k],`${path}.exercise.${k}`);id(e.id,`${path}.exercise.id`);const choices=list(e.choices,`${path}.exercise.choices`,2,8).map((x,i)=>text(x,`${path}.exercise.choices[${i}]`));
-  if(choices.some(x=>x.length>12))fail(`${path}.exercise.choices`,'kafelek może mieć najwyżej 12 znaków');
-  if(e.type==='syllable-choice'){unique(choices,`${path}.exercise.choices`);if(!choices.includes(String(e.target)))fail(`${path}.exercise.target`,'odpowiedź musi występować na liście choices');if(e.targetParts!==undefined)fail(`${path}.exercise.targetParts`,'pole dostępne tylko dla syllable-build')}
-  else if(e.type==='syllable-build'){
-    const parts=list(e.targetParts,`${path}.exercise.targetParts`,2,6).map((x,i)=>text(x,`${path}.exercise.targetParts[${i}]`));if(parts.join('')!==e.target)fail(`${path}.exercise.targetParts`,'złączenie sylab musi dawać target');
-    const remaining=[...choices];for(const part of parts){const i=remaining.indexOf(part);if(i<0)fail(`${path}.exercise.choices`,`brakuje kafelka ${part}`);remaining.splice(i,1)}
-  }else fail(`${path}.exercise.type`,'dostępne typy: syllable-choice, syllable-build');
-  const feedback=obj(q.feedback,`${path}.feedback`,['retry','success','practice']);for(const k of ['retry','success','practice'])text(feedback[k],`${path}.feedback.${k}`);
-  const reward=obj(q.reward,`${path}.reward`,['itemId','quantity']);id(reward.itemId,`${path}.reward.itemId`);number(reward.quantity,`${path}.reward.quantity`,1,99,true);return q as QuestDefinition;
-}
-export function validatePack(characters:unknown,items:unknown,quests:unknown[],paths?:string[]):ContentPack{
-  const pack={characters:validateCharacters(characters),items:validateItems(items),quests:quests.map((q,i)=>validateQuest(q,paths?.[i]??`quests[${i}]`))};unique(pack.quests.map(q=>q.id),'quests');
-  for(const q of pack.quests){if(!pack.characters.some(c=>c.id===q.npcId))fail(q.id,`nieznana postać ${q.npcId}`);if(!pack.items.some(i=>i.id===q.reward.itemId))fail(q.id,`nieznany przedmiot ${q.reward.itemId}`);for(const required of q.requires)if(!pack.quests.some(q=>q.id===required))fail(q.id,`nieznane wymagane zadanie ${required}`)}
-  const visited=new Set<string>();function visit(q:QuestDefinition,path:Set<string>){if(path.has(q.id))fail(q.id,'cykl w wymaganiach zadań');if(visited.has(q.id))return;const next=new Set([...path,q.id]);for(const key of q.requires)visit(pack.quests.find(q=>q.id===key)!,next);visited.add(q.id)}
-  for(const q of pack.quests)visit(q,new Set());return pack;
+function fail(p:string,m:string):never{throw new Error(`${p}: ${m}`)}
+function obj(v:unknown,p:string,keys:string[]):Obj{if(!v||typeof v!=='object'||Array.isArray(v))fail(p,'oczekiwano obiektu');for(const k of Object.keys(v))if(k!=='$schema'&&!keys.includes(k))fail(`${p}.${k}`,'nieznane pole');return v as Obj}
+function text(v:unknown,p:string,max=1200):string{if(typeof v!=='string'||!v.trim()||v.length>max)fail(p,`wymagany tekst (1–${max} znaków)`);return v}
+function id(v:unknown,p:string){const s=text(v,p,64);if(!/^[a-z][a-z0-9-]{0,63}$/.test(s)||['constructor','prototype'].includes(s))fail(p,'użyj małych liter, cyfr i myślników');return s}
+function num(v:unknown,p:string,min:number,max:number,integer=false){if(typeof v!=='number'||!Number.isFinite(v)||v<min||v>max||integer&&!Number.isInteger(v))fail(p,`wymagana liczba ${min}–${max}`)}
+function bool(v:unknown,p:string){if(typeof v!=='boolean')fail(p,'wymagane true lub false')}
+function list(v:unknown,p:string,min=0,max=200):unknown[]{if(!Array.isArray(v)||v.length<min||v.length>max)fail(p,`wymagana lista długości ${min}–${max}`);return v}
+function one(v:unknown,p:string,values:string[]){if(!values.includes(String(v)))fail(p,`dostępne: ${values.join(', ')}`)}
+function position(v:unknown,p:string,heading=false){const o=obj(v,p,heading?['x','z','heading']:['x','z']);num(o.x,p+'.x',-48,48);num(o.z,p+'.z',-48,48);if(heading)num(o.heading,p+'.heading',-Math.PI*2,Math.PI*2)}
+function lines(v:unknown,p:string,min=1){list(v,p,min,12).forEach((v,i)=>text(v,`${p}[${i}]`,400))}
+function conditions(v:unknown,p:string){list(v,p).forEach((c,i)=>{const path=`${p}[${i}]`,o=obj(c,path,['type','key','value','itemId','quantity']);if(o.type==='flag'){obj(c,path,['type','key','value']);id(o.key,path+'.key');bool(o.value,path+'.value')}else if(o.type==='item'){obj(c,path,['type','itemId','quantity']);id(o.itemId,path+'.itemId');num(o.quantity,path+'.quantity',1,99,true)}else fail(path+'.type','dostępne: flag, item')})}
+function effects(v:unknown,p:string){list(v,p,0,30).forEach((e,i)=>{const path=`${p}[${i}]`,o=obj(e,path,['type','key','value','itemId','quantity','documentId','sceneId','location','x','z','heading']);
+ if(o.type==='flag'){obj(o,path,['type','key','value']);id(o.key,path+'.key');bool(o.value,path+'.value')}
+ else if(o.type==='giveItem'||o.type==='takeItem'){obj(o,path,['type','itemId','quantity']);id(o.itemId,path+'.itemId');num(o.quantity,path+'.quantity',1,99,true)}
+ else if(o.type==='read'){obj(o,path,['type','documentId']);id(o.documentId,path+'.documentId')}
+ else if(o.type==='complete'){obj(o,path,['type','sceneId']);id(o.sceneId,path+'.sceneId')}
+ else if(o.type==='travel'){obj(o,path,['type','location','x','z','heading']);one(o.location,path+'.location',['home','village']);num(o.x,path+'.x',-48,48);num(o.z,path+'.z',-48,48);num(o.heading,path+'.heading',-Math.PI*2,Math.PI*2)}
+ else fail(path+'.type','nieznany skutek');
+ })}
+function unique(values:string[],p:string){if(new Set(values).size!==values.length)fail(p,'powtarzające się ID lub priorytety')}
+export function validateManifest(v:unknown):Manifest{const m=obj(v,'manifest',['version','characters','items','interactions','story']);if(m.version!==2)fail('manifest.version','obsługiwana wersja: 2');for(const k of ['characters','items','interactions','story'])if(!/^(?:[a-z0-9-]+\/)*[a-z0-9-]+\.json$/.test(text(m[k],`manifest.${k}`)))fail(`manifest.${k}`,'wymagana ścieżka JSON wewnątrz content');return m as Manifest}
+export function validatePack(value:unknown):ContentPack{
+ const p=obj(value,'content',['characters','items','interactions','story']);
+ const characters=list(p.characters,'characters',1,20);characters.forEach((v,i)=>{const path=`characters[${i}]`,c=obj(v,path,['id','name','role','model','position','behavior']);id(c.id,path+'.id');text(c.name,path+'.name',80);text(c.role,path+'.role',80);one(c.model,path+'.model',['bruno','fela','tola','milus']);position(c.position,path+'.position',true);const b=obj(c.behavior,path+'.behavior',['type','speed','pauseSeconds','waypoints']);if(b.type==='idle')obj(b,path+'.behavior',['type']);else if(b.type==='patrol'){num(b.speed,path+'.behavior.speed',.1,1.5);num(b.pauseSeconds,path+'.behavior.pauseSeconds',0,30);list(b.waypoints,path+'.behavior.waypoints',2,12).forEach((w,j)=>position(w,`${path}.behavior.waypoints[${j}]`))}else fail(path+'.behavior.type','dostępne: idle, patrol')});
+ const items=list(p.items,'items',1,100);items.forEach((v,i)=>{const path=`items[${i}]`,o=obj(v,path,['id','name','description','kind','model','color','width','depth']);id(o.id,path+'.id');text(o.name,path+'.name',80);text(o.description,path+'.description',400);one(o.kind,path+'.kind',['usable','decoration']);one(o.model,path+'.model',['seed','apple','letter','crate','key','book','lamp','chair','table','bed','rug','plant','shelf']);if(!/^#[a-fA-F0-9]{6}$/.test(String(o.color)))fail(path+'.color','wymagany kolor #RRGGBB');num(o.width,path+'.width',.2,3.5);num(o.depth,path+'.depth',.2,3.5)});
+ list(p.interactions,'interactions',1,100).forEach((v,i)=>{const path=`interactions[${i}]`,o=obj(v,path,['id','label','location','position','model','when']);id(o.id,path+'.id');text(o.label,path+'.label',80);one(o.location,path+'.location',['village','home']);position(o.position,path+'.position');one(o.model,path+'.model',['none','letter','crate','sign','cabinet','garden','bell']);conditions(o.when,path+'.when')});
+ const story=obj(p.story,'story',['version','id','title','scenes','documents','nodes']);if(story.version!==1)fail('story.version','obsługiwana wersja: 1');id(story.id,'story.id');text(story.title,'story.title',80);
+ list(story.scenes,'story.scenes',1,30).forEach((v,i)=>{const path=`scenes[${i}]`,o=obj(v,path,['id','title','objective','when']);id(o.id,path+'.id');text(o.title,path+'.title',80);text(o.objective,path+'.objective',240);conditions(o.when,path+'.when')});
+ list(story.documents,'story.documents',0,100).forEach((v,i)=>{const path=`documents[${i}]`,o=obj(v,path,['id','title','lines']);id(o.id,path+'.id');text(o.title,path+'.title',80);lines(o.lines,path+'.lines')});
+ list(story.nodes,'story.nodes',1,300).forEach((v,i)=>{const path=`nodes[${i}]`,o=obj(v,path,['id','target','event','priority','once','when','speaker','lines','choices']);id(o.id,path+'.id');id(o.target,path+'.target');one(o.event,path+'.event',['interact','place']);num(o.priority,path+'.priority',0,999,true);bool(o.once,path+'.once');conditions(o.when,path+'.when');text(o.speaker,path+'.speaker',80);lines(o.lines,path+'.lines',o.event==='place'?0:1);const choices=list(o.choices,path+'.choices',1,o.event==='place'?1:4);choices.forEach((v,j)=>{const cp=`${path}.choices[${j}]`,c=obj(v,cp,['id','label','effects']);id(c.id,cp+'.id');text(c.label,cp+'.label',80);effects(c.effects,cp+'.effects')});unique(choices.map(c=>(c as Obj).id as string),path+'.choices')});
+ const pack=p as ContentPack;for(const [name,entries] of Object.entries({characters:pack.characters,items:pack.items,interactions:pack.interactions,scenes:pack.story.scenes,documents:pack.story.documents,nodes:pack.story.nodes}))unique(entries.map(e=>e.id),name);
+ unique([...pack.characters,...pack.interactions].map(t=>t.id),'targets');unique(pack.story.nodes.map(n=>`${n.event}:${n.target}:${n.priority}`),'node priorities');
+ const itemIds=new Set(pack.items.map(i=>i.id)),targets=new Set([...pack.characters,...pack.interactions].map(t=>t.id)),sceneIds=new Set(pack.story.scenes.map(s=>s.id)),documentIds=new Set(pack.story.documents.map(d=>d.id));
+ const allEffects=pack.story.nodes.flatMap(n=>n.choices.flatMap(c=>c.effects)),flagIds=new Set(allEffects.filter((e):e is Extract<Effect,{type:'flag'}>=>e.type==='flag').map(e=>e.key));
+ const check=(conditions:Condition[],path:string)=>{for(const c of conditions){if(c.type==='item'&&!itemIds.has(c.itemId))fail(path,`nieznany przedmiot ${c.itemId}`);if(c.type==='flag'&&!flagIds.has(c.key))fail(path,`flaga ${c.key} nie ma żadnego źródła`)}};
+ for(const e of allEffects){if((e.type==='giveItem'||e.type==='takeItem')&&!itemIds.has(e.itemId))fail('effects',`nieznany przedmiot ${e.itemId}`);if(e.type==='complete'&&!sceneIds.has(e.sceneId))fail('effects',`nieznana scena ${e.sceneId}`);if(e.type==='read'&&!documentIds.has(e.documentId))fail('effects',`nieznany list ${e.documentId}`)}
+ for(const n of pack.story.nodes){if(!(n.event==='place'?itemIds:targets).has(n.target))fail(n.id,`nieznany cel ${n.target}`);check(n.when,n.id)}for(const x of [...pack.interactions,...pack.story.scenes])check(x.when,x.id);
+ return pack;
 }

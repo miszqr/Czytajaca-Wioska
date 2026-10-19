@@ -1,61 +1,44 @@
-# Czytająca Wioska — plan
+# Czytająca Wioska — „Nowy dom Kitka”
 
-## P0 — grywalny wycinek
+Aktualna specyfikacja: `docs/WORK_BRIEF.md`, 2026-10-19. Zastępuje dawny plan sylab i 12 ćwiczeń. Kitek, roślinność, kamera i sterowanie są zachowane. Nowy kod powstaje na `feat/new-home-story`; publiczna gra pozostaje przy poprzednim wydaniu.
 
-- [x] Niezależny projekt Vite, TypeScript, React i Babylon.js.
-- [x] Lokalne repozytorium Git, README i dokumentacja architektury.
-- [x] Wioska, drogi, krajobraz, staw i kolizje.
-- [x] Oryginalny prototyp Kitka z zatwierdzonymi kolorami i plecakiem.
-- [x] Kamera zza pleców, podążanie i ograniczanie przesłaniania.
-- [x] WASD / strzałki, mysz, standardowy Gamepad API i podstawowy dotyk.
-- [x] Strzałki: obrót i przód/tył względem Kitka, kamera automatycznie za plecami; ręczne rozglądanie ma pierwszeństwo.
-- [x] Bruno, interakcja z bliska i ręcznie przewijany dialog.
-- [x] Zadanie MA: ponowienie, podpowiedź, odsłuch, nagroda i powtórki.
-- [x] Niezależne moduły czytania i zadań, treść w danych.
-- [x] IndexedDB: pozycja, kamera, zadanie, próby i podpowiedzi.
-- [x] Kompilacja i testy po etapach; paczka do lokalnego uruchomienia.
-- [ ] Odbiór obrazu i shaderów w działającej przeglądarce — podgląd działa, ale jego przeglądarka zgłasza `WebGL not supported`.
-- [ ] Test na Pixelu 8: dotyk, obrót ekranu, limity pamięci i płynność.
-- [ ] Test fizycznego 8BitDo, w tym ponowne połączenie i układ przycisków.
-- [ ] Kalibracja czytelności, prędkości i kamery po teście z dzieckiem.
+## P0 — przyjazd, dom i list
 
-## P1 — fundament rozgrywki
+- [x] Sprawdzić istniejące repozytorium i zachować rozpoczęte zmiany w historii Git.
+- [x] Usunąć mechanikę sylab, quizowe komponenty i plan szkolnych zadań.
+- [x] Dane JSON: sceny, dialogi, warunki, skutki, mieszkańcy i interakcje.
+- [x] Bruno na placu; dialog ze wskazówką do domu przy stawie.
+- [x] Wejście do osobnego wnętrza, stół, łóżko, koperta i list Feli.
+- [x] Dziennik z celem oraz ponownym odczytem listów.
+- [x] Zapis świata i migracja starszych zapisów bez utraty zdobytych pamiątek.
+- [x] Build i 26 testów P0; scenariusz odbioru opisany w raporcie.
 
-- [ ] Fela, Tola i Miluś z dialogami i dostępnością zadań.
-- [ ] Definicje wszystkich 12 zadań ze specyfikacji.
-- [ ] Składanie słów z sylab i rozumienie krótkich zdań.
-- [ ] Wybór poziomu przez rodzica, kontrolowane słownictwo i powtórki.
-- [ ] Plecak 12 slotów i około 20 typów przedmiotów.
-- [ ] Przekazywanie/zużywanie przedmiotów użytkowych; dekoracje osobno.
-- [ ] Menu postępu, import/eksport i migracje zapisu.
-- [ ] Rozszerzone stany NPC: spokojny spacer i dostępność rozmowy.
-- [ ] Dopracowanie sterowania mobilnego i mapowania padów.
-- [ ] Dźwięki interakcji z ustawieniami głośności.
+## P1 — pełne osiem scen
 
-## Pierwsze dopracowanie grafiki
+- [ ] Fela i przekazanie lampy; ustawienie przy łóżku.
+- [ ] Notatka przy szafce; rozmowa z Brunonem.
+- [ ] Podniesienie skrzynki i odłożenie jej w ogrodzie; klucz.
+- [ ] Otwarcie szafki; książeczka i wskazówka do Toli.
+- [ ] Tola i Miluś; zaproszenia dla mieszkańców.
+- [ ] Spotkanie w domu i zakończenie historii bez kończenia gry.
+- [ ] Warianty rozmów, naturalne przypomnienia i jednorazowe skutki.
+- [ ] Build, test pełnej historii i wznowienia po każdym kroku.
 
-- [x] Cztery odmiany drzew, gałęzie, korzenie, nieregularne korony i detale kory.
-- [x] Krzewy, kępki trawy i kwiaty z płatkami.
-- [x] Wspólne materiały, łączenie geometrii i zachowanie rozmieszczenia przeszkód.
-- [x] Porównanie geometrii modeli i sprawdzenie kompilacji oraz istniejących testów.
-- [ ] Odbiór grafiki na urządzeniu i pomiar płynności na Pixelu.
-- [x] Publikacja poprawionej roślinności po zgodzie użytkownika; build `80ba87c`, wdrożenie zakończone sukcesem.
+## P2 — zabawa po historii i oprawa
 
-## P2 — dom i oprawa
+- [ ] Edytor mebli: wybór, podgląd 3D, obrót, siatka i kolizje.
+- [ ] Schowek dekoracji, około 20 przedmiotów, odzyskiwanie ustawionych mebli.
+- [ ] Proste stany i animacje mieszkańców, ponowne spotkania.
+- [ ] Odsłuch na żądanie, klawiatura, pad i dotyk dla nowych interakcji.
+- [ ] Responsywne dialogi, dziennik i edytor domu.
+- [ ] Build, testy regresji i dokumentacja treści.
 
-- [ ] Wnętrze domu Kitka i wejście/wyjście.
-- [ ] Edytor domu: podgląd, obrót, siatka, kolizje mebli.
-- [ ] Finalne modele i rig zgodnie z `docs/ASSETS.md`.
-- [ ] Pełen zestaw animacji: idle, walk, run, turn, talk, pick-up, give, celebrate.
-- [ ] Później sit, sleep i wave, wtórne ruchy uszu i ogona.
-- [ ] Lokalne efekty dźwiękowe i muzyka z odpowiednimi prawami.
-- [ ] Profilowanie Androida, poziomy jakości i końcowe testy regresji.
+## Odbiór na urządzeniu
 
-## Publikacja
+- [ ] Wygląd i shadery na GPU; przeglądarka udostępniona wcześniej zgłaszała brak WebGL.
+- [ ] Pixel 8: dotyk, orientacja, płynność i pamięć.
+- [ ] Fizyczny 8BitDo, ponowne połączenie i układ przycisków.
+- [ ] Czytelność i zrozumiałość historii w zabawie z dzieckiem.
+- [ ] Publikacja wyłącznie po wyraźnej zgodzie użytkownika.
 
-- [x] Publikacja poprawki kamery ze strzałkami po zgodzie użytkownika; wdrożenie `9f63d3e` zakończone sukcesem.
-- [x] Przygotowanie źródeł na `main` i gotowego buildu na `gh-pages` w `miszqr/Czytajaca-Wioska` na prośbę użytkownika.
-- [x] GitHub Pages działa z `gh-pages` → `/ (root)`.
-- [ ] Odbiór opublikowanego P0 na komputerze i telefonie.
-
-Nie podłączono automatycznego wdrażania z `main`. Po włączeniu GitHub Pages aktualizacje `gh-pages` będą publikowane. Stan „zaimplementowane” nie zastępuje odbioru wizualnego i testów na urządzeniach.
+Proceduralne modele i animacje są prototypami. Lista docelowych assetów: `docs/ASSETS.md`.
