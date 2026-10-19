@@ -22,11 +22,14 @@ Otwórz `http://localhost:4173`. Nie otwieraj HTML przez `file://`. Na telefonie
 npm run content:check
 npm test
 npm run build
+npm run test:build
 npm run check
 npm run preview -- --port 4173
 ```
 
-`build` waliduje treści, sprawdza TypeScript i tworzy `dist/`. `check` dodatkowo uruchamia testy. Katalog `public/content/` trafia do `dist/content/` i musi towarzyszyć buildowi.
+`build` waliduje treści, sprawdza TypeScript i tworzy `dist/`. `test:build` uruchamia gotowy kod produkcyjny w jsdom: sprawdza inicjalizację modułów, pierwszy render UI i rozpoczęcie ładowania treści, bez WebGL. `check` uruchamia testy, build i ten test startu. Katalog `public/content/` trafia do `dist/content/` i musi towarzyszyć buildowi.
+
+Podział zależności w `vite.config.ts` wymaga `strictExecutionOrder: true`. Babylon.js ma moduły zależne od kolejności inicjalizacji; bez tej opcji build może się udać, ale strona zatrzyma się na błędzie `NoneLogLevel`. Raport poprawki: [reports/runtime-startup-fix.md](reports/runtime-startup-fix.md).
 
 ## Odbieralne etapy
 
