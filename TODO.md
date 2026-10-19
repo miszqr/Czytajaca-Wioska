@@ -14,7 +14,7 @@
 - [x] Niezależne moduły czytania i zadań, treść w danych.
 - [x] IndexedDB: pozycja, kamera, zadanie, próby i podpowiedzi.
 - [x] Kompilacja i testy po etapach; paczka do lokalnego uruchomienia.
-- [ ] Odbiór obrazu i shaderów w działającej przeglądarce — podgląd środowiska zablokowany.
+- [ ] Odbiór obrazu i shaderów w działającej przeglądarce — podgląd działa, ale jego przeglądarka zgłasza `WebGL not supported`.
 - [ ] Test na Pixelu 8: dotyk, obrót ekranu, limity pamięci i płynność.
 - [ ] Test fizycznego 8BitDo, w tym ponowne połączenie i układ przycisków.
 - [ ] Kalibracja czytelności, prędkości i kamery po teście z dzieckiem.
@@ -32,6 +32,15 @@
 - [ ] Dopracowanie sterowania mobilnego i mapowania padów.
 - [ ] Dźwięki interakcji z ustawieniami głośności.
 
+## Pierwsze dopracowanie grafiki
+
+- [x] Cztery odmiany drzew, gałęzie, korzenie, nieregularne korony i detale kory.
+- [x] Krzewy, kępki trawy i kwiaty z płatkami.
+- [x] Wspólne materiały, łączenie geometrii i zachowanie rozmieszczenia przeszkód.
+- [x] Porównanie geometrii modeli i sprawdzenie kompilacji oraz istniejących testów.
+- [ ] Odbiór grafiki na urządzeniu i pomiar płynności na Pixelu.
+- [ ] Publikacja poprawionej roślinności po zgodzie użytkownika.
+
 ## P2 — dom i oprawa
 
 - [ ] Wnętrze domu Kitka i wejście/wyjście.
@@ -44,9 +53,9 @@
 
 ## Publikacja
 
-- [ ] Publikacja poprawki kamery ze strzałkami — gotowy build na `preview/arrow-camera`, oczekuje na zgodę użytkownika.
+- [x] Publikacja poprawki kamery ze strzałkami po zgodzie użytkownika; wdrożenie `9f63d3e` zakończone sukcesem.
 - [x] Przygotowanie źródeł na `main` i gotowego buildu na `gh-pages` w `miszqr/Czytajaca-Wioska` na prośbę użytkownika.
-- [ ] Włączenie GitHub Pages przez właściciela: `gh-pages` → `/ (root)`.
+- [x] GitHub Pages działa z `gh-pages` → `/ (root)`.
 - [ ] Odbiór opublikowanego P0 na komputerze i telefonie.
 
 Nie podłączono automatycznego wdrażania z `main`. Po włączeniu GitHub Pages aktualizacje `gh-pages` będą publikowane. Stan „zaimplementowane” nie zastępuje odbioru wizualnego i testów na urządzeniach.

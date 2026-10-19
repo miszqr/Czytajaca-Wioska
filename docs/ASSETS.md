@@ -7,7 +7,8 @@
 | Kitek 3D | Prototyp proceduralny; właściwe kolory, uszy, oczy, ogon, tunika i plecak | Oryginalny kod `characters/models.ts` |
 | Bruno 3D | Prototyp proceduralny: miś, fartuch i kapelusz | Oryginalny kod `characters/models.ts` |
 | Animacje | Zastępcze proceduralne: idle, walk, run, obrót, celebrate | Kod, bez rigu i klipów glTF |
-| Domy, drzewa, ogród, staw i kwiaty | Stylizowana geometria prototypowa | Oryginalny kod `game/world.ts` |
+| Domy, ogród i staw | Stylizowana geometria prototypowa | Oryginalny kod `game/world.ts` |
+| Drzewa i roślinność | Dąb, jabłoń, brzoza, sosna; rozgałęzione pnie, korzenie, nieregularne korony, krzewy, trawa i kwiaty z płatkami | Oryginalny kod `game/vegetation.ts` i `game/world.ts` |
 | Portrety i ikony | Proste wektory interfejsu; nie finalne portrety 3D | Oryginalny SVG w `ui/Icons.tsx` |
 | `references/kitek-concept.png` | Dostarczona referencja wizualna, nie model ani spritesheet | Załącznik użytkownika |
 | Głos | Opcjonalny głos systemowy, brak plików audio | Web Speech API |
@@ -25,3 +26,11 @@ Model Kitka nie odtwarza szczegółowego futra i jakości renderingu z referencj
 7. Dźwięki kroków, interakcji, otoczenia i spokojna muzyka, z udokumentowaną licencją.
 
 Dostarczona grafika nie została przekształcona w finalny asset. Wszystkie proceduralne modele pozostają oznaczone jako prototypy.
+
+## Pierwsze dopracowanie roślinności
+
+Kolor liści jest zapisany we wierzchołkach, a małe elementy są łączone w istniejące partie geometrii. Dekoracje mają własne ziarna losowania: nie zmieniają rozmieszczenia drzew, przeszkód ani pozycji zapisu. Pnie i główne korony zachowują obsługę kolizji kamery. Trawa i drobne gałązki nie blokują ruchu.
+
+[Porównanie modeli](previews/vegetation.webp) przedstawia geometrię wyeksportowaną z kodu i wyrenderowaną programowo w oświetleniu porównawczym. Nie jest zrzutem gry ani potwierdzeniem działania WebGL. Widoczne cienie kontaktowe na planszy porównawczej należą wyłącznie do tego renderu.
+
+Modele są nadal proceduralne i stylizowane. Nie dodano jeszcze wiatru, tekstur liści, LOD ani nowego systemu cieni.

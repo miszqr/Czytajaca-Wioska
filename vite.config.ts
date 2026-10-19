@@ -1,2 +1,2 @@
 import {defineConfig} from 'vite';
-export default defineConfig({base:'./',build:{target:'es2022',chunkSizeWarningLimit:1800},server:{port:4173,strictPort:true}});
+export default defineConfig({base:'./',build:{target:'es2022',chunkSizeWarningLimit:1800},server:{port:4173,strictPort:true,allowedHosts:['terminal.local']}});

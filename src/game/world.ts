@@ -3,11 +3,13 @@ import {createShapes} from './shapes';
 import {createCharacter} from '../characters/models';
 import {terrainHeight,blocked,type Solid} from './movement';
 import {CONFIG} from './config';
+import {createVegetation,type TreeKind} from './vegetation';
 export function createVillage(scene:Scene){
   scene.clearColor=Color4.FromHexString('#DCE9DDFF');scene.fogMode=Scene.FOGMODE_EXP2;scene.fogDensity=.013;scene.fogColor=Color3.FromHexString('#DCE9DD');
   const sky=new HemisphericLight('warm-sky',new Vector3(0,1,0),scene);sky.intensity=.9;sky.groundColor=Color3.FromHexString('#71856C');
   const sun=new DirectionalLight('afternoon-sun',new Vector3(-.5,-1,.3),scene);sun.intensity=.65;sun.diffuse=Color3.FromHexString('#FFE5BC');
-  const {shape,group,material}=createShapes(scene),environment=group('village'),solids:Solid[]=[];
+  const shapes=createShapes(scene),{shape,group,material}=shapes,environment=group('village'),solids:Solid[]=[];
+  const vegetation=createVegetation(scene,shapes);
   let seed=923;const random=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296};
   const ground=CreateGround('village-ground',{width:110,height:110,subdivisions:70,updatable:true},scene),positions=ground.getVerticesData(VertexBuffer.PositionKind)!,colors:number[]=[],normals:number[]=[];
   for(let i=0;i<positions.length;i+=3){const x=positions[i],z=positions[i+2];positions[i+1]=terrainHeight(x,z);const tone=.92+random()*.08;colors.push(.56*tone,.70*tone,.38*tone,1)}
@@ -73,22 +75,30 @@ export function createVillage(scene:Scene){
   shape('ball','pond-bank','#B9BD8C',environment,pond.x,py-.15,pond.z,7.4,.25,6.3);
   const water=shape('ball','pond-water','#79B5B8',environment,pond.x,py+.035,pond.z,6.7,.07,5.6);(water.material as import('@babylonjs/core/Materials/standardMaterial').StandardMaterial).specularColor=Color3.FromHexString('#5A7776');
   for(let i=0;i<12;i++){const a=random()*Math.PI*2;shape('ball','lily-leaf','#729F69',environment,pond.x+Math.cos(a)*5,py+.13,pond.z+Math.sin(a)*4,.35,.035,.25)}
-  function tree(x:number,z:number,scale:number,conifer:boolean){
+  function tree(x:number,z:number,scale:number,kind:TreeKind){
     if(blocked({x,z},solids,.8))return;
-    const g=group('tree',environment,x,terrainHeight(x,z),z);g.scaling.setAll(scale);
-    obstacle(shape('cylinder','trunk','#8D7254',g,0,1.25,0,.20,2.5,.20));solids.push({id:'tree',type:'circle',x,z,radius:.23*scale});
-    if(conifer){for(let i=0;i<3;i++)obstacle(shape('cone','pine-canopy',['#577F58','#699164','#80A071'][i],g,0,2.2+i*.72,0,1.25-i*.25,1.9,1.25-i*.25))}
-    else{obstacle(shape('ball','leaf-canopy','#72945E',g,0,2.7,0,1.25,1.45,1.15));obstacle(shape('ball','leaf-canopy','#8BA96B',g,-.6,3.2,.1,.90,.95,.88));obstacle(shape('ball','leaf-canopy','#A2B97B',g,-.35,3.8,.2,.65,.65,.65))}
+    vegetation.tree(environment,x,terrainHeight(x,z),z,scale,kind);solids.push({id:'tree',type:'circle',x,z,radius:.23*scale});
   }
-  for(const [x,z,s] of [[-6,-5,1.1],[5,4,1],[-14,1,1.3],[8,-16,1.1],[15,1,1.2],[-4,15,1],[7,19,1]])tree(x,z,s,false);
+  for(const [i,[x,z,s]] of [[-6,-5,1.1],[5,4,1],[-14,1,1.3],[8,-16,1.1],[15,1,1.2],[-4,15,1],[7,19,1]].entries())tree(x,z,s,(['oak','apple','birch'] as const)[i%3]);
   for(let i=0;i<100;i++){
-    const x=random()*96-48,z=random()*96-48;if(Math.hypot(x,z)<18||Math.abs(x)<4||Math.abs(z)<4)continue;tree(x,z,.8+random()*.65,i%3===0);
+    const x=random()*96-48,z=random()*96-48;if(Math.hypot(x,z)<18||Math.abs(x)<4||Math.abs(z)<4)continue;tree(x,z,.8+random()*.65,i%3===0?'pine':i%4===0?'birch':'oak');
   }
   for(let i=0;i<100;i++){
     const x=random()*48-24,z=random()*48-24;if(Math.hypot(x,z)<5||Math.abs(x)<3||Math.abs(z)<3||blocked({x,z},solids,.65))continue;
     const y=terrainHeight(x,z);shape('cylinder','flower-stem','#73925D',environment,x,y+.15,z,.018,.30,.018);
-    const flowerColor=['#E8BC5B','#EFE2B4','#C99EB0'][i%3];shape('ball','flower',flowerColor,environment,x,y+.31,z,.105,.065,.105);
+    const flowerColor=['#E8BC5B','#EFE2B4','#C99EB0'][i%3];
+    for(let p=0;p<5;p++){const a=p*Math.PI*2/5;shape('ball','flower-petal',flowerColor,environment,x+Math.cos(a)*.075,y+.31,z+Math.sin(a)*.075,.065,.035,.065)}
+    shape('ball','flower-centre','#E8BC5B',environment,x,y+.34,z,.045,.028,.045);
     for(let k=0;k<2;k++){const leaf=shape('ball','grass-leaf','#7C9F60',environment,x+.12*k,y+.09,z,.025,.17,.06);leaf.rotation.z=.4+k*.6}
+    vegetation.grass(environment,x+.25,y+.02,z,.7);
+  }
+  for(const [x,z,s] of [[-13,-6,1.3],[-14,-7,1],[-3,13,1.1],[7,7,1.2],[14,-8,1],[-14,13,1.2],[8,21,1]]){
+    if(!blocked({x,z},solids,.8))vegetation.shrub(environment,x,terrainHeight(x,z),z,s);
+  }
+  // Seed these decorations separately so adding detail cannot move trees or flowers.
+  for(let i=0;i<180;i++){
+    const x=Math.sin(i*127.1+3)*26,z=Math.cos(i*311.7+1)*26;
+    if(Math.hypot(x,z)>5&&Math.abs(x)>3.5&&Math.abs(z)>3.5&&!blocked({x,z},solids,.6))vegetation.grass(environment,x,terrainHeight(x,z)+.02,z,.65+(i%4)*.18);
   }
   const sign=group('garden-sign',environment,-3.7,.0,1.4);shape('cylinder','sign-post','#8C7150',sign,0,.52,0,.06,1.04,.06);shape('box','sign-board','#D8C49B',sign,0,.95,0,.8,.34,.10);shape('ball','sign-leaf','#7B9C61',sign,0,.97,-.07,.12,.08,.02);
   // Low draw-call count on mobile; obstacle batches remain available to camera raycasts.

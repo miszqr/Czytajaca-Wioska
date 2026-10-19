@@ -25,7 +25,7 @@ export function App(){
  useEffect(()=>{
    if(!loaded||!canvas.current)return;
    try{game.current=new VillageGame(canvas.current,stateRef.current,{onReady:()=>setReady(true),onError:()=>{setError('Nie udało się wyświetlić świata 3D. Sprawdź, czy przeglądarka obsługuje WebGL, i odśwież stronę.');setReady(false)},onNear:setNear,onGamepad:setPad,onAction:a=>actions.current(a),onSave:snapshot=>update(s=>({...s,...snapshot}))})}
-   catch{setError('Nie udało się uruchomić grafiki 3D. Spróbuj użyć aktualnego Chrome, Edge, Firefox lub Safari.');}
+   catch(error){console.error('Village graphics initialization failed:',error);setError('Nie udało się uruchomić grafiki 3D. Spróbuj użyć aktualnego Chrome, Edge, Firefox lub Safari.');}
    return()=>{game.current?.dispose();game.current=null;stopSpeech()};
  },[loaded,update]);
  useEffect(()=>{game.current?.setPaused(!ready||overlay!==null);stopSpeech()},[overlay,ready]);

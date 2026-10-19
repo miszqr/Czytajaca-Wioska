@@ -108,7 +108,7 @@ npm run check
 
 Raporty kolejnych etapów znajdują się w `reports/`. Testy domeny obejmują próby, nagrodę i rzeczywiste operacje IndexedDB (fake-indexeddb). Testy geometrii używają natywnego Babylon `NullEngine`; nie renderują obrazu na GPU. Test interfejsu uruchamia React w jsdom z zastąpionym rendererem i przechodzi całą pętlę zadania wraz z ponownym otwarciem gry.
 
-**Ograniczenie weryfikacji:** zarządzany podgląd przeglądarkowy jest niedostępny z powodu błędu infrastruktury `bwrap: Can't mount proc on /newroot/proc: Operation not permitted`. Wygląd, kompilacja shaderów na GPU, płynność na Pixelu 8 oraz fizyczny gamepad wymagają testu na urządzeniu. Przejście testów Node nie potwierdza tych aspektów.
+**Ograniczenie weryfikacji:** podgląd aplikacji uruchamia się, ale udostępniona przeglądarka zgłasza `WebGL not supported`. Wygląd, kompilacja shaderów na GPU, płynność na Pixelu 8 oraz fizyczny gamepad wymagają testu na urządzeniu. Przejście testów Node nie potwierdza tych aspektów.
 
 ## Pliki projektu
 
@@ -132,3 +132,9 @@ npm run dev
 ```
 
 Repozytorium: [miszqr/Czytajaca-Wioska](https://github.com/miszqr/Czytajaca-Wioska). Kod i build są przygotowane do GitHub Pages; włączenie hostingu wykonuje właściciel repozytorium zgodnie z instrukcją powyżej.
+
+## Dopracowanie roślinności — do odbioru
+
+Dodano dęby, jabłonie, brzozy i sosny z gałęziami, korzeniami i nieregularnymi koronami, a także krzewy, kępki trawy i płatki kwiatów. [Zobacz porównanie geometrii modeli](docs/previews/vegetation.webp). Obraz powstał przez programowy render modeli z kodu, w osobnym oświetleniu porównawczym; nie jest zrzutem gry.
+
+Zmiana jest przygotowana na osobnej gałęzi `feat/vegetation-detail`. GitHub Pages pozostaje przy opublikowanej poprawce kamery, do czasu zatwierdzenia nowej grafiki. Szczegóły i ograniczenia: [raport weryfikacji](reports/vegetation-detail.md).
