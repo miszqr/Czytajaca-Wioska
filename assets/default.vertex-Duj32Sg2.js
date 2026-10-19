@@ -1,4 +1,4 @@
-import{N as e}from"./index-DcP7GSOk.js";import{a as t,i as ee,n as te,r as ne,t as re}from"./logDepthDeclaration-C37vCUNV.js";import{t as ie}from"./helperFunctions-D8CoNyNn.js";var n=`decalVertexDeclaration`,r=`#ifdef DECAL
+import{N as e}from"./index-kWQm82hR.js";import{a as t,i as ee,n as te,r as ne,t as re}from"./logDepthDeclaration-BZUISQLc.js";import{t as ie}from"./helperFunctions-DdfEYIA8.js";var n=`decalVertexDeclaration`,r=`#ifdef DECAL
 uniform vec4 vDecalInfos;uniform mat4 decalMatrix;
 #endif
 `;e.IncludesShadersStore[n]||(e.IncludesShadersStore[n]=r);var ae={name:n,shader:r},i=`defaultVertexDeclaration`,a=`uniform mat4 viewProjection;
