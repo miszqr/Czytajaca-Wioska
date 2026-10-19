@@ -1,0 +1,7 @@
+{
+  "version": 2,
+  "characters": "characters.json",
+  "items": "items.json",
+  "interactions": "interactions.json",
+  "story": "story.json"
+}
