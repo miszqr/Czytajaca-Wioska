@@ -56,7 +56,7 @@ export function App(){
  };
  const completed=state.quest.status==='completed';
  return <main className="game-shell">
-   <canvas ref={canvas} className="world-canvas" tabIndex={-1} aria-label="Wioska 3D. Steruj klawiszami WASD lub joystickiem i porozmawiaj z Brunonem."/>
+   <canvas ref={canvas} className="world-canvas" tabIndex={-1} aria-label="Wioska 3D. Strzałki góra i dół: przód i tył; lewo i prawo: obrót Kitka z kamerą za plecami. Możesz też użyć WASD lub joysticka. E: rozmowa z Brunonem."/>
    <div className="vignette"/>
    <header className="hud-header">
      <div className="brand"><span className="brand-leaf"><Icon name="leaf" size={28}/></span><div><span className="brand-small">Przygody Kitka</span><h1>Czytająca Wioska</h1></div></div>
@@ -65,7 +65,7 @@ export function App(){
    {ready&&!overlay&&!error&&<>
      <aside className="quest-card"><span className="quest-icon"><Icon name={completed?'check':'leaf'}/></span><div><span className="eyebrow">{completed?'Pierwsza przyjaźń':'Mała przygoda'}</span><h2>{completed?'Nasionko od Brunona':state.quest.status==='active'?'Znajdź MA z Brunonem':'Poznajmy Brunona'}</h2><p>{completed?'Rozejrzyj się po wiosce.':near.near?'Bruno czeka na rozmowę.':`Podejdź do ogrodu · ${Math.ceil(near.distance)} m`}</p></div></aside>
      {near.visible&&near.distance<12&&<button className={'npc-label '+(near.near?'available':'')} style={{left:near.x,top:near.y}} onClick={interact} disabled={!near.near} aria-label={near.near?'Porozmawiaj z Brunonem':'Bruno — podejdź bliżej'}>{near.near&&<Icon name="chat" size={19}/>}<span>Bruno</span>{near.near&&<kbd>{pad?'A':'E'}</kbd>}</button>}
-     <div className="bottom-hud"><div className="controls-help"><span><kbd>W A S D</kbd> spacer</span><i/><span>przeciągnij — rozejrzyj się</span><i/><span><kbd>Shift</kbd> bieg</span>{pad&&<span className="pad-connected">Pad połączony</span>}</div><button className="interact-button" disabled={!near.near} onClick={interact}><Icon name="chat" size={22}/>{near.near?'Porozmawiaj':'Podejdź do Brunona'}<kbd>{pad?'A':'E'}</kbd></button></div>
+     <div className="bottom-hud"><div className="controls-help"><span><kbd>↑ ↓</kbd> przód / tył</span><i/><span><kbd>← →</kbd> obrót</span><i/><span><kbd>Shift</kbd> bieg</span>{pad&&<span className="pad-connected">Pad połączony</span>}</div><button className="interact-button" disabled={!near.near} onClick={interact}><Icon name="chat" size={22}/>{near.near?'Porozmawiaj':'Podejdź do Brunona'}<kbd>{pad?'A':'E'}</kbd></button></div>
      <button className="icon-button camera-button" aria-label="Ustaw kamerę za Kitkiem" onClick={()=>game.current?.recenter()}><Icon name="camera" size={23}/></button>
      <TouchControls key={String(!!overlay)} move={(x,y)=>game.current?.moveTouch(x,y)} run={value=>game.current?.runTouch(value)} interact={interact} near={near.near}/>
    </>}
@@ -73,7 +73,7 @@ export function App(){
    {error?<div className="scrim"><section className="dialog"><Icon name="help" size={36}/><h2>Świat potrzebuje chwili</h2><p>{error}</p><button className="primary" onClick={()=>location.reload()}>Spróbuj ponownie</button></section></div>:!loaded?<div className="loading"><Icon name="leaf" size={42}/><p>Otwieramy wioskę…</p></div>:overlay==='welcome'?<Dialog label="Witaj w Czytającej Wiosce" onBack={()=>{}}>
      <div className="welcome-portrait"><Portrait/></div><span className="eyebrow">Twoja pierwsza przygoda</span><h2>Cześć, jestem Kitek!</h2><p>Chodźmy poznać Brunona.<br/>Czeka na nas w swoim ogrodzie.</p><p className="quiet">Możemy też po prostu pospacerować.</p>
      <button className="primary" disabled={!ready} onClick={()=>{update(s=>({...s,welcomed:true}));close()}}>{ready?'Ruszamy':'Przygotowujemy świat…'}<Icon name="arrow"/></button>
-     <div className="welcome-instructions"><span>WASD / joystick — spacer</span><span>Mysz / gest — kamera</span><span>E / A — rozmowa</span></div>
+     <div className="welcome-instructions"><span>↑ ↓ — przód / tył · ← → — obrót</span><span>Mysz / gest — kamera</span><span>E / A — rozmowa</span></div>
    </Dialog>:overlay==='dialogue'?<Dialog label="Rozmowa z Brunonem" onBack={close}>
      <div className="speaker"><Portrait bear/><div><span className="eyebrow">Nasz sąsiad · ogrodnik</span><h2>Bruno</h2></div><button className="icon-button speaker-listen" onClick={readText} disabled={!canSpeak()} aria-label="Posłuchaj wypowiedzi Brunona"><Icon name="sound"/></button></div>
      <p className="dialogue-text">{practice?'Miło cię widzieć, Kitku! Chcesz jeszcze raz znaleźć MA?':FIRST_QUEST.dialogue[line]}</p>
@@ -88,7 +88,7 @@ export function App(){
      <div className="reward"><Icon name="seed" size={64}/></div><span className="eyebrow">Dziękuję, Kitku!</span><h2>Tak, to MA!</h2><p>{practice?'Miło było znowu poćwiczyć razem.':<>Bruno podarował ci<br/><strong>nasionko maku.</strong></>}</p><p className="quiet">Co jeszcze odkryjemy w wiosce?</p><button className="primary" onClick={close}>Wracam do wioski<Icon name="arrow"/></button>
    </Dialog>:overlay==='menu'?<Dialog label="Menu wioski" onBack={close}>
      <span className="eyebrow">Chwila odpoczynku</span><h2>Twój spacer</h2><div className="menu-progress"><Icon name="seed" size={32}/><div><strong>{completed?'Pierwsze nasionko zdobyte':'Bruno czeka w ogrodzie'}</strong><p>{completed?'Możesz wrócić i poćwiczyć MA.':'Czytanie możemy zacząć, kiedy zechcesz.'}</p></div></div>
-     <dl className="control-list"><div><dt>Spacer</dt><dd>WASD · strzałki · lewy drążek</dd></div><div><dt>Rozejrzyj się</dt><dd>Przeciągnij · prawy drążek</dd></div><div><dt>Rozmowa</dt><dd>E · przycisk A na padzie</dd></div><div><dt>Bieg</dt><dd>Shift · RT na padzie</dd></div><div><dt>Menu i powrót</dt><dd>Esc · Start / B na padzie</dd></div></dl><p className="quiet">Postęp zapisuje się automatycznie na tym urządzeniu.</p><button className="primary" onClick={close}>Wracam do spaceru<Icon name="arrow"/></button>
+     <dl className="control-list"><div><dt>Przód / tył</dt><dd>↑ ↓ — względem Kitka</dd></div><div><dt>Obrót Kitka</dt><dd>← → — kamera za plecami</dd></div><div><dt>Ruch względem kamery</dt><dd>WASD · lewy drążek · joystick</dd></div><div><dt>Rozejrzyj się</dt><dd>Przeciągnij · prawy drążek</dd></div><div><dt>Rozmowa</dt><dd>E · przycisk A na padzie</dd></div><div><dt>Bieg</dt><dd>Shift · RT na padzie</dd></div><div><dt>Menu i powrót</dt><dd>Esc · Start / B na padzie</dd></div></dl><p className="quiet">Postęp zapisuje się automatycznie na tym urządzeniu.</p><button className="primary" onClick={close}>Wracam do spaceru<Icon name="arrow"/></button>
    </Dialog>:null}
  </main>;
 }

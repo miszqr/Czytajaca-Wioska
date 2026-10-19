@@ -61,7 +61,9 @@ Nie dodano automatycznego wdrażania z `main`. Zmiany kodu wymagają ponownej ko
 
 | Czynność | Klawiatura / mysz | Pad w standardowym mapowaniu | Dotyk |
 | --- | --- | --- | --- |
-| Ruch względem kamery | WASD lub strzałki | Lewy drążek | Joystick po lewej |
+| Przód / tył względem Kitka | ↑ / ↓ | — | — |
+| Obrót Kitka z kamerą za plecami | ← / → | — | — |
+| Ruch względem kamery | WASD | Lewy drążek | Joystick po lewej |
 | Kamera | Przeciągnięcie na świecie | Prawy drążek | Przeciągnięcie na świecie |
 | Bieg | Shift | RT / klik lewego drążka | Przełącznik „Bieg” |
 | Rozmowa / wybór | E / Enter na przycisku | A, fizyczny dolny przycisk | „Rozmowa” / dotknięcie |
@@ -71,6 +73,8 @@ Nie dodano automatycznego wdrażania z `main`. Zmiany kodu wymagają ponownej ko
 | Odsłuch / podpowiedź | Przyciski na ekranie | X / Y | Przyciski na ekranie |
 | Zoom | Kółko myszy | — | — |
 
+Strzałki pozwalają grać bez ręcznego obracania kamery: lewo/prawo obracają Kitka w miejscu lub podczas chodzenia, a góra/dół prowadzą go do przodu/do tyłu bez odwracania przy cofaniu. Kamera obraca się razem z nim. Po ręcznym rozglądaniu wraca płynnie za plecy przy następnym użyciu strzałek. Przeciąganie myszą lub gestem oraz prawy drążek mają pierwszeństwo przed automatycznym podążaniem. WASD, lewy drążek i joystick pozostają zależne od kierunku kamery. Podczas rozmowy kamera i ruch są zatrzymane.
+
 Dla 8BitDo użyj trybu udostępniającego standardowe mapowanie Gamepad API, np. XInput na Windows. Wciśnij przycisk po podłączeniu pada, aby przeglądarka go udostępniła. Oznaczenia liter na urządzeniach w trybie Nintendo mogą różnić się od numerów standardowego mapowania. Fizyczny pad nie był testowany w tym środowisku.
 
 ## Zaimplementowane P0
@@ -79,7 +83,7 @@ Dla 8BitDo użyj trybu udostępniającego standardowe mapowanie Gamepad API, np.
 - Wioska 100 × 100 jednostek: plac, pięć domów z zewnątrz, ogród, staw, ścieżki, drzewa, kwiaty, płoty i łagodne wzniesienia.
 - Kitek: futro `#C98755`, tunika `#77A8D7`, brązowy plecak, duże uszy i ogon. Prototypowe animacje bezczynności, chodu, biegu i radości.
 - Kamera zza pleców z obrotem, zoomem i skracaniem dystansu przed przeszkodami.
-- Ruch względem kamery, rozpędzanie, ograniczenie obrotu, kolizje i bezpieczne brzegi stawu.
+- Strzałki względem postaci z kamerą za plecami; WASD/pad/dotyk względem kamery. Rozpędzanie, ograniczenie obrotu, kolizje i bezpieczne brzegi stawu.
 - Bruno, wskaźnik rozmowy z bliska, ustawienie postaci naprzeciw niego i zatrzymanie kamery podczas czytania.
 - Ręcznie przewijany dialog i ćwiczenie „MA” z podpowiedzią, spokojną informacją zwrotną i opcjonalnym odsłuchem.
 - Jednorazowa nagroda, powtórka ćwiczenia i swobodne spacerowanie po zadaniu.

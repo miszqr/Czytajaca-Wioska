@@ -31,11 +31,11 @@ flowchart TD
 
 ## Pętla ruchu i kamera
 
-Ruch jest obliczany względem yaw kamery; wektor przekątny jest normalizowany. Docelowe prędkości: 2.4 i 4.0 jednostki/s. Maksymalny obrót 540°/s. Rozpędzanie osiąga około 95% zadanej prędkości po 0.2 s. Delta klatki jest ograniczona do 50 ms, aby powrót z tła nie powodował teleportacji.
+Strzałki mają osobne osie: lewo/prawo obracają postać z prędkością 144°/s, a góra/dół poruszają wzdłuż jej kierunku patrzenia; cofanie nie odwraca postaci. Przy równoczesnym użyciu urządzeń strzałki mają pierwszeństwo dla ruchu. WASD, pad i dotyk nadal obliczają ruch względem yaw kamery, normalizują przekątną i obracają model do wektora ruchu z limitem 540°/s. Docelowe prędkości: 2.4 i 4.0 jednostki/s. Rozpędzanie osiąga około 95% zadanej prędkości po 0.2 s. Delta klatki jest ograniczona do 50 ms, aby powrót z tła nie powodował teleportacji.
 
 Kolizje ruchu: deterministyczna kapsuła w rzucie poziomym (koło) przeciw kołom i prostokątom; segment ruchu dzieli się na kroki ≤0.1 jednostki. Osobne osie pozwalają przesuwać się wzdłuż przeszkody. Pozycja Y pochodzi z tej samej funkcji wysokości co geometria terenu. Nie ma skoków ani fizyki brył w P0.
 
-Kamera śledzi pozycję, pozostawiając graczowi kontrolę obrotu. Cztery raycasty przeciw oznaczonej geometrii zmniejszają dystans przed ścianą/drzewem. Przy bardzo małym dystansie model gracza jest chwilowo ukrywany, aby nie oglądać wnętrza głowy. Kamera i ruch są zatrzymane podczas czytania. To prototyp rozwiązania kolizji kamery; gęsty las wymaga odbioru wizualnego.
+Kamera śledzi pozycję. Strzałki włączają podążanie za kierunkiem postaci: kamera otrzymuje ten sam przyrost obrotu, a pozostałe odchylenie po ręcznym rozglądaniu wygasza najkrótszą drogą, wykładniczo i niezależnie od liczby klatek. Wygaszanie kończy się również po puszczeniu strzałek. Przeciąganie kamery i prawy drążek mają pierwszeństwo; rozpoczęcie ruchu WASD/padem/dotykiem wyłącza podążanie, aby ruch względem kamery nie tworzył samonapędzającego się skrętu. Cztery raycasty przeciw oznaczonej geometrii zmniejszają dystans przed ścianą/drzewem. Przy bardzo małym dystansie model gracza jest chwilowo ukrywany, aby nie oglądać wnętrza głowy. Kamera i ruch są zatrzymane podczas czytania. To prototyp rozwiązania kolizji kamery; gęsty las wymaga odbioru wizualnego.
 
 ## Zadanie i zapis
 

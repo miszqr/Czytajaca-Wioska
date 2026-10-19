@@ -1,6 +1,6 @@
 import {deadzone} from './movement';
 export type Action='confirm'|'back'|'menu'|'left'|'right'|'up'|'down'|'listen'|'hint';
-export type InputFrame={horizontal:number;forward:number;lookX:number;lookY:number;run:boolean;actions:Action[];gamepad:boolean};
+export type InputFrame={horizontal:number;forward:number;turn:number;characterForward:number;characterControls:boolean;lookX:number;lookY:number;run:boolean;actions:Action[];gamepad:boolean};
 export class Input {
   private keys=new Set<string>();private actions:Action[]=[];private previous=new Set<string>();private touch={x:0,y:0};private runTouch=false;
   private keydown=(e:KeyboardEvent)=>{
@@ -25,7 +25,15 @@ export class Input {
       edge('up',(pad.axes[1]||0)<-.65,'up',this.previous);edge('down',(pad.axes[1]||0)>.65,'down',this.previous);
     }
     this.previous=pressed;
-    return {horizontal:Number(keys.has('KeyD')||keys.has('ArrowRight'))-Number(keys.has('KeyA')||keys.has('ArrowLeft'))+this.touch.x+deadzone(pad?.axes[0]||0),forward:Number(keys.has('KeyW')||keys.has('ArrowUp'))-Number(keys.has('KeyS')||keys.has('ArrowDown'))+this.touch.y-deadzone(pad?.axes[1]||0),lookX:deadzone(pad?.axes[2]||0),lookY:deadzone(pad?.axes[3]||0),run:keys.has('ShiftLeft')||keys.has('ShiftRight')||this.runTouch||!!pad?.buttons[7]?.pressed||!!pad?.buttons[10]?.pressed,actions,gamepad:!!pad};
+    return {
+      horizontal:Number(keys.has('KeyD'))-Number(keys.has('KeyA'))+this.touch.x+deadzone(pad?.axes[0]||0),
+      forward:Number(keys.has('KeyW'))-Number(keys.has('KeyS'))+this.touch.y-deadzone(pad?.axes[1]||0),
+      turn:Number(keys.has('ArrowRight'))-Number(keys.has('ArrowLeft')),
+      characterForward:Number(keys.has('ArrowUp'))-Number(keys.has('ArrowDown')),
+      characterControls:['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].some(key=>keys.has(key)),
+      lookX:deadzone(pad?.axes[2]||0),lookY:deadzone(pad?.axes[3]||0),
+      run:keys.has('ShiftLeft')||keys.has('ShiftRight')||this.runTouch||!!pad?.buttons[7]?.pressed||!!pad?.buttons[10]?.pressed,actions,gamepad:!!pad,
+    };
   }
   dispose(){window.removeEventListener('keydown',this.keydown);window.removeEventListener('keyup',this.keyup);window.removeEventListener('blur',this.blur)}
 }

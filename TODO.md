@@ -8,6 +8,7 @@
 - [x] Oryginalny prototyp Kitka z zatwierdzonymi kolorami i plecakiem.
 - [x] Kamera zza pleców, podążanie i ograniczanie przesłaniania.
 - [x] WASD / strzałki, mysz, standardowy Gamepad API i podstawowy dotyk.
+- [x] Strzałki: obrót i przód/tył względem Kitka, kamera automatycznie za plecami; ręczne rozglądanie ma pierwszeństwo.
 - [x] Bruno, interakcja z bliska i ręcznie przewijany dialog.
 - [x] Zadanie MA: ponowienie, podpowiedź, odsłuch, nagroda i powtórki.
 - [x] Niezależne moduły czytania i zadań, treść w danych.
@@ -43,6 +44,7 @@
 
 ## Publikacja
 
+- [ ] Publikacja poprawki kamery ze strzałkami — gotowy build na `preview/arrow-camera`, oczekuje na zgodę użytkownika.
 - [x] Przygotowanie źródeł na `main` i gotowego buildu na `gh-pages` w `miszqr/Czytajaca-Wioska` na prośbę użytkownika.
 - [ ] Włączenie GitHub Pages przez właściciela: `gh-pages` → `/ (root)`.
 - [ ] Odbiór opublikowanego P0 na komputerze i telefonie.

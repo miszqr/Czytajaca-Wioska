@@ -12,6 +12,7 @@ export class VillageGame {
   private input=new Input();private pose:PlayerPose;private cameraPose:CameraPose;private paused=true;private disposed=false;
   private vx=0;private vz=0;private time=0;private saveTime=0;private infoTime=0;private celebrateUntil=0;private cameraLength:number;
   private pointer:{id:number;x:number;y:number}|null=null;private observer:ResizeObserver;private pad=false;
+  private followHeading=false;
   private reduced=window.matchMedia('(prefers-reduced-motion: reduce)');
   constructor(private canvas:HTMLCanvasElement,state:SaveState,private callbacks:RuntimeCallbacks){
     try{this.engine=new Engine(canvas,true,{powerPreference:'low-power',preserveDrawingBuffer:false,stencil:true},false)}catch(e){this.input.dispose();throw e}
@@ -60,11 +61,27 @@ export class VillageGame {
       if(frame.gamepad!==this.pad){this.pad=frame.gamepad;this.callbacks.onGamepad(this.pad)}
       frame.actions.forEach(action=>this.callbacks.onAction(action));
       if(!this.paused){
+        // Arrows steer the character. Camera-relative input must not inherit
+        // auto-follow: a held sideways stick/key would otherwise spiral.
+        if(frame.characterControls)this.followHeading=true;
+        else if(Math.hypot(frame.horizontal,frame.forward)>.05)this.followHeading=false;
+        if(this.pointer||frame.lookX!==0||frame.lookY!==0)this.followHeading=false;
         this.cameraPose.yaw+=frame.lookX*dt*2.4;this.cameraPose.pitch=Math.max(CONFIG.cameraMinPitch,Math.min(CONFIG.cameraMaxPitch,this.cameraPose.pitch+frame.lookY*dt*1.5));
-        const intent=movementVector(frame.horizontal,frame.forward,this.cameraPose.yaw),speed=frame.run?CONFIG.runSpeed:CONFIG.walkSpeed,factor=1-Math.exp(-dt*3/CONFIG.accelerationSeconds);
+        if(frame.characterControls){
+          const turn=frame.turn*CONFIG.keyboardTurnSpeed*dt;
+          this.pose.heading+=turn;
+          // Keep an aligned camera directly behind during a turn. If it was
+          // orbited manually, ease the remaining offset back afterwards.
+          if(this.followHeading)this.cameraPose.yaw+=turn;
+        }
+        const intent=frame.characterControls?movementVector(0,frame.characterForward,this.pose.heading):movementVector(frame.horizontal,frame.forward,this.cameraPose.yaw),speed=frame.run?CONFIG.runSpeed:CONFIG.walkSpeed,factor=1-Math.exp(-dt*3/CONFIG.accelerationSeconds);
         this.vx+=(intent.x*speed-this.vx)*factor;this.vz+=(intent.z*speed-this.vz)*factor;
         const next=moveWithSlide(this.pose,{x:this.vx*dt,z:this.vz*dt},this.world.solids),actualSpeed=Math.hypot(next.x-this.pose.x,next.z-this.pose.z)/dt;
-        if(Math.hypot(intent.x,intent.z)>.05)this.pose.heading=turnTowards(this.pose.heading,Math.atan2(intent.x,intent.z),CONFIG.turnSpeed*dt);
+        if(!frame.characterControls&&Math.hypot(intent.x,intent.z)>.05)this.pose.heading=turnTowards(this.pose.heading,Math.atan2(intent.x,intent.z),CONFIG.turnSpeed*dt);
+        if(this.followHeading){
+          const offset=Math.atan2(Math.sin(this.pose.heading-this.cameraPose.yaw),Math.cos(this.pose.heading-this.cameraPose.yaw));
+          this.cameraPose.yaw+=offset*(1-Math.exp(-CONFIG.cameraFollowSpeed*dt));
+        }
         this.pose.x=next.x;this.pose.z=next.z;this.placePlayer();this.world.kitek.animate(this.time,actualSpeed,this.time<this.celebrateUntil,this.reduced.matches);this.updateCamera(dt);
         this.saveTime+=dt;if(this.saveTime>2){this.saveTime=0;this.flush()}
       }else this.world.kitek.animate(this.time,0,this.time<this.celebrateUntil,this.reduced.matches);
@@ -75,7 +92,7 @@ export class VillageGame {
   };
   distanceToBruno(){return Math.hypot(this.pose.x-CONFIG.bruno.x,this.pose.z-CONFIG.bruno.z)}
   snapshot():WorldSnapshot{return {player:{...this.pose},camera:{...this.cameraPose}}}
-  setPaused(value:boolean){this.paused=value;this.pointer=null;this.input.clear();this.vx=this.vz=0;if(value)this.world.kitek.root.setEnabled(true)}
+  setPaused(value:boolean){this.paused=value;this.pointer=null;this.followHeading=false;this.input.clear();this.vx=this.vz=0;if(value)this.world.kitek.root.setEnabled(true)}
   faceBruno(){if(this.distanceToBruno()>CONFIG.interactionRadius)return false;this.pose.heading=Math.atan2(CONFIG.bruno.x-this.pose.x,CONFIG.bruno.z-this.pose.z);this.placePlayer();this.world.bruno.root.rotation.y=Math.atan2(this.pose.x-CONFIG.bruno.x,this.pose.z-CONFIG.bruno.z);this.flush();return true}
   celebrate(){this.celebrateUntil=this.time+2.5}
   moveTouch(x:number,y:number){this.input.setTouch(x,y)}
