@@ -1,0 +1,509 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Nowy dom Kitka — sceny i dialogi",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "version": {
+      "const": 1
+    },
+    "id": {
+      "$ref": "#/$defs/id"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80,
+      "pattern": "\\S"
+    },
+    "scenes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/scene"
+      },
+      "minItems": 1,
+      "maxItems": 30
+    },
+    "documents": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/document"
+      },
+      "minItems": 0,
+      "maxItems": 100
+    },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/node"
+      },
+      "minItems": 1,
+      "maxItems": 300
+    }
+  },
+  "required": [
+    "version",
+    "id",
+    "title",
+    "scenes",
+    "documents",
+    "nodes"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]{0,63}$",
+      "not": {
+        "enum": [
+          "constructor",
+          "prototype"
+        ]
+      }
+    },
+    "text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 400,
+      "pattern": "\\S"
+    },
+    "condition": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "flag"
+            },
+            "key": {
+              "$ref": "#/$defs/id"
+            },
+            "value": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "type",
+            "key",
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "item"
+            },
+            "itemId": {
+              "$ref": "#/$defs/id"
+            },
+            "quantity": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 99
+            }
+          },
+          "required": [
+            "type",
+            "itemId",
+            "quantity"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "effect": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "flag"
+            },
+            "key": {
+              "$ref": "#/$defs/id"
+            },
+            "value": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "type",
+            "key",
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "giveItem"
+            },
+            "itemId": {
+              "$ref": "#/$defs/id"
+            },
+            "quantity": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 99
+            }
+          },
+          "required": [
+            "type",
+            "itemId",
+            "quantity"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "takeItem"
+            },
+            "itemId": {
+              "$ref": "#/$defs/id"
+            },
+            "quantity": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 99
+            }
+          },
+          "required": [
+            "type",
+            "itemId",
+            "quantity"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "read"
+            },
+            "documentId": {
+              "$ref": "#/$defs/id"
+            }
+          },
+          "required": [
+            "type",
+            "documentId"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "complete"
+            },
+            "sceneId": {
+              "$ref": "#/$defs/id"
+            }
+          },
+          "required": [
+            "type",
+            "sceneId"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "travel"
+            },
+            "location": {
+              "enum": [
+                "village",
+                "home"
+              ]
+            },
+            "x": {
+              "type": "number",
+              "minimum": -48,
+              "maximum": 48
+            },
+            "z": {
+              "type": "number",
+              "minimum": -48,
+              "maximum": 48
+            },
+            "heading": {
+              "type": "number",
+              "minimum": -6.28319,
+              "maximum": 6.28319
+            }
+          },
+          "required": [
+            "type",
+            "location",
+            "x",
+            "z",
+            "heading"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "placeFurniture"
+            },
+            "id": {
+              "$ref": "#/$defs/id"
+            },
+            "itemId": {
+              "$ref": "#/$defs/id"
+            },
+            "x": {
+              "type": "number",
+              "minimum": -4.5,
+              "maximum": 4.5
+            },
+            "z": {
+              "type": "number",
+              "minimum": -3.5,
+              "maximum": 3.5
+            },
+            "rotation": {
+              "enum": [
+                0,
+                1,
+                2,
+                3
+              ]
+            }
+          },
+          "required": [
+            "type",
+            "id",
+            "itemId",
+            "x",
+            "z",
+            "rotation"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "choice": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "pattern": "\\S"
+        },
+        "effects": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/effect"
+          },
+          "minItems": 0,
+          "maxItems": 30
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "effects"
+      ],
+      "additionalProperties": false
+    },
+    "scene": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "pattern": "\\S"
+        },
+        "objective": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 240,
+          "pattern": "\\S"
+        },
+        "when": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/condition"
+          },
+          "minItems": 0,
+          "maxItems": 200
+        },
+        "updates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "objective": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 240,
+                "pattern": "\\S"
+              },
+              "when": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/condition"
+                },
+                "minItems": 0,
+                "maxItems": 200
+              }
+            },
+            "required": [
+              "objective",
+              "when"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0,
+          "maxItems": 20
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "objective",
+        "when"
+      ],
+      "additionalProperties": false
+    },
+    "document": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "pattern": "\\S"
+        },
+        "lines": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/text"
+          },
+          "minItems": 1,
+          "maxItems": 12
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "lines"
+      ],
+      "additionalProperties": false
+    },
+    "node": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "target": {
+          "$ref": "#/$defs/id"
+        },
+        "event": {
+          "enum": [
+            "interact",
+            "place"
+          ]
+        },
+        "priority": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 999
+        },
+        "once": {
+          "type": "boolean"
+        },
+        "when": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/condition"
+          },
+          "minItems": 0,
+          "maxItems": 200
+        },
+        "speaker": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "pattern": "\\S"
+        },
+        "lines": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/text"
+          },
+          "minItems": 0,
+          "maxItems": 12
+        },
+        "choices": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/choice"
+          },
+          "minItems": 1,
+          "maxItems": 4
+        }
+      },
+      "required": [
+        "id",
+        "target",
+        "event",
+        "priority",
+        "once",
+        "when",
+        "speaker",
+        "lines",
+        "choices"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "event": {
+                "const": "interact"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "lines": {
+                "minItems": 1
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "choices": {
+                "maxItems": 1
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

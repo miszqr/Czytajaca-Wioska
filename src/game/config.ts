@@ -6,5 +6,5 @@ export const CONFIG = {
   cameraDistance: 3.5, cameraTargetHeight: 1,
   cameraMinPitch: .12, cameraMaxPitch: .85,
   cameraMinDistance: 2.3, cameraMaxDistance: 6,
-  spawn: {x:0,z:-5,heading:0}, bruno: {x:-3,z:3.5},
+  spawn: {x:0,z:-5,heading:0},
 } as const;

@@ -1,5 +1,5 @@
 import type {Condition,ContentPack,Effect,StoryNode} from '../content/types';
-import {placeFurniture} from '../housing/model';
+import {placeFurniture,guestPositions} from '../housing/model';
 import type {SaveState} from '../persistence/state';
 export const PACK_CAPACITY=12;
 export function matches(state:SaveState,conditions:readonly Condition[]){return conditions.every(c=>c.type==='flag'?!!state.flags[c.key]===c.value:(state.inventory[c.itemId]??0)>=c.quantity)}
@@ -20,6 +20,7 @@ export function applyEffects(content:ContentPack,state:SaveState,effects:readonl
   else if(e.type==='complete'&&!next.completed.includes(e.sceneId))next.completed.push(e.sceneId);
   else if(e.type==='travel'){next.location=e.location;next.player={x:e.x,z:e.z,heading:e.heading};next.camera.yaw=e.heading;if(e.location==='village')next.flags.hosting=false}
  }
+ if(next.flags.hosting&&!state.flags.hosting&&Object.keys(guestPositions(next,content)).length<content.characters.length)return {state,message:'Przesuń kilka mebli, aby zrobić miejsce dla gości.'};
  return {state:next,message:''};
 }
 export function choose(content:ContentPack,state:SaveState,nodeId:string,choiceId:string){

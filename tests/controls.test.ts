@@ -104,3 +104,9 @@ it('strzałki zachowują akcje dialogu, a dotyk i pad zachowują wektor względe
   frame=input.poll();expect(frame.characterControls).toBe(false);expect(frame.horizontal).toBe(1);expect(frame.forward).toBe(1);expect(frame.lookX).toBeGreaterThan(0);
   window.dispatchEvent(new Event('blur'));key('ArrowRight');input.clear();expect(input.poll().turn).toBe(0);
 });
+it('podgląd domu zmienia tylko kamerę edytora i usuwa geometrię po anulowaniu',()=>{
+ const state=newSave();state.location='home';state.player={x:0,z:-2.5,heading:0};const {game}=start(state);game.setPaused(true);const before=game.snapshot(),count=game.scene.meshes.length;
+ game.editHome(true);expect(game.camera.position.y).toBe(13);
+ game.previewFurniture({id:'preview',itemId:'lamp',x:-1.5,z:1.5,rotation:0});expect(game.scene.getTransformNodeByName('placement-preview')).not.toBeNull();
+ game.previewFurniture(null);game.editHome(false);expect(game.snapshot()).toEqual(before);expect(game.scene.meshes.length).toBe(count);expect(game.camera.position.y).toBeLessThan(5);frames();
+});

@@ -42,7 +42,7 @@ To fragment tablicy `story.nodes`, nie cały plik. Dodatkowo zdefiniuj dokument 
 
 Warunek flagi: `{"type":"flag","key":"read-fela-letter","value":true}`. Warunek posiadania: `{"type":"item","itemId":"lamp","quantity":1}`. Lista warunków działa jak AND. Dla alternatywnych warunków przygotuj osobne węzły. Flagi wymagają źródła w skutkach, aby literówka nie tworzyła niemożliwego zadania.
 
-Dostępne skutki: `flag`, `giveItem`, `takeItem`, `read`, `complete`, `travel`. Efekty stosuje silnik atomowo. `read` przechowuje ID listu w dzienniku; `complete` trwały wpis sceny. Nie dodawaj tego samego prezentu do zwykłej powtarzanej rozmowy — przekazanie prezentu powinno mieć własne ID i `once: true`.
+Dostępne skutki: `flag`, `giveItem`, `takeItem`, `read`, `complete`, `travel`, `placeFurniture`. Efekty stosuje silnik atomowo. `read` przechowuje ID listu w dzienniku; `complete` trwały wpis sceny. Nie dodawaj tego samego prezentu do zwykłej powtarzanej rozmowy — przekazanie prezentu powinno mieć własne ID i `once: true`.
 
 ## Trwałe ID
 
@@ -78,3 +78,21 @@ npm run dev
 Walidator odrzuca nieznane pola, brakujące ID, nieistniejące cele i dokumenty, niepoprawne wartości oraz powtarzające się priorytety dla tego samego celu. Pozycje trzeba dodatkowo sprawdzić w świecie; sama składnia JSON nie gwarantuje dostępności drogi.
 
 Testuj zmianę z nowym zapisem oraz wznowieniem przed i po zmienionej scenie. Format zapisu jest wersjonowany oddzielnie od danych fabuły. Stary zapis przed migracją ma zachowaną kopię.
+
+## Cele pośrednie i dokumentacja formatu
+
+Scena może mieć `updates`: listę alternatywnych celów dziennika z warunkami. Wygrywa pierwszy pasujący wpis. Przykład: po odłożeniu skrzynki cel zmienia się z prośby o przeniesienie na „Wrócę do Brunona po klucz”. Służy to przypomnieniu, nie wyznaczaniu trasy.
+
+Schemat dla edytora to `docs/story.schema.json`, wskazany przez `$schema` w `story.json`. Referencja służy lokalnej edycji; przeglądarka gry nie pobiera schematu. Silnik nadal wykonuje własną walidację referencji między plikami.
+
+`anchor` w interakcji może wskazywać mebel, np. `{"itemId":"table","x":0,"z":0}`. Pozycja podąża wtedy za przesuwanym i obracanym meblem. Gdy mebel trafi do schowka, jego interakcja znika; przeczytane listy pozostają dostępne w dzienniku.
+
+## Dekoracje
+
+Przedmiot z `kind: "decoration"` ma `model`, kolor `#RRGGBB`, `width` i `depth`. Wymiary określają obrys używany przy ustawianiu. Dostępne modele: łóżko (`bed`), stół (`table`), lampa (`lamp`), krzesło (`chair`), dywan (`rug`), roślina (`plant`), półka (`shelf`). Warianty kolorów i wielkości można dodać w JSON. Nowy typ geometrii wymaga handlera w `game/story-world.ts` oraz rozszerzenia typu i walidatora.
+
+Startowy zestaw w schowku jest tworzony raz: zawiera dekoracje poza łóżkiem, stołem i fabularną lampą. Dodanie nowej dekoracji do katalogu nie rozdaje jej automatycznie w starszym zapisie, który odebrał już zestaw. Dla istniejących graczy dodaj jednorazowe przekazanie przez dialog albo świadomą migrację. Nie kasuj flagi zestawu w celu poprawienia tekstu.
+
+W tej historii `lamp`, `bed`, `table` oraz `bedside` mają znaczenie dla związku mebli z fabułą. Zachowaj ich ID. Przy tworzeniu całkiem nowej historii należy również uogólnić lub zmienić handler sprawdzający lampę przy łóżku w `story/engine.ts` i skrót do edytora w `ui/App.tsx`. Sam tekst nie zmienia reguły odległości.
+
+Plecak mieści 12 typów przedmiotów, po kilka sztuk tego samego typu. Schowek pozwala odłożyć dekorację bez jej usuwania. Przedmioty fabularne nie są wyrzucane przez edytor. W P2 jest 20 typów przedmiotów: 14 dekoracyjnych i 6 użytkowych/pamiątkowych.

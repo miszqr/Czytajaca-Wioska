@@ -30,7 +30,12 @@
       "z": 1.2
     },
     "model": "letter",
-    "when": []
+    "when": [],
+    "anchor": {
+      "itemId": "table",
+      "x": 0,
+      "z": 0
+    }
   },
   {
     "id": "village-sign",
@@ -63,7 +68,12 @@
         "key": "lamp-placed",
         "value": false
       }
-    ]
+    ],
+    "anchor": {
+      "itemId": "bed",
+      "x": 1.5,
+      "z": 0
+    }
   },
   {
     "id": "cabinet",

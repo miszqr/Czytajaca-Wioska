@@ -2,6 +2,7 @@ import type {Scene,TransformNode} from './babylon';
 import {createShapes,type Shapes} from './shapes';
 import type {ContentPack,ItemDefinition,Furniture} from '../content/types';
 import type {SaveState} from '../persistence/state';
+import {targetPosition} from '../interactions/model';
 import {matches} from '../story/engine';
 import {terrainHeight} from './movement';
 export function drawItem(shapes:Shapes,parent:TransformNode,item:ItemDefinition,x:number,z:number,rotation=0){
@@ -29,8 +30,10 @@ export function createStoryWorld(scene:Scene,content:ContentPack){
  shape('box','inside-door','#9F7855',home,0,1,-3.9,1.2,2,.08);
  shape('box','window-frame','#A58260',home,-1,1.8,3.88,1.6,1.4,.08);shape('box','window-sky','#B7D4C7',home,-1,1.8,3.82,1.4,1.2,.04);
  shape('box','cabinet-note','#F5E6C5',home,3.3,1.35,2.65,.3,.35,.02);
- shape('box','cabinet-body','#9E7957',home,3.3,.85,3.15,1.4,1.7,.8);
+ for(const x of [2.65,3.95])shape('box','cabinet-side','#9E7957',home,x,.85,3.15,.1,1.7,.8);
+ shape('box','cabinet-back','#8F6F51',home,3.3,.85,3.52,1.4,1.7,.06);for(const y of [.07,.7,1.65])shape('box','cabinet-shelf','#B58F66',home,3.3,y,3.15,1.4,.1,.8);
  const cabinetDoor=shape('box','cabinet-door','#BF986B',home,3.3,.85,2.72,1.3,1.6,.07);shape('ball','cabinet-knob','#D6BD7F',home,3.75,.85,2.65,.04);
+ const grid=group('placement-grid',home);for(let x=-4.5;x<=4.5;x+=.5)shape('box','grid-line','#9DAA8A',grid,x,.018,0,.012,.008,7);for(let z=-3.5;z<=3.5;z+=.5)shape('box','grid-line','#9DAA8A',grid,0,.018,z,9,.008,.012);grid.setEnabled(false);
  const visuals=content.interactions.map(t=>{const g=group(t.id,objects,t.position.x,t.location==='home'?0:terrainHeight(t.position.x,t.position.z),t.position.z);
   if(t.model==='letter')drawItem(shapes,g,{id:'envelope',name:'',description:'',kind:'usable',model:'letter',color:'#FBE6BD',width:.4,depth:.3},0,0);
   if(t.model==='crate')drawItem(shapes,g,{id:'crate',name:'',description:'',kind:'usable',model:'crate',color:'#C69B69',width:.7,depth:.6},0,0);
@@ -41,10 +44,10 @@ export function createStoryWorld(scene:Scene,content:ContentPack){
  });
  let furnitureKey='';
  function sync(state:SaveState){
-  home.setEnabled(state.location==='home');for(const {target,root} of visuals)root.setEnabled(target.location===state.location&&matches(state,target.when));
+  home.setEnabled(state.location==='home');for(const {target,root} of visuals){const pos=targetPosition(target,state);root.setEnabled(!!pos&&target.location===state.location&&matches(state,target.when));if(pos){root.position.x=pos.x;root.position.z=pos.z}}
   cabinetDoor.setEnabled(!state.flags['cabinet-open']);
   const key=JSON.stringify(state.furniture);if(key!==furnitureKey){furnitureKey=key;for(const child of furnishings.getChildren())child.dispose();for(const f of state.furniture){const item=content.items.find(i=>i.id===f.itemId);if(item){const g=drawItem(shapes,furnishings,item,f.x,f.z,f.rotation);g.name=f.id;for(const m of g.getChildMeshes()){m.isPickable=item.model!=='rug';m.metadata={cameraObstacle:item.model!=='rug'}}}}}
  }
- function preview(f:Furniture|null){let old=home.getChildren().find(n=>n.name==='placement-preview');old?.dispose();if(!f)return;const item=content.items.find(i=>i.id===f.itemId);if(item){const g=drawItem(shapes,home,item,f.x,f.z,f.rotation);g.name='placement-preview';for(const m of g.getChildMeshes())m.visibility=.55}}
- return {home,objects,sync,preview};
+ function preview(f:Furniture|null,valid=true){let old=home.getChildren().find(n=>n.name==='placement-preview');old?.dispose();if(!f)return;const item=content.items.find(i=>i.id===f.itemId);if(item){const g=drawItem(shapes,home,{...item,color:valid?'#90B77B':'#C58B77'},f.x,f.z,f.rotation);g.name='placement-preview';for(const m of g.getChildMeshes())m.visibility=.55}}
+ return {home,objects,sync,preview,setEditing:(value:boolean)=>grid.setEnabled(value)};
 }

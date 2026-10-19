@@ -1,4 +1,5 @@
 {
+  "$schema": "../../docs/story.schema.json",
   "version": 1,
   "id": "new-home",
   "title": "Nowy dom Kitka",
@@ -220,7 +221,13 @@
       "event": "interact",
       "priority": 10,
       "once": true,
-      "when": [],
+      "when": [
+        {
+          "type": "flag",
+          "key": "entered-home",
+          "value": false
+        }
+      ],
       "speaker": "bruno",
       "lines": [
         "Witaj, Kitku! Twój dom stoi przy stawie.",

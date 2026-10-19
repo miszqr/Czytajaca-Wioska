@@ -7,7 +7,7 @@ export class Input {
     if(e.target instanceof HTMLElement&&e.target.closest('input,textarea,select'))return;
     if(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code))e.preventDefault();
     this.keys.add(e.code);
-    if(!e.repeat){if(e.code==='KeyE')this.actions.push('confirm');if(e.code==='Escape')this.actions.push('back');if(e.code==='KeyM')this.actions.push('menu');const direction=({ArrowLeft:'left',ArrowRight:'right',ArrowUp:'up',ArrowDown:'down'} as const)[e.code as 'ArrowLeft'];if(direction)this.actions.push(direction)}
+    if(!e.repeat){if(e.code==='KeyE')this.actions.push('confirm');if(e.code==='Escape')this.actions.push('back');if(e.code==='KeyM')this.actions.push('menu');if(e.code==='KeyR')this.actions.push('listen');const direction=({ArrowLeft:'left',ArrowRight:'right',ArrowUp:'up',ArrowDown:'down'} as const)[e.code as 'ArrowLeft'];if(direction)this.actions.push(direction)}
   };
   private keyup=(e:KeyboardEvent)=>this.keys.delete(e.code);
   private blur=()=>this.clear();

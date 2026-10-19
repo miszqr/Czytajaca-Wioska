@@ -34,9 +34,13 @@ npm run preview -- --port 4173
 | --- | --- | --- |
 | P0 | Bruno na placu → dom przy stawie → list Feli → dziennik i zapis | Zaimplementowany, 26 testów i build zakończone powodzeniem |
 | P1 | Lampa, szafka, skrzynka, klucz, Tola, Miluś i spotkanie | Zaimplementowany, 28 testów i build zakończone powodzeniem |
-| P2 | Edytor domu, dekoracje, swobodna zabawa i oprawa | Zaplanowany |
+| P2 | Edytor domu, dekoracje, swobodna zabawa i oprawa | Zaimplementowany, 34 testy i build zakończone powodzeniem |
 
 P0: wybierz „Ruszamy”, podejdź do Brunona na placu i naciśnij E. Dom Kitka stoi po prawej stronie wioski, przed stawem; ma niebieską tabliczkę. Podejdź do drzwi od strony ścieżki, wejdź i otwórz kopertę na stole. List pozostanie w dzienniku. Można wyjść na spacer, zamknąć grę i wznowić stan w domu.
+
+P1: po liście odwiedź Felę. Przynieś lampę do domu i ustaw przy łóżku w edytorze. Przeczytaj notatkę przy szafce, porozmawiaj z Brunonem i przenieś skrzynkę do ogrodu. Wróć po klucz. Książeczka z szafki prowadzi do Toli, a Tola do Milusia. Roznieś zaproszenia i zadzwoń dzwonkiem w domu.
+
+P2: przycisk „Urządź dom” działa także przed ukończeniem historii. Wybierz mebel ze schowka lub plecaka, przesuń podgląd, obróć i postaw. Meble można przenosić i chować. Gości można pożegnać dzwonkiem i zaprosić ponownie. Nie ma końcowego ekranu blokującego świat.
 
 ## Sterowanie
 
@@ -50,6 +54,7 @@ P0: wybierz „Ruszamy”, podejdź do Brunona na placu i naciśnij E. Dom Kitka
 | Wybór w dialogu | Tab / strzałki | D-pad / lewy drążek | Dotknięcie |
 | Powrót | Esc | B | Przycisk powrotu |
 | Menu | M / Esc | Start | Przycisk menu |
+| Edytor: miejsce / obrót / postaw | Strzałki / R / E | D-pad / X / A | Przyciski edytora |
 | Odsłuch / dziennik | Przyciski na ekranie | X / Y | Przyciski na ekranie |
 
 Dialog zatrzymuje kamerę i ruch. Wypowiedzi przewija się ręcznie; nie ma automatycznego odsłuchu ani presji czasu. Dziennik przypomina cel, bez rysowania dokładnej trasy.
@@ -63,7 +68,7 @@ Dialog zatrzymuje kamerę i ruch. Wypowiedzi przewija się ręcznie; nie ma auto
 - [docs/CONTENT.md](docs/CONTENT.md) — zasady edycji i dodawania treści.
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — podział kodu, zapis i przepływ zdarzeń.
 
-SaveState v3 zapisuje lokalizację, pozycję, kamerę, flagi, sceny, listy, ekwipunek i meble. Baza IndexedDB `czytajaca-wioska` pozostaje w wersji 1; zmieniono format danych pod kluczem `p0`. Starszy zapis jest archiwizowany pod `legacy-v1` lub `legacy-v2` przed migracją. Zachowuje pozycję i pamiątki, a nowa historia zaczyna się od przyjazdu. Dawne odpowiedzi nie sterują fabułą. Nieobsługiwany zapis nie jest nadpisywany.
+SaveState v3 zapisuje lokalizację, pozycję, kamerę, flagi, sceny, listy, ekwipunek, schowek i meble. Baza IndexedDB `czytajaca-wioska` pozostaje w wersji 1; zmieniono format danych pod kluczem `p0`. Starszy zapis jest archiwizowany pod `legacy-v1` lub `legacy-v2` przed migracją. Zachowuje pozycję i pamiątki, a nowa historia zaczyna się od przyjazdu. Dawne odpowiedzi nie sterują fabułą. Nieobsługiwany zapis nie jest nadpisywany.
 
 Bez konta, analityki i serwera gry. Przy braku IndexedDB używane jest localStorage. Gdy oba magazyny są zablokowane, UI informuje, że postęp zniknie po zamknięciu. Zapis jest przypisany do przeglądarki i adresu strony. Czyszczenie danych witryny usuwa postęp. Nagłe zamknięcie procesu może utracić ostatni fragment ruchu.
 
@@ -71,6 +76,8 @@ Bez konta, analityki i serwera gry. Przy braku IndexedDB używane jest localStor
 
 Raporty są w `reports/`. Testy logiki i UI sprawdzają przebieg fabuły oraz rzeczywiste operacje fake-indexeddb. Scena i sterowanie są sprawdzane przez Babylon NullEngine, bez renderowania na GPU.
 
-Udostępniona wcześniej przeglądarka zgłaszała `WebGL not supported`. Wygląd, shadery, wydajność na Pixelu 8 oraz fizyczny 8BitDo wymagają odbioru na urządzeniu. Lista rzeczy do sprawdzenia: [docs/ACCEPTANCE.md](docs/ACCEPTANCE.md). Docelowe modele i animacje: [docs/ASSETS.md](docs/ASSETS.md).
+Udostępniona wcześniej przeglądarka zgłaszała `WebGL not supported`. Wygląd, shadery, wydajność na Pixelu 8 oraz fizyczny 8BitDo wymagają odbioru na urządzeniu. Lista rzeczy do sprawdzenia: [docs/ACCEPTANCE.md](docs/ACCEPTANCE.md). Sklep i biblioteka mają stanowiska mieszkańców przy budynkach, bez osobnych wnętrz. Goście pojawiają się w domu po zaproszeniu; nie przechodzą jeszcze całej trasy przez wioskę. Edytor ma kamerę z góry; po jego zamknięciu wraca kamera zza pleców.
+
+Docelowe modele i animacje: [docs/ASSETS.md](docs/ASSETS.md).
 
 Nie dodano automatycznego wdrażania z `main`. Publikacja na `gh-pages` wymaga osobnej zgody. Samo zapisanie gałęzi roboczej nie aktualizuje działającej gry.

@@ -88,5 +88,115 @@
     "color": "#ECD6B0",
     "width": 0.4,
     "depth": 0.3
+  },
+  {
+    "id": "chair-oak",
+    "name": "Drewniane krzesło",
+    "description": "Dekoracja do twojego pokoju. Możesz zmienić jej miejsce.",
+    "kind": "decoration",
+    "model": "chair",
+    "color": "#B1885F",
+    "width": 0.7,
+    "depth": 0.7
+  },
+  {
+    "id": "chair-blue",
+    "name": "Niebieskie krzesło",
+    "description": "Dekoracja do twojego pokoju. Możesz zmienić jej miejsce.",
+    "kind": "decoration",
+    "model": "chair",
+    "color": "#7E9EAE",
+    "width": 0.7,
+    "depth": 0.7
+  },
+  {
+    "id": "small-table",
+    "name": "Mały stolik",
+    "description": "Dekoracja do twojego pokoju. Możesz zmienić jej miejsce.",
+    "kind": "decoration",
+    "model": "table",
+    "color": "#C6A576",
+    "width": 1,
+    "depth": 1
+  },
+  {
+    "id": "rug-sun",
+    "name": "Dywan w kolorze słońca",
+    "description": "Dekoracja do twojego pokoju. Możesz zmienić jej miejsce.",
+    "kind": "decoration",
+    "model": "rug",
+    "color": "#D9B65F",
+    "width": 2.5,
+    "depth": 1.7
+  },
+  {
+    "id": "rug-leaf",
+    "name": "Zielony dywan",
+    "description": "Dekoracja do twojego pokoju. Możesz zmienić jej miejsce.",
+    "kind": "decoration",
+    "model": "rug",
+    "color": "#8AA479",
+    "width": 2,
+    "depth": 1.5
+  },
+  {
+    "id": "plant-poppy",
+    "name": "Doniczka z kwiatem",
+    "description": "Dekoracja do twojego pokoju. Możesz zmienić jej miejsce.",
+    "kind": "decoration",
+    "model": "plant",
+    "color": "#CB8D71",
+    "width": 0.65,
+    "depth": 0.65
+  },
+  {
+    "id": "plant-fern",
+    "name": "Paproć w doniczce",
+    "description": "Dekoracja do twojego pokoju. Możesz zmienić jej miejsce.",
+    "kind": "decoration",
+    "model": "plant",
+    "color": "#9C8468",
+    "width": 0.8,
+    "depth": 0.8
+  },
+  {
+    "id": "shelf",
+    "name": "Półka na książki",
+    "description": "Dekoracja do twojego pokoju. Możesz zmienić jej miejsce.",
+    "kind": "decoration",
+    "model": "shelf",
+    "color": "#B6926C",
+    "width": 1.4,
+    "depth": 0.55
+  },
+  {
+    "id": "lamp-blue",
+    "name": "Niebieska lampa",
+    "description": "Dekoracja do twojego pokoju. Możesz zmienić jej miejsce.",
+    "kind": "decoration",
+    "model": "lamp",
+    "color": "#91ADBD",
+    "width": 0.7,
+    "depth": 0.7
+  },
+  {
+    "id": "stool",
+    "name": "Małe krzesełko",
+    "description": "Dekoracja do twojego pokoju. Możesz zmienić jej miejsce.",
+    "kind": "decoration",
+    "model": "chair",
+    "color": "#B39B73",
+    "width": 0.55,
+    "depth": 0.55
+  },
+  {
+    "id": "bench",
+    "name": "Ławka do rozmów",
+    "description": "Dekoracja do twojego pokoju. Możesz zmienić jej miejsce.",
+    "kind": "decoration",
+    "model": "chair",
+    "color": "#9CA67A",
+    "width": 1.5,
+    "depth": 0.7
   }
 ]

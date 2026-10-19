@@ -61,6 +61,11 @@ export function createVillage(scene:Scene,characters:readonly CharacterDefinitio
   cottage('Sklep Feli',10,9,6,5,'#E9CEAA','#B87960');
   cottage('Biblioteka Toli',0,23,7.4,5.5,'#E5DCC2','#768A93');
   cottage('Dom Milusia',13,-12,5,4.4,'#E8D9C3','#A48E6F');
+  const stall=group('fela-stall',environment,8,terrainHeight(8,4.8),4.8);
+  shape('box','stall-counter','#B79163',stall,0,.7,0,1.8,.13,.75);for(const x of [-.75,.75])shape('box','stall-leg','#92714E',stall,x,.34,0,.1,.68,.6);
+  for(let i=0;i<4;i++)shape('ball','stall-apple',i%2?'#BC7865':'#D1AD64',stall,-.6+i*.35,.87,0,.12,.12,.12);
+  solids.push({id:'stall',type:'box',x:8,z:4.8,halfX:.9,halfZ:.4});
+  const mail=group('mailbox',environment,14.4,terrainHeight(14.4,-15),-15);shape('box','mailbox-post','#96744F',mail,0,.5,0,.12,1,.12);shape('box','mailbox-body','#8FA6AC',mail,0,1,0,.55,.4,.45);
   function fence(x:number,z:number,length:number,angle=0){
     const g=group('fence',environment,x,terrainHeight(x,z),z);g.rotation.y=angle;
     for(let i=0;i<=length;i+=1.25){shape('box','fence-post','#B69B6F',g,i-length/2,.48,0,.12,.96,.12);shape('cone','post-cap','#CCB480',g,i-length/2,1.02,0,.11,.12,.11)}

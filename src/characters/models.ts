@@ -55,10 +55,14 @@ export function createCharacter(scene:Scene,kind:'kitek'|'bruno'|'fela'|'tola'|'
   }
   if(kind==='milus'){shape('ball','rabbit-tail','#EEE4CC',tail,0,0,-.07,.11);shape('box','mail-bag','#A58260',body,.22,.45,.03,.22,.28,.22)}
   if(kind==='tola'){for(const side of [-1,1]){shape('ball','owl-wing',fur,body,side*.29,.6,-.04,.1,.26,.14);shape('ring','owl-glasses','#6D6451',head,side*.105,.015,.258,.20,.20,.10)}root.scaling.setAll(1.05)}
-  function animate(time:number,speed:number,celebrate=false,reduced=false){
+  function animate(time:number,speed:number,celebrate=false,reduced=false,gesture:'idle'|'talk'|'pick-up'|'give'='idle'){
     const phase=time*(speed>2.6?12:8),stride=Math.min(1,speed/2.4);
     limbs.forEach((limb,i)=>limb.rotation.x=reduced?0:Math.sin(phase+(i%2)*Math.PI)*(i<2?.52:-.52)*stride);
     body.position.y=reduced?0:(celebrate?Math.abs(Math.sin(time*7))*.13:Math.sin(time*2)*.008+Math.abs(Math.sin(phase))*.026*stride);
+    body.rotation.x=!reduced&&gesture==='pick-up'?Math.abs(Math.sin(time*3))*.25:0;
+    head.rotation.x=!reduced&&gesture==='talk'?Math.sin(time*4)*.035:0;
+    if(!reduced&&(gesture==='give'||gesture==='pick-up')){limbs[2].rotation.x=-.9;limbs[3].rotation.x=-.9}
+    if(!reduced&&gesture==='talk')limbs[2].rotation.x=-.3+Math.sin(time*3)*.12;
     tail.rotation.y=reduced?0:Math.sin(time*2.4)*.15;
     if(celebrate){limbs[2].rotation.z=-1.8;limbs[3].rotation.z=1.8}else{limbs[2].rotation.z=0;limbs[3].rotation.z=0}
   }

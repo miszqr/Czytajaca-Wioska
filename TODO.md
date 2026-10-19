@@ -26,12 +26,12 @@ Aktualna specyfikacja: `docs/WORK_BRIEF.md`, 2026-10-19. Zastępuje dawny plan s
 
 ## P2 — zabawa po historii i oprawa
 
-- [ ] Edytor mebli: wybór, podgląd 3D, obrót, siatka i kolizje.
-- [ ] Schowek dekoracji, około 20 przedmiotów, odzyskiwanie ustawionych mebli.
-- [ ] Proste stany i animacje mieszkańców, ponowne spotkania.
-- [ ] Odsłuch na żądanie, klawiatura, pad i dotyk dla nowych interakcji.
-- [ ] Responsywne dialogi, dziennik i edytor domu.
-- [ ] Build, testy regresji i dokumentacja treści.
+- [x] Edytor mebli: wybór, podgląd 3D, obrót, siatka i kolizje.
+- [x] Schowek dekoracji, około 20 przedmiotów, odzyskiwanie ustawionych mebli.
+- [x] Proste stany i animacje mieszkańców, ponowne spotkania.
+- [x] Odsłuch na żądanie, klawiatura, pad i dotyk dla nowych interakcji.
+- [x] Responsywne dialogi, dziennik i edytor domu.
+- [x] Build, 34 testy regresji i dokumentacja treści. Optymalizacja prototypu: wspólne materiały i aktualizacja geometrii tylko przy zmianie; pomiary wydajności pozostają do odbioru.
 
 ## Odbiór na urządzeniu
 

@@ -5,8 +5,11 @@
 | Element | Status | Źródło |
 | --- | --- | --- |
 | Kitek 3D | Prototyp proceduralny; właściwe kolory, uszy, oczy, ogon, tunika i plecak | Oryginalny kod `characters/models.ts` |
+| Fela 3D | Lisica w zielonym ubraniu; prototyp inspirowany dostarczoną ilustracją | Oryginalny kod; `references/fela-concept.png` jest referencją, nie modelem |
+| Tola i Miluś 3D | Sowa z okularami i królik z torbą; prototypy | Oryginalny kod `characters/models.ts` |
+| Wnętrze i meble | Pokój, szafka, łóżko, stół oraz warianty lamp, krzeseł, dywanów i roślin | Oryginalne bryły w `game/story-world.ts`; 20 typów przedmiotów w danych |
 | Bruno 3D | Prototyp proceduralny: miś, fartuch i kapelusz | Oryginalny kod `characters/models.ts` |
-| Animacje | Zastępcze proceduralne: idle, walk, run, obrót, celebrate | Kod, bez rigu i klipów glTF |
+| Animacje | Zastępcze proceduralne: idle, walk, run, obrót, talk, pick-up, give, celebrate | Kod, bez rigu i klipów glTF |
 | Domy, ogród i staw | Stylizowana geometria prototypowa | Oryginalny kod `game/world.ts` |
 | Drzewa i roślinność | Dąb, jabłoń, brzoza, sosna; rozgałęzione pnie, korzenie, nieregularne korony, krzewy, trawa i kwiaty z płatkami | Oryginalny kod `game/vegetation.ts` i `game/world.ts` |
 | Portrety i ikony | Proste wektory interfejsu; nie finalne portrety 3D | Oryginalny SVG w `ui/Icons.tsx` |
@@ -22,7 +25,7 @@ Model Kitka nie odtwarza szczegółowego futra i jakości renderingu z referencj
 3. Bruno, Fela, Tola, Miluś z rigami i prostymi animacjami rozmowy.
 4. Modułowe domy z wnętrzami, biblioteka, sklep i meble.
 5. Roślinność z kilkoma wariantami i LOD; materiały wspólne/atlasy.
-6. Około 20 przedmiotów z czytelnymi ikonami.
+6. Docelowe modele i osobne ikony obecnych 20 typów przedmiotów; dziś część wariantów współdzieli bryły i ogólną ikonę.
 7. Dźwięki kroków, interakcji, otoczenia i spokojna muzyka, z udokumentowaną licencją.
 
 Dostarczona grafika nie została przekształcona w finalny asset. Wszystkie proceduralne modele pozostają oznaczone jako prototypy.

@@ -1,35 +1,53 @@
-# Odbiór P0
+# Odbiór „Nowego domu Kitka”
 
-## Weryfikacja wykonana automatycznie
+## Wyniki automatyczne
 
-Pierwotne P0: **10 testów zaliczonych**, 4 pliki testowe; `npm run build` zakończony powodzeniem. Wcześniejsze etapy: P0.1 — 5 testów, P0.2 — 9 testów. W końcowej kontroli wykryto i naprawiono odwrócony kierunek powierzchni ścieżek; test sprawdza, że ich normalne wskazują w górę.
+| Etap | Wynik | Raport |
+| --- | --- | --- |
+| P0 | 26 testów i build — OK | `reports/story-P0.md` |
+| P1 | 28 testów i build — OK | `reports/story-P1.md` |
+| P2 | 34 testy i build — OK | `reports/story-P2.md` |
 
-Poprawka sterowania dodaje `tests/controls.test.ts`: rzeczywiste zdarzenia klawiatury, pętla gry z Babylon NullEngine i geometria kamery. Sprawdzane są obrót w miejscu, ruch podczas obrotu, cofanie bez odwracania, najkrótsza droga powrotu kamery, pierwszeństwo rozglądania, brak zapętlenia sterowania WASD, pauza oraz wejście pada i dotyku. Testy nie renderują obrazu na GPU.
+Test pełnej historii przechodzi wszystkie osiem scen i odtwarza zapis po każdym działaniu. Testy UI sprawdzają ręczne dialogi, listy, dziennik, podgląd mebla, blokowanie kolizji i ustawienie lampy z akcjami pada. Testy geometrii sprawdzają dostępność interakcji, a test sterowania odtworzenie kamery po edytorze. Logi historyczne `P0-1/2/3` dotyczą poprzedniej koncepcji; nie stanowią kryteriów obecnej fabuły.
 
-Wynik poprawki: **17/17 testów, 5 plików testowych; kompilacja produkcyjna poprawna**. Próba odbioru przez Browser zakończyła się timeoutem połączenia, a podgląd lokalnego serwera przez przeglądarkę zdalną — `ERR_CONNECTION_REFUSED`. Płynność i obraz pozostają do sprawdzenia na urządzeniu.
+NullEngine i jsdom nie potwierdzają obrazu na GPU ani działania fizycznego urządzenia. Udostępniona wcześniej przeglądarka zgłaszała `WebGL not supported`. Poniższy odbiór ręczny pozostaje do wykonania na komputerze i telefonie z działającym WebGL.
 
-Raporty `reports/P0-1-*`, `P0-2-*`, `P0-3-*` zawierają wyniki kompilacji i testów. Etap 1 sprawdza fundamenty domenowe i zapis; etap 2 dodaje model świata, ruch i scenę NullEngine; etap 3 kompiluje zintegrowaną grę i sprawdza pełną pętlę UI.
+## P0 — dom i list
 
-NullEngine oraz jsdom nie są testem obrazu, WebGL na GPU, wydajności ani fizycznego kontrolera. Podgląd przeglądarkowy jest zablokowany błędem infrastruktury opisanym w README.
+- [ ] Uruchom `npm run dev` i otwórz `http://localhost:4173`.
+- [ ] Kitek ma futro `#C98755`, niebieskie ubranie, brązowy plecak i ogon. Kamera zaczyna za nim.
+- [ ] Strzałki pozwalają iść, cofać i obracać się; ręczna kamera ma pierwszeństwo. WASD/pad/joystick pozostają zależne od kamery.
+- [ ] Nie można wejść do wody, przeniknąć przez dom lub utknąć przy płocie.
+- [ ] Porozmawiaj z Brunonem na placu. Wypowiedzi zmieniają się dopiero po „Dalej”.
+- [ ] Znajdź dom przy stawie z niebieską tabliczką, wejdź, otwórz list na stole.
+- [ ] Przeczytaj list ponownie z dziennika, wyjdź na spacer, wróć i odśwież stronę.
+- [ ] Po wznowieniu pozycja i lokalizacja są właściwe, a list nadal jest w dzienniku.
 
-## Próba na komputerze / telefonie
+## P1 — historia
 
-- [ ] Uruchom lokalnie; świat pojawia się bez błędów i logowania.
-- [ ] Kitek ma niebieskie ubranie, plecak i ogon; kamera zaczyna za nim.
-- [ ] Strzałkami ←/→ obróć Kitka w miejscu: kamera pozostaje za plecami. Sprawdź też obrót podczas ruchu ↑.
-- [ ] ↑ idzie do przodu, ↓ cofa bez odwracania Kitka ani kamery.
-- [ ] Obróć kamerę myszą; po użyciu strzałek wraca płynnie za plecy. Ręczne przeciąganie podczas ruchu ma pierwszeństwo.
-- [ ] Po obrocie kamery WASD, pad i dotyk nadal poruszają względem niej; dłuższe trzymanie kierunku bocznego nie powoduje krążenia.
-- [ ] Obejdź dom, płot, drzewo i staw. Nie można przenikać ani wejść do wody.
-- [ ] Przybliż kamerę do ściany i sprawdź płynne skrócenie dystansu.
-- [ ] Podejdź do Brunona. Znacznik rozmowy i E/A uruchamiają dialog tylko z bliska.
-- [ ] Przewijaj dialog ręcznie; ruch i kamera są wtedy zatrzymane.
-- [ ] Wybierz LA, skorzystaj z podpowiedzi i odsłuchu, następnie wskaż MA.
-- [ ] Otrzymasz jedno nasionko. Powtórka ćwiczenia nie przyznaje kolejnego.
-- [ ] Przerwij zadanie przed odpowiedzią; spacer nadal działa i można wrócić.
-- [ ] Odśwież stronę: pozycja, kamera, ukończenie i nagroda wracają.
-- [ ] Na telefonie sprawdź jednocześnie joystick i obrót kamery, pion i poziom.
-- [ ] Na padzie sprawdź oba drążki, A/B, D-pad, Start, odłączenie i ponowne podłączenie.
-- [ ] Wyłącz dostęp do pamięci witryny: pojawia się informacja, a gra nadal działa.
+- [ ] Po liście Fela daje jedną lampę. Kolejna rozmowa nie daje drugiej.
+- [ ] W domu użyj miejsca przy łóżku lub „Urządź dom” → Plecak. Ustaw lampę przy łóżku.
+- [ ] Odczytaj notatkę na szafce i zapytaj Brunona o klucz.
+- [ ] Podnieś skrzynkę przy placu; widać ją przy Kitku. Postaw ją obok grządek.
+- [ ] Wróć do Brunona po klucz. Otwórz szafkę w domu, zajrzyj do książeczki.
+- [ ] Porozmawiaj z Tolą przy bibliotece i Milusiem przy jego domu.
+- [ ] Przekaż po jednym zaproszeniu Brunonowi, Feli i Toli.
+- [ ] W domu zadzwoń dzwonkiem: czterej sąsiedzi pojawiają się w wolnych miejscach.
+- [ ] Porozmawiaj z gośćmi, przeczytaj nowy wpis w dzienniku, pożegnaj ich dzwonkiem.
+- [ ] Można ponownie zaprosić sąsiadów, wyjść z domu i swobodnie spacerować.
+- [ ] Przerwij historię w kilku miejscach i odśwież stronę. Żaden klucz, prezent ani zaproszenie nie znika ani się nie powiela.
 
-Dalsze zmiany P1/P2 nie są częścią tego odbioru. Gotowy build P0 przekazano na gałęzi `gh-pages`; ustawieniami publikacji zarządza właściciel repozytorium.
+## P2 — dom i urządzenia
+
+- [ ] Ze schowka wybierz krzesło. Podgląd w pokoju zgadza się z ustawionym meblem.
+- [ ] Obróć prostokątny mebel: zmienia się obrys; kolizja i ściany blokują niedozwolone ustawienie.
+- [ ] Przesuń mebel, anuluj, schowaj i ustaw ponownie. Własność przedmiotu zostaje zachowana.
+- [ ] Nie da się zablokować wyjścia, szafki ani zamknąć Kitka za meblami.
+- [ ] Po edycji kamera wraca zza pleców; po przeładowaniu meble stoją tak samo.
+- [ ] Odsłuch jest dostępny na żądanie; brak polskiego głosu nie blokuje przejścia.
+- [ ] Na Pixelu 8 sprawdź pion/poziom, czytelność, dotyk, jednoczesny ruch i kamerę.
+- [ ] Na 8BitDo sprawdź A/B/X/Y, oba drążki, D-pad, Start, odłączenie i powrót pada.
+- [ ] W edytorze D-pad przesuwa, X obraca, A ustawia, B anuluje podgląd.
+- [ ] Sprawdź płynność przez kilka minut przy drzewach, w domu i podczas spotkania.
+
+Nie publikować przed osobną zgodą użytkownika. Modele i animacje pozostają proceduralnymi prototypami.
