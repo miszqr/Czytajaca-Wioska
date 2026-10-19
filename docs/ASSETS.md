@@ -30,6 +30,8 @@ Model Kitka nie odtwarza szczegółowego futra i jakości renderingu z referencj
 
 Dostarczona grafika nie została przekształcona w finalny asset. Wszystkie proceduralne modele pozostają oznaczone jako prototypy.
 
+Oryginał referencji Feli jest też zachowany w [archiwum części](references/fela-original/README.md). Na gałęzi odzyskanej przez połączenie GitHub PNG odtwarza polecenie `python3 scripts/restore-fela-reference.py`; suma kontrolna potwierdza identyczność z załącznikiem. Ten krok nie jest potrzebny do uruchomienia gry.
+
 ## Pierwsze dopracowanie roślinności
 
 Kolor liści jest zapisany we wierzchołkach, a małe elementy są łączone w istniejące partie geometrii. Dekoracje mają własne ziarna losowania: nie zmieniają rozmieszczenia drzew, przeszkód ani pozycji zapisu. Pnie i główne korony zachowują obsługę kolizji kamery. Trawa i drobne gałązki nie blokują ruchu.

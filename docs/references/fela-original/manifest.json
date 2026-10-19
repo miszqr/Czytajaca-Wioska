@@ -1,0 +1,17 @@
+{
+  "filename": "fela-concept.png",
+  "encoding": "base64",
+  "bytes": 2438200,
+  "sha256": "32d51083e92eff286c1912979ca466ea9ccc64826b65bfd057b91a437914fb19",
+  "git_blob_sha": "a9df06d02a1c3c91d31f3011d8ca7747c54e90ec",
+  "parts": [
+    "part-01.b64",
+    "part-02.b64",
+    "part-03.b64",
+    "part-04.b64",
+    "part-05.b64",
+    "part-06.b64",
+    "part-07.b64",
+    "part-08.b64"
+  ]
+}
