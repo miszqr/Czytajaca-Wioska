@@ -39,7 +39,7 @@
 - [x] Wspólne materiały, łączenie geometrii i zachowanie rozmieszczenia przeszkód.
 - [x] Porównanie geometrii modeli i sprawdzenie kompilacji oraz istniejących testów.
 - [ ] Odbiór grafiki na urządzeniu i pomiar płynności na Pixelu.
-- [ ] Publikacja poprawionej roślinności po zgodzie użytkownika.
+- [x] Publikacja poprawionej roślinności po zgodzie użytkownika; build `80ba87c`, wdrożenie zakończone sukcesem.
 
 ## P2 — dom i oprawa
 

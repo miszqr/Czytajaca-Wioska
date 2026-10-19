@@ -133,8 +133,8 @@ npm run dev
 
 Repozytorium: [miszqr/Czytajaca-Wioska](https://github.com/miszqr/Czytajaca-Wioska). Kod i build są przygotowane do GitHub Pages; włączenie hostingu wykonuje właściciel repozytorium zgodnie z instrukcją powyżej.
 
-## Dopracowanie roślinności — do odbioru
+## Dopracowanie roślinności — opublikowane
 
 Dodano dęby, jabłonie, brzozy i sosny z gałęziami, korzeniami i nieregularnymi koronami, a także krzewy, kępki trawy i płatki kwiatów. [Zobacz porównanie geometrii modeli](docs/previews/vegetation.webp). Obraz powstał przez programowy render modeli z kodu, w osobnym oświetleniu porównawczym; nie jest zrzutem gry.
 
-Zmiana jest przygotowana na osobnej gałęzi `feat/vegetation-detail`. GitHub Pages pozostaje przy opublikowanej poprawce kamery, do czasu zatwierdzenia nowej grafiki. Szczegóły i ograniczenia: [raport weryfikacji](reports/vegetation-detail.md).
+Zmiana została opublikowana na GitHub Pages po zgodzie użytkownika. Build `80ba87c` zawiera cztery odmiany drzew i dodatkową roślinność; kod jest na `main`, a gałąź `feat/vegetation-detail` zachowuje wersję przygotowaną do przeglądu. Szczegóły i ograniczenia: [raport weryfikacji](reports/vegetation-detail.md).

@@ -9,4 +9,5 @@
 - Przeglądarka podglądu zgłosiła `WebGL not supported`; wygląd shaderów, kamera przy nowych koronach i wydajność na urządzeniu pozostają niezweryfikowane.
 - `docs/previews/vegetation.webp`: programowy render rzeczywistych siatek modeli w osobnym oświetleniu porównawczym, nie screenshot WebGL. Cienie na tej planszy nie oznaczają dodania cieni do gry.
 - Brak nowych zależności i zasobów zewnętrznych.
-- Nie aktualizowano gałęzi `gh-pages` ani działającej gry.
+- Po zatwierdzeniu przez użytkownika opublikowano build `80ba87c5a76d5b18d6d937afe1939523c8f06423` na `gh-pages`. GitHub Actions: run `39229495339`, zakończony sukcesem.
+- Strona zwraca nowy `index.html` zgodny z zatwierdzonym buildem (HTTP 200). Weryfikacja HTTP nie potwierdza renderowania WebGL.
