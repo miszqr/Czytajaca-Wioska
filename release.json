@@ -1,6 +1,6 @@
 {
-  "sourceCommit": "1ad1401209bcbb44a66cd2ea23265eb28baf0074",
+  "sourceCommit": "d268c206b45e6720f12130c328d346cb55516f16",
   "sourceBranch": "feat/new-home-story",
-  "release": "Nowy dom Kitka P0-P2 — camera collision fix",
+  "release": "separate-location-scenes",
   "date": "2026-10-20"
 }
