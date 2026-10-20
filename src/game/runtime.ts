@@ -1,11 +1,8 @@
-import {Engine,Scene,FreeCamera,Vector3,Matrix,Viewport,Ray} from './babylon';
-import {createVillage} from './world';
+import {Engine,Vector3,Matrix,Viewport,Ray} from './babylon';
+import {LocationScenes,type LocationScene} from './location-scenes';
 import {CONFIG} from './config';
 import {movementVector,moveWithSlide,blocked,terrainHeight,turnTowards} from './movement';
 import type {ContentPack,StoryNode} from '../content/types';
-import {createShapes} from './shapes';
-import {drawItem} from './story-world';
-import {createStoryWorld} from './story-world';
 import {targetPosition} from '../interactions/model';
 import {homeSolids,guestPositions} from '../housing/model';
 import {matches,findNode} from '../story/engine';
@@ -16,21 +13,24 @@ export type WorldSnapshot={player:PlayerPose;camera:CameraPose;location:SaveStat
 export type NearInfo={targetId:string|null;label:string;near:boolean;distance:number;x:number;y:number;visible:boolean};
 export type RuntimeCallbacks={onReady:()=>void;onError:(error:unknown)=>void;onNear:(info:NearInfo)=>void;onSave:(snapshot:WorldSnapshot)=>void;onAction:(action:Action)=>void;onGamepad:(connected:boolean)=>void};
 export class VillageGame {
-  readonly engine:Engine;readonly scene:Scene;readonly world:ReturnType<typeof createVillage>;readonly camera:FreeCamera;
+  readonly engine:Engine;
+  private locations:LocationScenes;private view:LocationScene;
+  get scene(){return this.view.scene}
+  get world(){return this.view.world}
+  get camera(){return this.view.camera}
   private input=new Input();private pose:PlayerPose;private cameraPose:CameraPose;private paused=true;private disposed=false;
   private vx=0;private vz=0;private time=0;private saveTime=0;private infoTime=0;private celebrateUntil=0;private cameraLength:number;
   private pointer:{id:number;x:number;y:number}|null=null;private observer:ResizeObserver;private pad=false;
-  private followHeading=false;private gesture:'idle'|'pick-up'|'give'='idle';private gestureUntil=0;private talkingNpc='';private editing=false;private guestSpots:Record<string,{x:number;z:number}>={};private guestKey='';private carriedCrate:import('./babylon').TransformNode|null=null;private state:SaveState;private storyWorld:ReturnType<typeof createStoryWorld>;
+  private followHeading=false;private gesture:'idle'|'pick-up'|'give'='idle';private gestureUntil=0;private talkingNpc='';private editing=false;private guestSpots:Record<string,{x:number;z:number}>={};private guestKey='';private state:SaveState;
   private reduced=window.matchMedia('(prefers-reduced-motion: reduce)');
   constructor(private canvas:HTMLCanvasElement,state:SaveState,private callbacks:RuntimeCallbacks,private content:ContentPack){
     this.state=state;
     try{this.engine=new Engine(canvas,true,{powerPreference:'low-power',preserveDrawingBuffer:false,stencil:true},false)}catch(e){this.input.dispose();throw e}
     this.engine.setHardwareScalingLevel(1/Math.min(window.devicePixelRatio||1,1.5));
-    this.scene=new Scene(this.engine);
-    try{this.world=createVillage(this.scene,content.characters)}catch(error){this.input.dispose();this.scene.dispose();this.engine.dispose();throw error}
-    const crateItem=content.items.find(i=>i.id==='crate');if(crateItem){this.carriedCrate=drawItem(createShapes(this.scene),this.world.kitek.root,crateItem,0,.42);this.carriedCrate.scaling.setAll(.65);this.carriedCrate.position.y=.4;this.carriedCrate.setEnabled(!!state.inventory.crate)}
-    this.storyWorld=createStoryWorld(this.scene,content);this.storyWorld.sync(state);this.guestSpots=guestPositions(state,content);this.guestKey=JSON.stringify([state.flags.hosting,state.furniture]);this.world.environment.setEnabled(state.location==='village');this.world.ground.setEnabled(state.location==='village');
-    this.camera=new FreeCamera('behind-kitek',new Vector3(0,2,-4),this.scene);this.camera.minZ=.08;this.camera.maxZ=160;this.camera.fov=.92;this.scene.activeCamera=this.camera;
+    this.locations=new LocationScenes(this.engine,content);
+    try{this.view=this.locations.prepare(state)}catch(error){this.input.dispose();this.locations.dispose();this.engine.dispose();throw error}
+    this.guestSpots=guestPositions(state,content);this.guestKey=JSON.stringify([state.flags.hosting,state.furniture]);
+    this.syncActors();
     this.pose={...state.player};if(blocked(this.pose,this.solids))this.pose=state.location==='home'?{x:0,z:-2.5,heading:0}:{...CONFIG.spawn};
     this.cameraPose={...state.camera};this.cameraLength=state.camera.distance;
     this.placePlayer();this.updateCamera(1);
@@ -59,7 +59,7 @@ export class VillageGame {
     let allowed=distance;
     for(const offset of [Vector3.Zero(),new Vector3(.16,0,0),new Vector3(-.16,0,0),new Vector3(0,.16,0)]){
       // A custom picking predicate replaces Babylon's default visibility checks.
-      // Ignore the disabled location, including meshes under a disabled parent.
+      // Ignore hidden objects within the active scene, including disabled parents.
       const hit=this.scene.pickWithRay(new Ray(target.add(offset),direction,distance),mesh=>mesh.metadata?.cameraObstacle===true&&mesh.isEnabled()&&mesh.isVisible&&mesh.isPickable);
       if(hit?.hit)allowed=Math.min(allowed,Math.max(.35,hit.distance-.25));
     }
@@ -102,7 +102,8 @@ export class VillageGame {
         this.saveTime+=dt;if(this.saveTime>2){this.saveTime=0;this.flush()}
       }else this.world.kitek.animate(this.time,0,this.time<this.celebrateUntil,this.reduced.matches,this.time<this.gestureUntil?this.gesture:'idle');
       for(const npc of this.world.npcs){
-        npc.character.root.setEnabled(this.state.location==='village'||!!this.state.flags.hosting&&!!this.guestSpots[npc.definition.id]);if(this.state.location==='home'){const pos=this.guestPosition(npc.definition.id);npc.character.root.position.set(pos.x,0,pos.z);npc.character.animate(this.time+.5,0,false,this.reduced.matches,this.paused&&this.talkingNpc===npc.definition.id?'talk':'idle');continue;}
+        if(!npc.character.root.isEnabled())continue;
+        if(this.state.location==='home'){const pos=this.guestPosition(npc.definition.id);npc.character.root.position.set(pos.x,0,pos.z);npc.character.animate(this.time+.5,0,false,this.reduced.matches,this.paused&&this.talkingNpc===npc.definition.id?'talk':'idle');continue;}
         const others=this.world.solids.filter(s=>s!==npc.solid);
         const {motion,speed}=advanceNpc(npc.motion,npc.definition.behavior,dt,others,this.pose,this.paused);
         npc.motion=motion;npc.solid.x=motion.x;npc.solid.z=motion.z;
@@ -121,14 +122,37 @@ export class VillageGame {
   private get solids(){return this.state.location==='home'?[...homeSolids(this.state,this.content),...(this.state.flags.hosting?this.world.npcs.filter(n=>this.guestSpots[n.definition.id]).map(n=>({id:n.definition.id,type:'circle' as const,...this.guestPosition(n.definition.id),radius:.42})):[])]:this.world.solids}
   private height(x:number,z:number){return this.state.location==='home'?0:terrainHeight(x,z)}
   private targets(){return [
-    ...(this.state.location==='village'||this.state.flags.hosting?this.world.npcs.filter(n=>this.guestSpots[n.definition.id]).map(n=>({id:n.definition.id,label:n.definition.name,...(this.state.location==='home'?this.guestPosition(n.definition.id):{x:n.motion.x,z:n.motion.z})})):[]),
+    ...(this.state.location==='village'||this.state.flags.hosting?this.world.npcs.filter(n=>this.state.location==='village'||this.guestSpots[n.definition.id]).map(n=>({id:n.definition.id,label:n.definition.name,...(this.state.location==='home'?this.guestPosition(n.definition.id):{x:n.motion.x,z:n.motion.z})})):[]),
     ...this.content.interactions.filter(t=>t.location===this.state.location&&matches(this.state,t.when)).flatMap(t=>{const pos=targetPosition(t,this.state);return pos?[{id:t.id,label:t.label,...pos}]:[]})
   ].filter(t=>findNode(this.content,this.state,t.id))}
   nearestTarget(){return this.targets().sort((a,b)=>Math.hypot(this.pose.x-a.x,this.pose.z-a.z)-Math.hypot(this.pose.x-b.x,this.pose.z-b.z))[0]}
   snapshot():WorldSnapshot{return {player:{...this.pose},camera:{...this.cameraPose},location:this.state.location}}
-  syncState(state:SaveState){const travel=state.location!==this.state.location;this.state=state;const guestKey=JSON.stringify([state.flags.hosting,state.furniture]);if(guestKey!==this.guestKey){this.guestKey=guestKey;this.guestSpots=guestPositions(state,this.content)}this.carriedCrate?.setEnabled(!!state.inventory.crate);this.storyWorld.sync(state);this.world.environment.setEnabled(state.location==='village');this.world.ground.setEnabled(state.location==='village');if(travel){this.pose={...state.player};this.cameraPose={...state.camera};this.cameraLength=this.cameraPose.distance;this.placePlayer();this.updateCamera(1);this.infoTime=1}}
-  previewFurniture(f:import('../content/types').Furniture|null,valid=true){this.storyWorld.preview(f,valid)}
-  editHome(active:boolean){this.editing=active&&this.state.location==='home';this.storyWorld.setEditing(this.editing);this.updateCamera(1)}
+  private syncActors(){
+    for(const npc of this.world.npcs){
+      const visible=this.state.location==='village'||!!this.state.flags.hosting&&!!this.guestSpots[npc.definition.id];
+      npc.character.root.setEnabled(visible);
+      if(this.state.location==='home'){const pos=this.guestPosition(npc.definition.id);npc.character.root.position.set(pos.x,0,pos.z)}
+    }
+  }
+  syncState(state:SaveState){
+    if(this.disposed)return;
+    const travel=state.location!==this.state.location,nextView=this.locations.prepare(state);
+    if(travel){
+      this.view.story.preview(null);this.view.story.setEditing(false);this.editing=false;
+      this.input.clear();this.pointer=null;this.vx=this.vz=0;this.followHeading=false;this.talkingNpc='';
+    }
+    this.state=state;this.view=nextView;
+    const guestKey=JSON.stringify([state.flags.hosting,state.furniture]);
+    if(guestKey!==this.guestKey){this.guestKey=guestKey;this.guestSpots=guestPositions(state,this.content)}
+    this.syncActors();
+    if(travel){
+      this.pose={...state.player};this.cameraPose={...state.camera};this.cameraLength=this.cameraPose.distance;
+      this.placePlayer();this.updateCamera(1);this.infoTime=1;
+      this.callbacks.onNear({targetId:null,label:'',near:false,distance:99,x:0,y:0,visible:false});
+    }
+  }
+  previewFurniture(f:import('../content/types').Furniture|null,valid=true){this.view.story.preview(f,valid)}
+  editHome(active:boolean){this.editing=active&&this.state.location==='home';this.view.story.setEditing(this.editing);this.updateCamera(1)}
   setPaused(value:boolean){this.paused=value;if(!value)this.talkingNpc='';this.pointer=null;this.followHeading=false;this.input.clear();this.vx=this.vz=0;if(value)this.world.kitek.root.setEnabled(true)}
   faceTarget(id:string){const target=this.targets().find(t=>t.id===id);if(!target||Math.hypot(this.pose.x-target.x,this.pose.z-target.z)>CONFIG.interactionRadius)return false;this.pose.heading=Math.atan2(target.x-this.pose.x,target.z-this.pose.z);this.placePlayer();const npc=this.world.npcs.find(n=>n.definition.id===id);if(npc){this.talkingNpc=id;npc.motion.heading=Math.atan2(this.pose.x-target.x,this.pose.z-target.z);npc.character.root.rotation.y=npc.motion.heading}this.flush();return true}
 
@@ -140,6 +164,6 @@ export class VillageGame {
   dispose(){
     if(this.disposed)return;this.flush();this.disposed=true;this.engine.stopRenderLoop(this.frame);this.input.dispose();this.observer.disconnect();
     this.canvas.removeEventListener('pointerdown',this.down);this.canvas.removeEventListener('pointermove',this.move);this.canvas.removeEventListener('pointerup',this.up);this.canvas.removeEventListener('pointercancel',this.up);this.canvas.removeEventListener('wheel',this.wheel);this.canvas.removeEventListener('contextmenu',this.context);this.canvas.removeEventListener('webglcontextlost',this.contextLost);
-    window.removeEventListener('blur',this.blur);window.removeEventListener('pagehide',this.flush);document.removeEventListener('visibilitychange',this.visibility);this.scene.dispose();this.engine.dispose();
+    window.removeEventListener('blur',this.blur);window.removeEventListener('pagehide',this.flush);document.removeEventListener('visibilitychange',this.visibility);this.locations.dispose();this.engine.dispose();
   }
 }

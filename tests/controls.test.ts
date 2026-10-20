@@ -13,11 +13,12 @@ vi.mock('../src/game/babylon',async()=>{
 });
 import {DEFAULT_CONTENT} from '../src/content/defaults';
 import {VillageGame} from '../src/game/runtime';
-import {newSave} from '../src/persistence/state';
+import {newSave,validateSave} from '../src/persistence/state';
 import type {SaveState} from '../src/persistence/state';
 import {Input as KeyboardInput} from '../src/game/input';
 import {Vector3} from '../src/game/babylon';
 import {CONFIG} from '../src/game/config';
+import {choose,findNode} from '../src/story/engine';
 
 let game:VillageGame|undefined,input:Input|undefined;
 const errors=vi.fn();
@@ -113,11 +114,11 @@ it('podgląd domu zmienia tylko kamerę edytora i usuwa geometrię po anulowaniu
  game.previewFurniture(null);game.editHome(false);expect(game.snapshot()).toEqual(before);expect(game.scene.meshes.length).toBe(count);expect(game.camera.position.y).toBeLessThan(5);frames();
 });
 
-it('ukryte wnętrze nie przybliża kamery na placu, ale ściany działają w domu',()=>{
+it('wnętrze w osobnej scenie nie przybliża kamery na placu, ale ściany działają w domu',()=>{
  const outside=newSave();outside.player={x:0,z:-3,heading:0};
  const {game}=start(outside);
  const cameraDistance=()=>Vector3.Distance(game.camera.position,game.world.kitek.root.position.add(new Vector3(0,CONFIG.cameraTargetHeight,0)));
- expect(game.scene.getTransformNodeByName('home-interior')!.isEnabled()).toBe(false);
+ expect(game.scene.getTransformNodeByName('home-interior')).toBeNull();
  expect(cameraDistance()).toBeCloseTo(outside.camera.distance);
 
  const inside={...outside,location:'home' as const};game.syncState(inside);
@@ -128,4 +129,65 @@ it('ukryte wnętrze nie przybliża kamery na placu, ale ściany działają w dom
  game.syncState(outside);frames();
  expect(cameraDistance()).toBeCloseTo(outside.camera.distance);
  expect(game.world.kitek.root.isEnabled()).toBe(true);
+});
+
+it('drzwi przełączają scenę i kamerę, zachowują fabułę oraz właściwe punkty wejścia',()=>{
+ let state=newSave();const {game}=start(state),village=game.scene,villageCamera=game.camera,villageKitek=game.world.kitek;
+ expect(game.engine.scenes).toHaveLength(1);
+ function act(target:string){const node=findNode(DEFAULT_CONTENT,state,target)!;expect(node).toBeDefined();state=choose(DEFAULT_CONTENT,state,node.id,node.choices[0].id).state;game.syncState(state)}
+ act('bruno');key('ArrowUp');frames(5);act('home-door');const home=game.scene,homeCamera=game.camera;
+ expect(home).not.toBe(village);expect(homeCamera).not.toBe(villageCamera);
+ expect(game.world.kitek).not.toBe(villageKitek);expect(game.world.kitek.root.getScene()).toBe(home);
+ expect(game.snapshot().player).toEqual({x:0,z:-2.5,heading:0});
+ const entryPose=game.snapshot().player;frames(2);expect(game.snapshot().player).toEqual(entryPose);
+ expect(home.getMeshByName('village-ground')).toBeNull();expect(home.getTransformNodeByName('home-door')).toBeNull();
+ expect(village.getTransformNodeByName('home-interior')).toBeNull();expect(village.getTransformNodeByName('fela-letter')).toBeNull();
+ act('fela-letter');act('home-exit');expect(game.scene).toBe(village);expect(game.camera).toBe(villageCamera);
+ expect(game.snapshot().player).toEqual({x:18,z:4.2,heading:3.14159});expect(state.read).toEqual(['fela-letter']);
+ act('home-door');expect(game.scene).toBe(home);expect(game.camera).toBe(homeCamera);expect(game.engine.scenes).toHaveLength(2);
+ expect(state.read).toEqual(['fela-letter']);expect(state.completed).toContain('home');
+});
+
+it('renderuje i aktualizuje tylko aktywną scenę, powroty nie mnożą zasobów, dispose sprząta obie',()=>{
+ const outside=newSave(),inside={...outside,location:'home' as const,player:{x:0,z:-2.5,heading:0}};
+ const {game}=start(outside),village=game.scene,villageNpcs=game.world.npcs;
+ const villageRender=vi.mocked(village.render);villageRender.mockClear();
+ const before=villageNpcs.map(n=>({motion:structuredClone(n.motion),position:n.character.root.position.asArray()}));
+ game.syncState(inside);const home=game.scene,homeRender=vi.spyOn(home,'render').mockImplementation(()=>{});
+ frames(30);expect(homeRender).toHaveBeenCalledTimes(30);expect(villageRender).not.toHaveBeenCalled();
+ expect(villageNpcs.map(n=>({motion:n.motion,position:n.character.root.position.asArray()}))).toEqual(before);
+ const counts=[village.meshes.length,home.meshes.length,village.materials.length,home.materials.length];
+ for(let i=0;i<5;i++){game.syncState(outside);frames();game.syncState(inside);frames()}
+ expect(game.engine.scenes).toHaveLength(2);
+ expect([village.meshes.length,home.meshes.length,village.materials.length,home.materials.length]).toEqual(counts);
+ game.dispose();expect(village.meshes).toHaveLength(0);expect(home.meshes).toHaveLength(0);expect(game.engine.scenes).toHaveLength(0);expect(loop.frame).toBeNull();
+});
+
+it('wznawia zapis v3 bez tworzenia wioski i zachowuje meble oraz edytor przy kolejnych wizytach',()=>{
+ const saved=newSave();saved.location='home';saved.player={x:0,z:-2.5,heading:.4};saved.camera={yaw:.4,pitch:.45,distance:4.2};saved.flags['read-fela-letter']=true;saved.read=['fela-letter'];saved.inventory.crate=1;
+ saved.furniture.push({id:'fela-lamp',itemId:'lamp',x:-1.5,z:1.5,rotation:1});
+ const restored=validateSave(JSON.parse(JSON.stringify(saved)))!;const {game}=start(restored),home=game.scene;
+ expect(game.engine.scenes).toHaveLength(1);expect(home.getMeshByName('village-ground')).toBeNull();expect(game.snapshot()).toEqual({location:'home',player:saved.player,camera:saved.camera});
+ expect(home.getTransformNodeByName('fela-lamp')!.position.x).toBe(-1.5);
+ game.editHome(true);game.previewFurniture({id:'preview',itemId:'lamp',x:1,z:1,rotation:0});
+ const outside={...saved,location:'village' as const,player:{...CONFIG.spawn}};game.syncState(outside);
+ expect(home.getTransformNodeByName('placement-preview')).toBeNull();expect(home.getTransformNodeByName('placement-grid')!.isEnabled()).toBe(false);
+ const changed=structuredClone(saved);changed.furniture.find(f=>f.id==='fela-lamp')!.x=-1;
+ game.syncState(changed);expect(game.scene).toBe(home);expect(game.camera.position.y).toBeLessThan(5);
+ expect(home.getTransformNodeByName('fela-lamp')!.position.x).toBe(-1);
+ expect(home.getTransformNodeByName('fela-letter')!.isEnabled()).toBe(true);
+ expect(home.getTransformNodeByName('crate')!.isEnabled()).toBe(true);
+ game.editHome(true);expect(game.camera.position.y).toBe(13);game.editHome(false);
+ expect(game.snapshot().camera).toEqual(saved.camera);
+});
+
+it('goście mają osobne modele we wnętrzu i nie przenoszą mieszkańców z wioski',()=>{
+ const outside=newSave();const {game}=start(outside),villagers=game.world.npcs;
+ const before=villagers.map(n=>n.character.root.position.asArray());
+ const inside={...outside,location:'home' as const,player:{x:0,z:-2.5,heading:0},flags:{hosting:true}};
+ game.syncState(inside);const guests=game.world.npcs;
+ for(const [i,npc] of guests.entries()){expect(npc.character.root).not.toBe(villagers[i].character.root);expect(npc.character.root.isEnabled()).toBe(true);expect(npc.character.root.getScene()).toBe(game.scene)}
+ expect(villagers.map(n=>n.character.root.position.asArray())).toEqual(before);
+ game.syncState({...inside,flags:{hosting:false}});expect(guests.every(n=>!n.character.root.isEnabled())).toBe(true);
+ game.syncState(outside);expect(game.world.npcs).toBe(villagers);expect(villagers.every(n=>n.character.root.isEnabled())).toBe(true);
 });

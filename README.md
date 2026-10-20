@@ -73,6 +73,8 @@ Dialog zatrzymuje kamerę i ruch. Wypowiedzi przewija się ręcznie; nie ma auto
 
 SaveState v3 zapisuje lokalizację, pozycję, kamerę, flagi, sceny, listy, ekwipunek, schowek i meble. Baza IndexedDB `czytajaca-wioska` pozostaje w wersji 1; zmieniono format danych pod kluczem `p0`. Starszy zapis jest archiwizowany pod `legacy-v1` lub `legacy-v2` przed migracją. Zachowuje pozycję i pamiątki, a nowa historia zaczyna się od przyjazdu. Dawne odpowiedzi nie sterują fabułą. Nieobsługiwany zapis nie jest nadpisywany.
 
+Wioska i dom Kitka działają w osobnych scenach Babylon.js. Drzwi przełączają aktywną scenę i ustawiają postać przy wejściu. Scena powstaje przy pierwszej wizycie; później jest ponownie używana, a poza nią nie działa renderowanie ani ruch mieszkańców. Plecak, fabuła i umeblowanie pozostają wspólne. Istniejące zapisy v3 działają bez zmiany formatu. Opis podziału i przejść: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
 Bez konta, analityki i serwera gry. Przy braku IndexedDB używane jest localStorage. Gdy oba magazyny są zablokowane, UI informuje, że postęp zniknie po zamknięciu. Zapis jest przypisany do przeglądarki i adresu strony. Czyszczenie danych witryny usuwa postęp. Nagłe zamknięcie procesu może utracić ostatni fragment ruchu.
 
 ## Weryfikacja i ograniczenia

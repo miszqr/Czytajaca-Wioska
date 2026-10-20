@@ -1,6 +1,6 @@
 import type {Scene,TransformNode} from './babylon';
 import {createShapes,type Shapes} from './shapes';
-import type {ContentPack,ItemDefinition,Furniture} from '../content/types';
+import type {ContentPack,ItemDefinition,Furniture,Location} from '../content/types';
 import type {SaveState} from '../persistence/state';
 import {targetPosition} from '../interactions/model';
 import {matches} from '../story/engine';
@@ -22,8 +22,8 @@ export function drawItem(shapes:Shapes,parent:TransformNode,item:ItemDefinition,
  else shape('ball',item.model,c,g,0,.18,0,w/2,.18,d/2);
  return g;
 }
-export function createStoryWorld(scene:Scene,content:ContentPack){
- const shapes=createShapes(scene),{group,shape}=shapes,home=group('home-interior'),objects=group('story-objects'),furnishings=group('home-furnishings',home);
+function createHomeInterior(scene:Scene,content:ContentPack){
+ const shapes=createShapes(scene),{group,shape}=shapes,home=group('home-interior'),furnishings=group('home-furnishings',home);
  shape('box','wood-floor','#D8B88A',home,0,-.1,0,10,.2,8);
  for(let x=-4.8;x<5;x+=.5)shape('box','floor-plank','#BF9C72',home,x,.005,0,.015,.012,8);
  for(const [x,z,w,d] of [[-5,0,.16,8],[5,0,.16,8],[0,4,10,.16],[0,-4,10,.16]]){const wall=shape('box','home-wall','#EADCC1',home,x,1.4,z,w,2.8,d);wall.isPickable=true;wall.metadata={cameraObstacle:true}}
@@ -34,7 +34,20 @@ export function createStoryWorld(scene:Scene,content:ContentPack){
  shape('box','cabinet-back','#8F6F51',home,3.3,.85,3.52,1.4,1.7,.06);for(const y of [.07,.7,1.65])shape('box','cabinet-shelf','#B58F66',home,3.3,y,3.15,1.4,.1,.8);
  const cabinetDoor=shape('box','cabinet-door','#BF986B',home,3.3,.85,2.72,1.3,1.6,.07);shape('ball','cabinet-knob','#D6BD7F',home,3.75,.85,2.65,.04);
  const grid=group('placement-grid',home);for(let x=-4.5;x<=4.5;x+=.5)shape('box','grid-line','#9DAA8A',grid,x,.018,0,.012,.008,7);for(let z=-3.5;z<=3.5;z+=.5)shape('box','grid-line','#9DAA8A',grid,0,.018,z,9,.008,.012);grid.setEnabled(false);
- const visuals=content.interactions.map(t=>{const g=group(t.id,objects,t.position.x,t.location==='home'?0:terrainHeight(t.position.x,t.position.z),t.position.z);
+ let furnitureKey='';
+ function sync(state:SaveState){
+  cabinetDoor.setEnabled(!state.flags['cabinet-open']);
+  const key=JSON.stringify(state.furniture);if(key!==furnitureKey){furnitureKey=key;for(const child of furnishings.getChildren())child.dispose();for(const f of state.furniture){const item=content.items.find(i=>i.id===f.itemId);if(item){const g=drawItem(shapes,furnishings,item,f.x,f.z,f.rotation);g.name=f.id;for(const m of g.getChildMeshes()){m.isPickable=item.model!=='rug';m.metadata={cameraObstacle:item.model!=='rug'}}}}}
+ }
+ function preview(f:Furniture|null,valid=true){let old=home.getChildren().find(n=>n.name==='placement-preview');old?.dispose();if(!f)return;const item=content.items.find(i=>i.id===f.itemId);if(item){const g=drawItem(shapes,home,{...item,color:valid?'#90B77B':'#C58B77'},f.x,f.z,f.rotation);g.name='placement-preview';for(const m of g.getChildMeshes())m.visibility=.55}}
+ return {home,sync,preview,setEditing:(value:boolean)=>grid.setEnabled(value)};
+}
+
+// Only create geometry belonging to this location. No hidden room in the village.
+export function createStoryWorld(scene:Scene,content:ContentPack,location:Location){
+ const shapes=createShapes(scene),{group,shape}=shapes,objects=group('story-objects');
+ const interior=location==='home'?createHomeInterior(scene,content):null;
+ const visuals=content.interactions.filter(t=>t.location===location).map(t=>{const g=group(t.id,objects,t.position.x,location==='home'?0:terrainHeight(t.position.x,t.position.z),t.position.z);
   if(t.model==='letter')drawItem(shapes,g,{id:'envelope',name:'',description:'',kind:'usable',model:'letter',color:'#FBE6BD',width:.4,depth:.3},0,0);
   if(t.model==='crate')drawItem(shapes,g,{id:'crate',name:'',description:'',kind:'usable',model:'crate',color:'#C69B69',width:.7,depth:.6},0,0);
   if(t.model==='sign'){shape('cylinder','sign-post','#8C7150',g,0,.6,0,.05,1.2,.05);shape('box','sign-board','#D8C49B',g,0,1.2,0,1.1,.45,.12)}
@@ -42,12 +55,10 @@ export function createStoryWorld(scene:Scene,content:ContentPack){
   if(t.model==='bell'){shape('cylinder','bell-stand','#927151',g,0,.5,0,.035,1,.035);shape('cone','bell','#D4B474',g,0,1,0,.15,.22,.15)}
   return {target:t,root:g};
  });
- let furnitureKey='';
  function sync(state:SaveState){
-  home.setEnabled(state.location==='home');for(const {target,root} of visuals){const pos=targetPosition(target,state);root.setEnabled(!!pos&&target.location===state.location&&matches(state,target.when));if(pos){root.position.x=pos.x;root.position.z=pos.z}}
-  cabinetDoor.setEnabled(!state.flags['cabinet-open']);
-  const key=JSON.stringify(state.furniture);if(key!==furnitureKey){furnitureKey=key;for(const child of furnishings.getChildren())child.dispose();for(const f of state.furniture){const item=content.items.find(i=>i.id===f.itemId);if(item){const g=drawItem(shapes,furnishings,item,f.x,f.z,f.rotation);g.name=f.id;for(const m of g.getChildMeshes()){m.isPickable=item.model!=='rug';m.metadata={cameraObstacle:item.model!=='rug'}}}}}
+  if(state.location!==location)throw new Error('Nie można synchronizować obiektów innej lokalizacji.');
+  for(const {target,root} of visuals){const pos=targetPosition(target,state);root.setEnabled(!!pos&&matches(state,target.when));if(pos){root.position.x=pos.x;root.position.z=pos.z}}
+  interior?.sync(state);
  }
- function preview(f:Furniture|null,valid=true){let old=home.getChildren().find(n=>n.name==='placement-preview');old?.dispose();if(!f)return;const item=content.items.find(i=>i.id===f.itemId);if(item){const g=drawItem(shapes,home,{...item,color:valid?'#90B77B':'#C58B77'},f.x,f.z,f.rotation);g.name='placement-preview';for(const m of g.getChildMeshes())m.visibility=.55}}
- return {home,objects,sync,preview,setEditing:(value:boolean)=>grid.setEnabled(value)};
+ return {objects,sync,preview:(f:Furniture|null,valid=true)=>interior?.preview(f,valid),setEditing:(value:boolean)=>interior?.setEditing(value)};
 }

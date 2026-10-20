@@ -9,7 +9,7 @@ import {newSave} from '../src/persistence/state';
 import type {Solid} from '../src/game/movement';
 import {CONFIG} from '../src/game/config';
 it('buduje rzeczywistą scenę Babylon, bezpieczny start, pięć modeli i kolizje',async()=>{
-  const engine=new NullEngine(),scene=new Scene(engine);
+  const engine=new NullEngine(),scene=new Scene(engine),homeScene=new Scene(engine);
   try{
     const world=createVillage(scene,DEFAULT_CONTENT.characters);const camera=new FreeCamera('test',new Vector3(0,3,-8),scene);scene.activeCamera=camera;camera.setTarget(new Vector3(0,0,0));
     const road=scene.meshes.find(m=>m.material?.name==='#D7C396')!;expect(road).toBeDefined();const normals=road.getVerticesData(VertexBuffer.NormalKind)!;for(let i=1;i<normals.length;i+=3)expect(normals[i]).toBeGreaterThan(.9);
@@ -25,12 +25,14 @@ it('buduje rzeczywistą scenę Babylon, bezpieczny start, pięć modeli i kolizj
     }
     const outside=flood({x:0,z:-5},world.solids,30);
     for(const target of [...DEFAULT_CONTENT.interactions.filter(t=>t.location==='village'),...DEFAULT_CONTENT.characters])expect(outside.some(p=>Math.hypot(p.x-target.position.x,p.z-target.position.z)<1.8),`reachable ${target.id}`).toBe(true);
-    const state=newSave();state.location='home';const room=createStoryWorld(scene,DEFAULT_CONTENT);room.sync(state);const inside=flood({x:0,z:-2.5},homeSolids(state,DEFAULT_CONTENT),5);
+    const state=newSave();state.location='home';const room=createStoryWorld(homeScene,DEFAULT_CONTENT,'home');room.sync(state);const inside=flood({x:0,z:-2.5},homeSolids(state,DEFAULT_CONTENT),5);
     for(const target of DEFAULT_CONTENT.interactions.filter(t=>t.location==='home'))expect(inside.some(p=>Math.hypot(p.x-target.position.x,p.z-target.position.z)<1.8),`reachable ${target.id}`).toBe(true);
-    expect(scene.getTransformNodeByName('starter-bed')).not.toBeNull();
+    expect(homeScene.getTransformNodeByName('starter-bed')).not.toBeNull();
+    expect(scene.getTransformNodeByName('home-interior')).toBeNull();
+    expect(homeScene.getMeshByName('village-ground')).toBeNull();
     world.kitek.animate(.5,2.4);expect(world.kitek.limbs[0].rotation.x).not.toBe(0);
     await Promise.all(scene.meshes.filter(m=>m.material).map(m=>m.material!.forceCompilationAsync(m)));
     scene.render();expect(scene.getActiveMeshes().length).toBeGreaterThan(0);
-  }finally{scene.dispose();engine.dispose()}
+  }finally{scene.dispose();homeScene.dispose();engine.dispose()}
   expect(scene.meshes.length).toBe(0);
 },15000);
