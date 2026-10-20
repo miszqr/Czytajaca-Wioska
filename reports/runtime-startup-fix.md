@@ -19,3 +19,14 @@ Dodano `scripts/verify-build.mjs` oraz `npm run test:build` do `npm run check`. 
 - Testy jsdom i NullEngine nie potwierdzają wyglądu ani wydajności GPU.
 
 Nie zmieniono fabuły, treści, mechaniki ani formatu zapisu. Poprawka kontynuuje wcześniej zatwierdzone wdrożenie GitHub Pages na gałęzi `gh-pages`.
+
+## Wdrożenie i kontrola publicznej wersji — 2026-10-20
+
+- Poprawka źródeł: `858a47c36f1a2dcd71c1e50d6db0b4679e82297b`, gałąź `feat/new-home-story`.
+- Wydanie: `702ee4cd8f302646515f7e6ec441f53bb7aef4e5`, gałąź `gh-pages`.
+- [GitHub Pages run 39321488138](https://github.com/miszqr/Czytajaca-Wioska/actions/runs/39321488138): `completed / success`.
+- Publiczny `release.json` wskazuje poprawkę `858a47c`; wszystkie 51 plików pobranych przez HTTP jest identycznych z przetestowanym buildem (porównanie SHA obiektów Git).
+- W publicznej przeglądarce kod przechodzi inicjalizację modułów i renderuje interfejs React; błąd `NoneLogLevel` nie występuje.
+- Ta przeglądarka testowa zgłasza `WebGL not supported`, więc nie potwierdzono w niej renderowania świata 3D. To ograniczenie środowiska odbioru, zgodne z wcześniejszą weryfikacją, a nie ponowne wystąpienie błędu inicjalizacji modułów.
+
+Gra pozostaje dostępna pod https://miszqr.github.io/Czytajaca-Wioska/.
