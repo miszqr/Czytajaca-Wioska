@@ -11,6 +11,7 @@
 | Bruno 3D | Prototyp proceduralny: miś, fartuch i kapelusz | Oryginalny kod `characters/models.ts` |
 | Animacje | Zastępcze proceduralne: idle, walk, run, obrót, talk, pick-up, give, celebrate | Kod, bez rigu i klipów glTF |
 | Domy, ogród i staw | Stylizowana geometria prototypowa | Oryginalny kod `game/world.ts` |
+| Dom / sklep Feli | Dopracowana drewniana chatka: bale ze słojami, gontowy dach z wygiętymi okapami, komin, ganek, okiennice, kwietniki i szyld | Proceduralny model `game/fela-house.ts`, inspirowany ilustracją dostarczoną przez użytkownika |
 | Drzewa i roślinność | Dąb, jabłoń, brzoza, sosna; rozgałęzione pnie, korzenie, nieregularne korony, krzewy, trawa i kwiaty z płatkami | Oryginalny kod `game/vegetation.ts` i `game/world.ts` |
 | Portrety i ikony | Proste wektory interfejsu; nie finalne portrety 3D | Oryginalny SVG w `ui/Icons.tsx` |
 | `references/kitek-concept.png` | Dostarczona referencja wizualna, nie model ani spritesheet | Załącznik użytkownika |
@@ -39,3 +40,13 @@ Kolor liści jest zapisany we wierzchołkach, a małe elementy są łączone w i
 [Porównanie modeli](previews/vegetation.webp) przedstawia geometrię wyeksportowaną z kodu i wyrenderowaną programowo w oświetleniu porównawczym. Nie jest zrzutem gry ani potwierdzeniem działania WebGL. Widoczne cienie kontaktowe na planszy porównawczej należą wyłącznie do tego renderu.
 
 Modele są nadal proceduralne i stylizowane. Nie dodano jeszcze wiatru, tekstur liści, LOD ani nowego systemu cieni.
+
+## Drewniany dom Feli
+
+[Porównanie domu](previews/fela-house.webp) przedstawia rzeczywiste siatki przed i po zmianie, wyrenderowane programowo. Podgląd używa osobnego oświetlenia i miękkiego cienia pod modelem; nie jest zrzutem WebGL ani obietnicą dodania cieni do gry.
+
+Dom ma 17 860 trójkątów. Kolory drewna, gontów i detali są zapisane we wierzchołkach, dzięki czemu budynek używa jednego istniejącego materiału. Wszystkie elementy są scalane z otoczeniem przy tworzeniu wioski. Komin, ściany i dach mają uproszczone bryły do promieni kamery; kwiaty, litery i drobne zdobienia nie blokują kamery. Nie dodano tekstur, zależności, świateł punktowych ani pracy w pętli animacji.
+
+Sklep pozostaje w dotychczasowym miejscu. Ganek ma osobny obrys kolizji, zachowujący wolną trasę Feli i dostęp do rozmowy. Wnętrze sklepu nie jest częścią tej zmiany. Pozostałe domy korzystają z dotychczasowego modelu.
+
+Eksport do kontroli geometrii: `node scripts/export-fela-house.mjs /tmp/fela-house.json`. Render porównawczy: `python scripts/render-house-preview.py before.json after.json preview.webp` (Python, NumPy i Pillow; wyłącznie narzędzie dokumentacyjne). Pomiary i walidacja: [raport](../reports/fela-house-detail.md).

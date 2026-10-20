@@ -5,6 +5,7 @@ import {terrainHeight,blocked,type Solid} from './movement';
 import type {CharacterDefinition} from '../content/types';
 import type {NpcMotion} from './npc';
 import {createVegetation,type TreeKind} from './vegetation';
+import {createFelaHouse} from './fela-house';
 export function createVillage(scene:Scene,characters:readonly CharacterDefinition[]){
   scene.clearColor=Color4.FromHexString('#DCE9DDFF');scene.fogMode=Scene.FOGMODE_EXP2;scene.fogDensity=.013;scene.fogColor=Color3.FromHexString('#DCE9DD');
   const sky=new HemisphericLight('warm-sky',new Vector3(0,1,0),scene);sky.intensity=.9;sky.groundColor=Color3.FromHexString('#71856C');
@@ -58,7 +59,7 @@ export function createVillage(scene:Scene,characters:readonly CharacterDefinitio
   shape('box','home-blue-sign','#77A8D7',environment,19.8,1.4,5.5,.7,.36,.10);
   path([[0,0],[8,0],[15,1],[18,4.7]],2);
   cottage('Dom Brunona',-10,10,5.2,4.5,'#E8D9AA','#839265');
-  cottage('Sklep Feli',10,9,6,5,'#E9CEAA','#B87960');
+  createFelaHouse(scene,shapes,environment,10,terrainHeight(10,9),9,solids);
   cottage('Biblioteka Toli',0,23,7.4,5.5,'#E5DCC2','#768A93');
   cottage('Dom Milusia',13,-12,5,4.4,'#E8D9C3','#A48E6F');
   const stall=group('fela-stall',environment,8,terrainHeight(8,4.8),4.8);

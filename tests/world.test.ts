@@ -1,5 +1,5 @@
 import {it,expect} from 'vitest';
-import {NullEngine,Scene,FreeCamera,Vector3,VertexBuffer} from '../src/game/babylon';
+import {NullEngine,Scene,FreeCamera,Vector3,VertexBuffer,Ray} from '../src/game/babylon';
 import {DEFAULT_CONTENT} from '../src/content/defaults';
 import {createVillage} from '../src/game/world';
 import {blocked} from '../src/game/movement';
@@ -8,6 +8,8 @@ import {homeSolids} from '../src/housing/model';
 import {newSave} from '../src/persistence/state';
 import type {Solid} from '../src/game/movement';
 import {CONFIG} from '../src/game/config';
+import {createFelaHouse} from '../src/game/fela-house';
+import {createShapes} from '../src/game/shapes';
 it('buduje rzeczywistą scenę Babylon, bezpieczny start, pięć modeli i kolizje',async()=>{
   const engine=new NullEngine(),scene=new Scene(engine),homeScene=new Scene(engine);
   try{
@@ -36,3 +38,20 @@ it('buduje rzeczywistą scenę Babylon, bezpieczny start, pięć modeli i kolizj
   }finally{scene.dispose();homeScene.dispose();engine.dispose()}
   expect(scene.meshes.length).toBe(0);
 },15000);
+
+it('drewniany dom Feli zachowuje budżet geometrii, osłonę kamery i drożną trasę spaceru',()=>{
+ const engine=new NullEngine(),scene=new Scene(engine),shapes=createShapes(scene),solids:Solid[]=[];
+ try{
+  const home=createFelaHouse(scene,shapes,shapes.group('village'),10,0,9,solids),meshes=home.getChildMeshes();
+  expect(meshes.reduce((sum,m)=>sum+m.getTotalIndices()/3,0)).toBeLessThan(20000);
+  expect(new Set(meshes.map(m=>m.material)).size).toBe(1);
+  for(const mesh of meshes){mesh.computeWorldMatrix(true);for(const kind of [VertexBuffer.PositionKind,VertexBuffer.NormalKind,VertexBuffer.ColorKind,VertexBuffer.UVKind])expect(mesh.getVerticesData(kind)?.every(Number.isFinite),`${mesh.name}: ${kind}`).toBe(true)}
+  const obstacle=(mesh:typeof meshes[number])=>mesh.metadata?.cameraObstacle===true&&mesh.isEnabled()&&mesh.isVisible&&mesh.isPickable;
+  const facade=scene.pickWithRay(new Ray(new Vector3(10,1.5,0),new Vector3(0,0,1),20),obstacle);
+  expect(facade?.hit).toBe(true);expect(facade?.pickedPoint?.z).toBeCloseTo(6.5);
+  const roof=scene.pickWithRay(new Ray(new Vector3(11,10,9),new Vector3(0,-1,0),10),obstacle);
+  expect(roof?.hit).toBe(true);expect(roof?.pickedPoint?.y).toBeGreaterThan(5);expect(roof?.pickedPoint?.y).toBeLessThan(6);
+  expect(blocked({x:10,z:9},solids)).toBe(true);expect(blocked({x:10,z:6},solids)).toBe(true);
+  for(let x=9.5;x<=11.5;x+=.1)expect(blocked({x,z:4.8},solids,.5),`Fela at ${x}`).toBe(false);
+ }finally{scene.dispose();engine.dispose()}
+});
