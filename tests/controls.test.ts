@@ -16,6 +16,8 @@ import {VillageGame} from '../src/game/runtime';
 import {newSave} from '../src/persistence/state';
 import type {SaveState} from '../src/persistence/state';
 import {Input as KeyboardInput} from '../src/game/input';
+import {Vector3} from '../src/game/babylon';
+import {CONFIG} from '../src/game/config';
 
 let game:VillageGame|undefined,input:Input|undefined;
 const errors=vi.fn();
@@ -109,4 +111,21 @@ it('podgląd domu zmienia tylko kamerę edytora i usuwa geometrię po anulowaniu
  game.editHome(true);expect(game.camera.position.y).toBe(13);
  game.previewFurniture({id:'preview',itemId:'lamp',x:-1.5,z:1.5,rotation:0});expect(game.scene.getTransformNodeByName('placement-preview')).not.toBeNull();
  game.previewFurniture(null);game.editHome(false);expect(game.snapshot()).toEqual(before);expect(game.scene.meshes.length).toBe(count);expect(game.camera.position.y).toBeLessThan(5);frames();
+});
+
+it('ukryte wnętrze nie przybliża kamery na placu, ale ściany działają w domu',()=>{
+ const outside=newSave();outside.player={x:0,z:-3,heading:0};
+ const {game}=start(outside);
+ const cameraDistance=()=>Vector3.Distance(game.camera.position,game.world.kitek.root.position.add(new Vector3(0,CONFIG.cameraTargetHeight,0)));
+ expect(game.scene.getTransformNodeByName('home-interior')!.isEnabled()).toBe(false);
+ expect(cameraDistance()).toBeCloseTo(outside.camera.distance);
+
+ const inside={...outside,location:'home' as const};game.syncState(inside);
+ expect(game.scene.getTransformNodeByName('home-interior')!.isEnabled()).toBe(true);
+ expect(cameraDistance()).toBeGreaterThan(.35);
+ expect(cameraDistance()).toBeLessThan(1.2);
+
+ game.syncState(outside);frames();
+ expect(cameraDistance()).toBeCloseTo(outside.camera.distance);
+ expect(game.world.kitek.root.isEnabled()).toBe(true);
 });

@@ -58,7 +58,9 @@ export class VillageGame {
     // Several rays reserve clearance around the camera, not only at its centre.
     let allowed=distance;
     for(const offset of [Vector3.Zero(),new Vector3(.16,0,0),new Vector3(-.16,0,0),new Vector3(0,.16,0)]){
-      const hit=this.scene.pickWithRay(new Ray(target.add(offset),direction,distance),mesh=>mesh.metadata?.cameraObstacle===true);
+      // A custom picking predicate replaces Babylon's default visibility checks.
+      // Ignore the disabled location, including meshes under a disabled parent.
+      const hit=this.scene.pickWithRay(new Ray(target.add(offset),direction,distance),mesh=>mesh.metadata?.cameraObstacle===true&&mesh.isEnabled()&&mesh.isVisible&&mesh.isPickable);
       if(hit?.hit)allowed=Math.min(allowed,Math.max(.35,hit.distance-.25));
     }
     this.cameraLength=allowed<this.cameraLength?allowed:this.cameraLength+(allowed-this.cameraLength)*(1-Math.exp(-dt*9));
