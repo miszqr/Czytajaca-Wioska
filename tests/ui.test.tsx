@@ -3,15 +3,20 @@ import {it,expect,vi} from 'vitest';
 import {act} from 'react';
 import {createRoot} from 'react-dom/client';
 import 'fake-indexeddb/auto';
-const mock=vi.hoisted(()=>({callbacks:null as any,nearId:'bruno',loadError:false}));
+const mock=vi.hoisted(()=>({callbacks:null as any,nearId:'bruno',loadError:false,sessions:[] as any[]}));
 vi.mock('../src/game/runtime',()=>({VillageGame:class{
- constructor(_canvas:unknown,_state:unknown,callbacks:any){mock.callbacks=callbacks;queueMicrotask(()=>callbacks.onReady())}
- setPaused(){} editHome(){} syncState(){} faceTarget(id:string){return mock.nearId===id} dispose(){} celebrate(){} moveTouch(){} runTouch(){} recenter(){} previewFurniture(){} playStoryAction(){}
+ state:any;disposed=false;
+ constructor(_canvas:unknown,state:unknown,private callbacks:any){this.state=structuredClone(state);mock.sessions.push(this);mock.callbacks=callbacks;queueMicrotask(()=>{if(!this.disposed)callbacks.onReady()})}
+ syncState(state:unknown){this.state=structuredClone(state)}
+ dispose(){if(this.disposed)return;this.disposed=true;const {player,camera,location}=this.state;this.callbacks.onSave({player,camera,location})}
+ setPaused(){} editHome(){} faceTarget(id:string){return mock.nearId===id} celebrate(){} moveTouch(){} runTouch(){} recenter(){} previewFurniture(){} playStoryAction(){}
 }}));
 vi.mock('../src/content/load',async()=>{const {DEFAULT_CONTENT}=await import('../src/content/defaults');return {loadContent:async()=>{if(mock.loadError)throw new Error('story.json: błąd');return DEFAULT_CONTENT}}});
 import {App} from '../src/ui/App';
 import {SaveStore} from '../src/persistence/store';
 import {newSave} from '../src/persistence/state';
+import {prepareStorage} from '../src/housing/model';
+import {DEFAULT_CONTENT} from '../src/content/defaults';
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT=true;
 async function settle(){await act(async()=>{await new Promise(r=>setTimeout(r,25))})}
 function button(text:string){const b=Array.from(document.querySelectorAll('button')).find(b=>b.textContent?.trim()===text);expect(b,`button: ${text}`).toBeDefined();return b!}
@@ -44,5 +49,35 @@ it('P2: lampa trafia z plecaka do pokoju przez podgląd, kolizje i sterowanie pa
   const saved=await store.load();expect(saved?.flags['lamp-placed']).toBe(true);expect(saved?.inventory.lamp).toBeUndefined();expect(saved?.furniture.filter(f=>f.itemId==='lamp')).toHaveLength(1);expect(saved?.furniture.find(f=>f.itemId==='lamp')?.rotation).toBe(1);
   await click('Urządź dom');await click('W pokoju');await click('Przesuń Lampa od Feli');await act(async()=>mock.callbacks.onAction('right'));await click('Wróć do wyboru');await click('Gotowe, wracam do pokoju.');expect((await store.load())?.furniture).toEqual(saved?.furniture);
   await act(async()=>root.unmount());root=createRoot(container);await act(async()=>root.render(<App/>));await settle();expect((await store.load())?.furniture).toEqual(saved?.furniture);
+ }finally{await act(async()=>root.unmount());container.remove();await store.close()}
+});
+
+it.each(['village','home'] as const)('nowa gra z %s: anulowanie chroni zapis, potwierdzenie odtwarza świat i zapis od początku',async location=>{
+ const before=prepareStorage(newSave(),DEFAULT_CONTENT);before.welcomed=true;before.location=location;before.player={x:2,z:2,heading:1};before.camera={yaw:1,pitch:.5,distance:5};
+ before.flags['read-fela-letter']=true;before.flags.hosting=true;before.completed=['arrival','home'];before.seen=['read-fela-letter'];before.read=['fela-letter'];before.inventory={lamp:1,book:1};before.storage={};before.furniture[0].x=-2;
+ const store=new SaveStore();await store.save(before);const saved=await store.load();
+ const container=document.createElement('div');document.body.append(container);let root=createRoot(container);
+ try{
+  await act(async()=>root.render(<App/>));await settle();const previous=mock.sessions.at(-1),count=mock.sessions.length;
+  await act(async()=>mock.callbacks.onAction('menu'));await click('Zacznij nową grę');
+  expect(document.querySelector('[role="dialog"]')?.textContent).toContain('Dotychczasowy postęp zostanie usunięty');
+  expect(document.activeElement?.textContent).toBe('Nie, wróć do menu');
+  await act(async()=>mock.callbacks.onAction('confirm'));await settle();
+  expect(document.querySelector('[role="dialog"]')?.getAttribute('aria-label')).toBe('Menu wioski');expect(await store.load()).toEqual(saved);expect(previous.disposed).toBe(false);
+  await click('Zacznij nową grę');await act(async()=>mock.callbacks.onAction('back'));await settle();
+  expect(document.querySelector('[role="dialog"]')?.getAttribute('aria-label')).toBe('Menu wioski');expect(await store.load()).toEqual(saved);
+  await click('Zacznij nową grę');await act(async()=>document.activeElement?.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true})));await settle();
+  expect(document.querySelector('[role="dialog"]')?.getAttribute('aria-label')).toBe('Menu wioski');expect(await store.load()).toEqual(saved);
+  await click('Zacznij nową grę');await click('Tak, zacznij od nowa');
+  const expected=prepareStorage(newSave(),DEFAULT_CONTENT);const {updatedAt:_,...fresh}=expected;
+  expect(previous.disposed).toBe(true);expect(mock.sessions).toHaveLength(count+1);expect(mock.sessions.at(-1).state).toMatchObject(fresh);
+  expect(document.querySelector('[role="dialog"]')?.getAttribute('aria-label')).toBe('Witaj w Czytającej Wiosce');expect(await store.load()).toMatchObject(fresh);
+  // A reload before accepting the welcome must still load the fresh save,
+  // including after the old world's final onSave during disposal.
+  await act(async()=>root.unmount());root=createRoot(container);await act(async()=>root.render(<App/>));await settle();
+  expect(mock.sessions.at(-1).state).toMatchObject(fresh);expect(document.querySelector('[role="dialog"]')?.getAttribute('aria-label')).toBe('Witaj w Czytającej Wiosce');
+  await click('Ruszamy');expect(document.querySelector('.quest-card h2')?.textContent).toBe('Przyjazd');
+  await approach('bruno');expect(document.querySelector('.dialogue-text')?.textContent).toContain('Witaj, Kitku!');
+  expect(await store.load()).toMatchObject({...fresh,welcomed:true});
  }finally{await act(async()=>root.unmount());container.remove();await store.close()}
 });
