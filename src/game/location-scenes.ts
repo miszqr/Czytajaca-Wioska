@@ -46,7 +46,7 @@ export class LocationScenes{
    const world=location==='village'?createVillage(scene,this.content.characters):createHomeActors(scene,this.content);
    const story=createStoryWorld(scene,this.content,location);
    const camera=new FreeCamera('behind-kitek',new Vector3(0,2,-4),scene);
-   camera.minZ=.08;camera.maxZ=160;camera.fov=.92;scene.activeCamera=camera;
+   camera.minZ=.08;camera.maxZ=location==='village'?500:160;camera.fov=.92;scene.activeCamera=camera;
    let carriedCrate:TransformNode|null=null;
    const item=this.content.items.find(i=>i.id==='crate');
    if(item){carriedCrate=drawItem(createShapes(scene),world.kitek.root,item,0,.42);carriedCrate.scaling.setAll(.65);carriedCrate.position.y=.4;carriedCrate.setEnabled(false)}

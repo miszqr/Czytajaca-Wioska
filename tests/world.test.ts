@@ -12,6 +12,7 @@ import {createFelaHouse} from '../src/game/fela-house';
 import {createTolaLibrary} from '../src/game/tola-library';
 import {createShapes} from '../src/game/shapes';
 import {createStorybookCottage,COTTAGES,type CottageKind} from '../src/game/storybook-cottage';
+import {ISLAND,beachApproach,shoreDistance} from '../src/game/island-terrain';
 it('buduje rzeczywistą scenę Babylon, bezpieczny start, pięć modeli i kolizje',async()=>{
   const engine=new NullEngine(),scene=new Scene(engine),homeScene=new Scene(engine);
   try{
@@ -29,6 +30,11 @@ it('buduje rzeczywistą scenę Babylon, bezpieczny start, pięć modeli i kolizj
     expect(casters.some(m=>surfaceColors.includes(m.material?.name??''))).toBe(true);
     expect(casters.some(m=>m.name==='golden-hour-sky-dome')).toBe(false);
     expect(casters.some(m=>m.name==='contact-shadow')).toBe(false);
+    expect(world.ocean.position.y).toBe(ISLAND.seaLevel);expect(world.ocean.isPickable).toBe(false);
+    expect(casters.includes(world.ocean)).toBe(false);expect(world.ocean.parent).toBeNull();
+    for(const tree of world.solids.filter(s=>s.id==='tree'))expect(shoreDistance(tree.x,tree.z)).toBeGreaterThanOrEqual(8.8);
+    const roadPositions=road.getVerticesData(VertexBuffer.PositionKind)!;
+    for(let i=0;i<roadPositions.length;i+=3)expect(roadPositions[i+1]).toBeGreaterThan(ISLAND.seaLevel);
     for(const actor of [world.kitek,...world.npcs.map(n=>n.character)])expect(actor.root.getChildMeshes().some(m=>casters.includes(m))).toBe(true);
     const obstacles=world.environment.getChildMeshes().filter(m=>m.metadata?.cameraObstacle);
     expect(obstacles.length).toBeGreaterThan(0);for(const mesh of obstacles){expect(mesh.isPickable).toBe(true);expect(casters.includes(mesh),mesh.name).toBe(true)}
@@ -42,8 +48,9 @@ it('buduje rzeczywistą scenę Babylon, bezpieczny start, pięć modeli i kolizj
       const seen=new Set<string>(),queue=[start];seen.add(`${start.x},${start.z}`);
       for(let i=0;i<queue.length;i++){const p=queue[i];for(const [dx,dz] of [[.5,0],[-.5,0],[0,.5],[0,-.5]]){const next={x:p.x+dx,z:p.z+dz},key=`${next.x},${next.z}`;if(Math.abs(next.x)>bounds||Math.abs(next.z)>bounds||seen.has(key)||blocked(next,solids)||blocked({x:p.x+dx/2,z:p.z+dz/2},solids))continue;seen.add(key);queue.push(next)}}return queue;
     }
-    const outside=flood({x:0,z:-5},world.solids,30);
+    const outside=flood({x:0,z:-5},world.solids,49);
     for(const target of [...DEFAULT_CONTENT.interactions.filter(t=>t.location==='village'),...DEFAULT_CONTENT.characters])expect(outside.some(p=>Math.hypot(p.x-target.position.x,p.z-target.position.z)<1.8),`reachable ${target.id}`).toBe(true);
+    for(const [x,z] of [[0,-49],[-49,10],[4,49],[49,-3]]){const [px,pz]=beachApproach(x,z);expect(outside.some(p=>Math.hypot(p.x-px,p.z-pz)<.7),`beach ${x},${z}`).toBe(true)}
     const state=newSave();state.location='home';const room=createStoryWorld(homeScene,DEFAULT_CONTENT,'home');room.sync(state);const inside=flood({x:0,z:-2.5},homeSolids(state,DEFAULT_CONTENT),5);
     for(const target of DEFAULT_CONTENT.interactions.filter(t=>t.location==='home'))expect(inside.some(p=>Math.hypot(p.x-target.position.x,p.z-target.position.z)<1.8),`reachable ${target.id}`).toBe(true);
     expect(homeScene.getTransformNodeByName('starter-bed')).not.toBeNull();

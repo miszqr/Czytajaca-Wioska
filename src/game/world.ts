@@ -1,4 +1,4 @@
-import {Scene,Mesh,VertexData,VertexBuffer,CreateGround,Color3} from './babylon';
+import {Scene,Mesh,VertexData,Color3} from './babylon';
 import {createShapes} from './shapes';
 import {createCharacter} from '../characters/models';
 import {terrainHeight,blocked,type Solid} from './movement';
@@ -9,14 +9,16 @@ import {createFelaHouse} from './fela-house';
 import {createTolaLibrary} from './tola-library';
 import {createGoldenHour} from './golden-hour';
 import {createStorybookCottage,COTTAGES} from './storybook-cottage';
+import {createIslandGround,createOcean} from './island-coast';
+import {beachApproach,shoreDistance} from './island-terrain';
 export function createVillage(scene:Scene,characters:readonly CharacterDefinition[]){
   const lighting=createGoldenHour(scene);
   const shapes=createShapes(scene),{shape,group,material}=shapes,environment=group('village'),solids:Solid[]=[];
   const vegetation=createVegetation(scene,shapes);
   let seed=923;const random=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296};
-  const ground=CreateGround('village-ground',{width:110,height:110,subdivisions:70,updatable:true},scene),positions=ground.getVerticesData(VertexBuffer.PositionKind)!,colors:number[]=[],normals:number[]=[];
-  for(let i=0;i<positions.length;i+=3){const x=positions[i],z=positions[i+2];positions[i+1]=terrainHeight(x,z);const tone=.92+random()*.08;colors.push(.56*tone,.70*tone,.38*tone,1)}
-  VertexData.ComputeNormals(positions,ground.getIndices()!,normals);ground.updateVerticesData(VertexBuffer.PositionKind,positions);ground.updateVerticesData(VertexBuffer.NormalKind,normals);ground.setVerticesData(VertexBuffer.ColorKind,colors);ground.material=material('#FFFFFF');ground.isPickable=true;ground.metadata={cameraObstacle:true};
+  const ground=createIslandGround(scene,shapes),ocean=createOcean(scene,lighting.sun.direction.negate().normalize());
+  // Preserve the scenery seed previously consumed by the 71×71 ground vertices.
+  for(let i=0;i<71*71;i++)random();
   function obstacle(mesh:Mesh){mesh.isPickable=true;mesh.metadata={cameraObstacle:true};return mesh}
   // Thin surfaces lie almost on the terrain. Rendering them into the shadow
   // map causes self-shadow stripes at the low golden-hour sun angle.
@@ -33,8 +35,8 @@ export function createVillage(scene:Scene,characters:readonly CharacterDefinitio
     }
     VertexData.ComputeNormals(vertices,indices,normals);const data=new VertexData();Object.assign(data,{positions:vertices,indices,normals});const mesh=groundDetail(new Mesh('soft-village-path',scene));data.applyToMesh(mesh);mesh.material=material('#D7C396');mesh.parent=environment;
   }
-  path([[0,-49],[-5,-27],[5,-8],[0,0]],3.4);path([[0,0],[-2,10],[2,28],[4,49]],3.1);
-  path([[-49,10],[-18,15],[-10,0],[0,0]],3);path([[0,0],[10,-2],[28,2],[49,-3]],3);
+  path([beachApproach(0,-49),[-5,-27],[5,-8],[0,0]],3.4);path([[0,0],[-2,10],[2,28],beachApproach(4,49)],3.1);
+  path([beachApproach(-49,10),[-18,15],[-10,0],[0,0]],3);path([[0,0],[10,-2],[28,2],beachApproach(49,-3)],3);
   const plaza=groundDetail(shape('cylinder','village-square','#DCCA9F',environment,0,.035,0,4.3,.035,4.3));
   for(let i=0;i<22;i++){const a=i/22*Math.PI*2;const p=groundDetail(shape('box','plaza-stone',i%2?'#E8D8B6':'#CEBB91',environment,Math.sin(a)*3.9,.06,Math.cos(a)*3.9,.70,.065,.38));p.rotation.y=a}
   void plaza;
@@ -65,7 +67,7 @@ export function createVillage(scene:Scene,characters:readonly CharacterDefinitio
   const water=shape('ball','pond-water','#79B5B8',environment,pond.x,py+.035,pond.z,6.7,.07,5.6);(water.material as import('@babylonjs/core/Materials/standardMaterial').StandardMaterial).specularColor=Color3.FromHexString('#5A7776');
   for(let i=0;i<12;i++){const a=random()*Math.PI*2;shape('ball','lily-leaf','#729F69',environment,pond.x+Math.cos(a)*5,py+.13,pond.z+Math.sin(a)*4,.35,.035,.25)}
   function tree(x:number,z:number,scale:number,kind:TreeKind){
-    if(blocked({x,z},solids,.8))return;
+    if(shoreDistance(x,z)<8.8||blocked({x,z},solids,.8))return;
     vegetation.tree(environment,x,terrainHeight(x,z),z,scale,kind);solids.push({id:'tree',type:'circle',x,z,radius:.23*scale});
   }
   for(const [i,[x,z,s]] of [[-6,-5,1.1],[5,4,1],[-14,1,1.3],[8,-16,1.1],[15,1,1.2],[-4,15,1],[7,19,1]].entries())tree(x,z,s,(['oak','apple','birch'] as const)[i%3]);
@@ -108,5 +110,5 @@ export function createVillage(scene:Scene,characters:readonly CharacterDefinitio
   for(const character of [kitek,...npcs.map(npc=>npc.character)]){const shadow=shape('cylinder','contact-shadow','#66784F',character.root,0,.018,0,.31,.012,.22);shadow.material=material('#66784F')}
   const scenery=environment.getChildMeshes(),actors=[kitek,...npcs.map(n=>n.character)].flatMap(c=>c.root.getChildMeshes());
   lighting.addShadows([...scenery,...actors],[ground,...scenery,...actors]);
-  return {environment,ground,kitek,npcs,solids,water};
+  return {environment,ground,kitek,npcs,solids,water,ocean};
 }
