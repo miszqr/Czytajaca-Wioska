@@ -1,4 +1,4 @@
-import {Scene,Mesh,VertexData,VertexBuffer,CreateGround,Color3,Color4,HemisphericLight,DirectionalLight,Vector3} from './babylon';
+import {Scene,Mesh,VertexData,VertexBuffer,CreateGround,Color3} from './babylon';
 import {createShapes} from './shapes';
 import {createCharacter} from '../characters/models';
 import {terrainHeight,blocked,type Solid} from './movement';
@@ -7,10 +7,9 @@ import type {NpcMotion} from './npc';
 import {createVegetation,type TreeKind} from './vegetation';
 import {createFelaHouse} from './fela-house';
 import {createTolaLibrary} from './tola-library';
+import {createGoldenHour} from './golden-hour';
 export function createVillage(scene:Scene,characters:readonly CharacterDefinition[]){
-  scene.clearColor=Color4.FromHexString('#DCE9DDFF');scene.fogMode=Scene.FOGMODE_EXP2;scene.fogDensity=.013;scene.fogColor=Color3.FromHexString('#DCE9DD');
-  const sky=new HemisphericLight('warm-sky',new Vector3(0,1,0),scene);sky.intensity=.9;sky.groundColor=Color3.FromHexString('#71856C');
-  const sun=new DirectionalLight('afternoon-sun',new Vector3(-.5,-1,.3),scene);sun.intensity=.65;sun.diffuse=Color3.FromHexString('#FFE5BC');
+  const lighting=createGoldenHour(scene);
   const shapes=createShapes(scene),{shape,group,material}=shapes,environment=group('village'),solids:Solid[]=[];
   const vegetation=createVegetation(scene,shapes);
   let seed=923;const random=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296};
@@ -125,5 +124,7 @@ export function createVillage(scene:Scene,characters:readonly CharacterDefinitio
     const motion:NpcMotion={x,z,heading,waypoint:0,waiting:0,stuck:0};return {definition,character,solid,motion};
   });
   for(const character of [kitek,...npcs.map(npc=>npc.character)]){const shadow=shape('cylinder','contact-shadow','#66784F',character.root,0,.018,0,.31,.012,.22);shadow.material=material('#66784F')}
+  const scenery=environment.getChildMeshes(),actors=[kitek,...npcs.map(n=>n.character)].flatMap(c=>c.root.getChildMeshes());
+  lighting.addShadows([...scenery,...actors],[ground,...scenery,...actors]);
   return {environment,ground,kitek,npcs,solids,water};
 }
