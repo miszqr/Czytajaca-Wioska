@@ -8,6 +8,8 @@ vi.mock('../src/game/runtime',()=>({VillageGame:class{
  state:any;disposed=false;
  constructor(_canvas:unknown,state:unknown,private callbacks:any){this.state=structuredClone(state);mock.sessions.push(this);mock.callbacks=callbacks;queueMicrotask(()=>{if(!this.disposed)callbacks.onReady()})}
  syncState(state:unknown){this.state=structuredClone(state)}
+ snapshot(){const {player,camera,location}=this.state;return structuredClone({player,camera,location})}
+ setCameraDistance(distance:number){this.state.camera.distance=Math.max(CONFIG.cameraMinDistance,Math.min(CONFIG.cameraMaxDistance,distance));this.callbacks.onSave(this.snapshot())}
  dispose(){if(this.disposed)return;this.disposed=true;const {player,camera,location}=this.state;this.callbacks.onSave({player,camera,location})}
  setPaused(){} editHome(){} faceTarget(id:string){return mock.nearId===id} celebrate(){} moveTouch(){} runTouch(){} recenter(){} previewFurniture(){} playStoryAction(){}
 }}));
@@ -17,11 +19,37 @@ import {SaveStore} from '../src/persistence/store';
 import {newSave} from '../src/persistence/state';
 import {prepareStorage} from '../src/housing/model';
 import {DEFAULT_CONTENT} from '../src/content/defaults';
+import {CONFIG} from '../src/game/config';
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT=true;
 async function settle(){await act(async()=>{await new Promise(r=>setTimeout(r,25))})}
 function button(text:string){const b=Array.from(document.querySelectorAll('button')).find(b=>b.textContent?.trim()===text);expect(b,`button: ${text}`).toBeDefined();return b!}
 async function click(text:string){await act(async()=>button(text).click());await settle()}
 async function approach(targetId:string){mock.nearId=targetId;await act(async()=>mock.callbacks.onNear({targetId,label:targetId,near:true,distance:1,x:200,y:200,visible:true}));await act(async()=>mock.callbacks.onAction('confirm'));await settle()}
+it('menu zmienia i zapisuje odległość kamery, obsługuje suwak, przyciski i pad',async()=>{
+ const before=prepareStorage(newSave(),DEFAULT_CONTENT);before.welcomed=true;before.camera.distance=3.5;before.flags['met-bruno']=true;
+ const store=new SaveStore();await store.save(before);const container=document.createElement('div');document.body.append(container);let root=createRoot(container);
+ const slider=()=>document.querySelector<HTMLInputElement>('#camera-distance')!;
+ async function setDistance(value:string){await act(async()=>{const input=slider();Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value')!.set!.call(input,value);input.dispatchEvent(new Event('input',{bubbles:true}))});await settle()}
+ try{
+  await act(async()=>root.render(<App/>));await settle();
+  await act(async()=>document.querySelector<HTMLButtonElement>('[aria-label="Otwórz menu"]')!.click());await settle();
+  expect(document.activeElement).toBe(slider());expect(slider().value).toBe('3.5');
+  await setDistance('7.4');expect(mock.sessions.at(-1).state.camera.distance).toBe(7.4);
+  await act(async()=>mock.callbacks.onAction('right'));await settle();expect(slider().value).toBe('7.5');
+  await act(async()=>mock.callbacks.onAction('left'));await settle();expect(slider().value).toBe('7.4');
+  await act(async()=>mock.callbacks.onAction('confirm'));expect(document.querySelector('[aria-label="Menu wioski"]')).not.toBeNull();
+  await act(async()=>document.querySelector<HTMLButtonElement>('[aria-label="Oddal kamerę"]')!.click());await settle();expect(slider().value).toBe('7.5');
+  await click('Domyślna odległość');expect(slider().value).toBe(String(CONFIG.cameraDistance));
+  await setDistance(String(CONFIG.cameraMaxDistance));expect(document.querySelector<HTMLButtonElement>('[aria-label="Oddal kamerę"]')!.disabled).toBe(true);
+  await setDistance('7.4');await click('Wracam do spaceru.');
+  expect((await store.load())?.camera.distance).toBe(7.4);expect((await store.load())?.flags).toEqual(before.flags);
+  await act(async()=>root.unmount());root=createRoot(container);await act(async()=>root.render(<App/>));await settle();
+  expect(mock.sessions.at(-1).state.camera.distance).toBe(7.4);
+  // Menu uses the live pose, including a wheel change not yet autosaved.
+  mock.sessions.at(-1).state.camera.distance=8.2;
+  await act(async()=>mock.callbacks.onAction('menu'));await settle();expect(slider().value).toBe('8.2');
+ }finally{await act(async()=>root.unmount());container.remove();await store.close()}
+});
 it('P0: ręczny dialog, wejście do domu, list, dziennik i wznowienie',async()=>{
  const store=new SaveStore();await store.save(newSave());const container=document.createElement('div');document.body.append(container);let root=createRoot(container);
  try{

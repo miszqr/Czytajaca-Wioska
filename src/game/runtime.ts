@@ -160,7 +160,14 @@ export class VillageGame {
   celebrate(){this.celebrateUntil=this.time+2.5}
   moveTouch(x:number,y:number){this.input.setTouch(x,y)}
   runTouch(value:boolean){this.input.setRun(value)}
-  recenter(){this.cameraPose.yaw=this.pose.heading;this.cameraPose.pitch=.3;this.cameraPose.distance=CONFIG.cameraDistance}
+  setCameraDistance(distance:number){
+    if(!Number.isFinite(distance))return;
+    this.cameraPose.distance=Math.max(CONFIG.cameraMinDistance,Math.min(CONFIG.cameraMaxDistance,distance));
+    // Update even while the menu pauses movement; save the requested distance,
+    // not the temporary shorter distance imposed by walls or trees.
+    this.updateCamera(1);this.flush();
+  }
+  recenter(){this.cameraPose.yaw=this.pose.heading;this.cameraPose.pitch=.3;this.updateCamera(1);this.flush()}
   dispose(){
     if(this.disposed)return;this.flush();this.disposed=true;this.engine.stopRenderLoop(this.frame);this.input.dispose();this.observer.disconnect();
     this.canvas.removeEventListener('pointerdown',this.down);this.canvas.removeEventListener('pointermove',this.move);this.canvas.removeEventListener('pointerup',this.up);this.canvas.removeEventListener('pointercancel',this.up);this.canvas.removeEventListener('wheel',this.wheel);this.canvas.removeEventListener('contextmenu',this.context);this.canvas.removeEventListener('webglcontextlost',this.contextLost);

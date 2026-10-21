@@ -131,6 +131,23 @@ it('wnętrze w osobnej scenie nie przybliża kamery na placu, ale ściany dział
  expect(game.world.kitek.root.isEnabled()).toBe(true);
 });
 
+it('ustawienie kamery działa w pauzie, zachowuje odległość przy centrowaniu i kolizjach',()=>{
+ const saved=newSave(),{game}=start(saved);game.setPaused(true);
+ const before=game.snapshot(),distance=()=>Vector3.Distance(game.camera.position,game.world.kitek.root.position.add(new Vector3(0,CONFIG.cameraTargetHeight,0)));
+ game.setCameraDistance(8);expect(game.snapshot().camera.distance).toBe(8);expect(distance()).toBeCloseTo(8,2);
+ expect(game.snapshot().player).toEqual(before.player);expect(game.snapshot().camera.yaw).toBe(before.camera.yaw);
+ game.recenter();expect(game.snapshot().camera.distance).toBe(8);
+ game.setCameraDistance(99);expect(game.snapshot().camera.distance).toBe(CONFIG.cameraMaxDistance);
+ game.setCameraDistance(-1);expect(game.snapshot().camera.distance).toBe(CONFIG.cameraMinDistance);
+ game.setCameraDistance(NaN);expect(game.snapshot().camera.distance).toBe(CONFIG.cameraMinDistance);
+ game.setCameraDistance(8);
+ const inside={...saved,location:'home' as const,player:{x:0,z:-3,heading:0},camera:game.snapshot().camera};game.syncState(inside);
+ expect(distance()).toBeLessThan(1.2);expect(game.snapshot().camera.distance).toBe(8);
+ game.syncState({...saved,camera:game.snapshot().camera});expect(distance()).toBeCloseTo(8,2);
+ // Save validation accepts the extended range without changing the save format.
+ expect(validateSave({...saved,...game.snapshot()})?.camera.distance).toBe(8);
+});
+
 it('drzwi przełączają scenę i kamerę, zachowują fabułę oraz właściwe punkty wejścia',()=>{
  let state=newSave();const {game}=start(state),village=game.scene,villageCamera=game.camera,villageKitek=game.world.kitek;
  expect(game.engine.scenes).toHaveLength(1);

@@ -12,6 +12,7 @@ import {canSpeak,speak,stopSpeech} from '../audio/speech';
 import {Icon,Portrait} from './Icons';
 import {Dialog} from './Dialog';
 import {TouchControls} from './TouchControls';
+import {CameraSettings} from './CameraSettings';
 type Overlay='welcome'|'dialogue'|'journal'|'document'|'menu'|'new-game'|'inventory'|'housing'|null;
 export function App(){
  const canvas=useRef<HTMLCanvasElement>(null),game=useRef<VillageGame|null>(null),[store]=useState(()=>new SaveStore());
@@ -31,6 +32,12 @@ export function App(){
  useEffect(()=>{const fn=()=>{if(document.hidden)stopSpeech()};document.addEventListener('visibilitychange',fn);return()=>document.removeEventListener('visibilitychange',fn)},[]);
  const scene=content?currentScene(content,state):undefined,doc=content?.story.documents.find(d=>d.id===documentId),speaker=content?.characters.find(c=>c.id===node?.speaker);
  function close(){stopSpeech();setOverlay(overlay==='new-game'?'menu':null);setMessage('')}
+ function openMenu(){
+  const snapshot=game.current?.snapshot();
+  if(snapshot){const next={...stateRef.current,...snapshot};stateRef.current=next;setState(next)}
+  setOverlay('menu');
+ }
+ function changeCameraDistance(distance:number){game.current?.setCameraDistance(distance)}
  function startNewGame(){
   if(!content||overlay!=='new-game')return;
   // Dispose and flush the old world before queuing the fresh save. Recreate even
@@ -46,7 +53,25 @@ export function App(){
  function select(id:string){if(!content||!node)return;const result=choose(content,stateRef.current,node.id,id);if(result.message){setMessage(result.message);return}update(()=>result.state);game.current?.playStoryAction(node,id);close()}
  function openDocument(id:string){setDocumentId(id);setLine(0);setOverlay('document')}
  function readText(){const text=overlay==='document'?doc?.lines[line]:overlay==='dialogue'?node?.lines[line]:scene?.objective;if(text)speak(text)}
- actions.current=action=>{if(!ready||error)return;if(overlay==='housing'){housingActions.current?.(action);return}if(overlay){if(action==='confirm'){const focused=document.activeElement as HTMLButtonElement;if(focused?.matches('[role="dialog"] button:not([disabled])'))focused.click();else document.querySelector<HTMLButtonElement>('[role="dialog"] .primary:not([disabled])')?.click()}else if(action==='back'){if(overlay!=='welcome')close()}else if(['left','right','up','down'].includes(action)){const buttons=Array.from(document.querySelectorAll<HTMLButtonElement>('[role="dialog"] button:not([disabled])')),current=buttons.indexOf(document.activeElement as HTMLButtonElement),d=action==='left'||action==='up'?-1:1;buttons[(current+d+buttons.length)%buttons.length]?.focus()}else if(action==='listen')readText()}else if(action==='confirm')interact();else if(action==='menu'||action==='back')setOverlay('menu');else if(action==='hint')setOverlay('journal')};
+ actions.current=action=>{
+  if(!ready||error)return;
+  if(overlay==='housing'){housingActions.current?.(action);return}
+  if(overlay){
+   const focused=document.activeElement as HTMLElement,range=focused?.matches('#camera-distance');
+   if(action==='confirm'){
+    if(focused?.matches('[role="dialog"] button:not([disabled])'))focused.click();
+    else if(!range)document.querySelector<HTMLButtonElement>('[role="dialog"] .primary:not([disabled])')?.click();
+   }else if(action==='back'){if(overlay!=='welcome')close()}
+   else if(range&&(action==='left'||action==='right'))changeCameraDistance(Math.round((stateRef.current.camera.distance+(action==='left'?-.1:.1))*10)/10);
+   else if(['left','right','up','down'].includes(action)){
+    const controls=Array.from(document.querySelectorAll<HTMLElement>('[role="dialog"] button:not([disabled]),[role="dialog"] input[type="range"]'));
+    const current=controls.indexOf(focused),direction=action==='left'||action==='up'?-1:1;
+    controls[(current+direction+controls.length)%controls.length]?.focus();
+   }else if(action==='listen')readText();
+  }else if(action==='confirm')interact();
+  else if(action==='menu'||action==='back')openMenu();
+  else if(action==='hint')setOverlay('journal');
+ };
  const inventory=Object.entries(state.inventory);
  return <main className="game-shell">
   <canvas ref={canvas} className="world-canvas" tabIndex={-1} aria-label="Czytająca Wioska 3D. Strzałki: przód, tył i obrót. WASD: ruch względem kamery. E: rozmowa lub użycie przedmiotu."/>
@@ -54,7 +79,7 @@ export function App(){
   <header className="hud-header"><div className="brand"><span className="brand-leaf"><Icon name="leaf" size={28}/></span><div><span className="brand-small">Nowy dom Kitka</span><h1>Czytająca Wioska</h1></div></div><div className="header-actions">
    <button className="icon-button" aria-label="Otwórz dziennik" disabled={!ready||!!overlay} onClick={()=>setOverlay('journal')}><Icon name="book"/></button>
    <button className="seed-counter" aria-label="Otwórz plecak" disabled={!ready||!!overlay} onClick={()=>setOverlay('inventory')}><Icon name="bag"/><span>{inventory.length}/{PACK_CAPACITY}</span><span className="seed-label">plecak</span></button>
-   <button className="icon-button menu-button" aria-label="Otwórz menu" disabled={!ready||!!overlay} onClick={()=>setOverlay('menu')}><Icon name="menu"/></button>
+   <button className="icon-button menu-button" aria-label="Otwórz menu" disabled={!ready||!!overlay} onClick={openMenu}><Icon name="menu"/></button>
   </div></header>
   {ready&&!overlay&&!error&&<>
    <button className="quest-card" onClick={()=>setOverlay('journal')} aria-label="Zobacz cel w dzienniku"><span className="quest-icon"><Icon name="book"/></span><div><span className="eyebrow">Dziennik Kitka</span><h2>{scene?.title??'Jestem u siebie'}</h2><p>{scene?.objective??(state.flags['story-complete']?'Dobrze być u siebie. Mogę odwiedzić sąsiadów.':'Mogę pospacerować i odwiedzić sąsiadów.')}</p></div></button>
@@ -73,7 +98,7 @@ export function App(){
   :overlay==='journal'?<Dialog label="Dziennik Kitka" onBack={close}><span className="eyebrow">Moje małe przygody</span><h2>Dziennik Kitka</h2><p className="journal-objective">{scene?.objective??('Dobrze być u siebie. Mogę odwiedzić sąsiadów.')}</p><button className="text-button" onClick={readText} disabled={!canSpeak()}><Icon name="sound"/>Posłuchaj celu</button><ul className="progress-list">{content.story.scenes.filter(s=>state.completed.includes(s.id)).map(s=><li key={s.id}><Icon name="leaf" size={18}/><span>{s.title}</span></li>)}</ul><div className="quest-list">{state.read.map(id=>{const d=content.story.documents.find(d=>d.id===id);return d&&<button className="secondary" key={id} onClick={()=>openDocument(id)}><Icon name="letter"/>{d.title}</button>})}</div><button className="primary" onClick={close}>Wracam do spaceru.</button></Dialog>
   :overlay==='inventory'?<Dialog label="Plecak Kitka" onBack={close} wide><span className="eyebrow">Rzeczy na drogę</span><h2>Plecak Kitka</h2><div className="inventory-grid">{Array.from({length:PACK_CAPACITY},(_,i)=>{const entry=inventory[i],item=entry?content.items.find(item=>item.id===entry[0]):undefined;return <div className={'inventory-slot '+(!entry?'empty':'')} key={i}>{entry?<><Icon name={item?.model==='seed'?'seed':item?.model==='apple'?'apple':'box'} size={30}/><strong>{item?.name??entry[0]}</strong><span>× {entry[1]}</span><small>{item?.description}</small></>:<span aria-label="Puste miejsce">·</span>}</div>})}</div><button className="primary" onClick={close}>Wracam do spaceru.</button></Dialog>
   :overlay==='housing'?<HousingEditor state={state} content={content} initialItem={housingItem} onChange={next=>update(()=>next)} onClose={close} onPreview={preview} actions={housingActions}/>
-  :overlay==='menu'?<Dialog label="Menu wioski" onBack={close}><span className="eyebrow">Chwila odpoczynku</span><h2>Twój spacer</h2><div className="quest-list">{state.location==='home'&&!state.flags.hosting&&<button className="secondary" onClick={()=>{setHousingItem(undefined);setOverlay('housing')}}>Urządź dom</button>}<button className="secondary" onClick={()=>setOverlay('journal')}>Otwórz dziennik</button><button className="secondary" onClick={()=>setOverlay('inventory')}>Zajrzyj do plecaka</button><button className="secondary" onClick={()=>setOverlay('new-game')}>Zacznij nową grę</button></div><dl className="control-list"><div><dt>Przód / tył, obrót</dt><dd>↑ ↓ / ← →</dd></div><div><dt>Ruch względem kamery</dt><dd>WASD · lewy drążek · joystick</dd></div><div><dt>Rozmowa i przedmioty</dt><dd>E · A na padzie</dd></div><div><dt>Odsłuch / dziennik</dt><dd>X / Y na padzie</dd></div></dl><p className="quiet">Postęp zapisuje się na tym urządzeniu.</p><button className="primary" onClick={close}>Wracam do spaceru.<Icon name="arrow"/></button></Dialog>
+  :overlay==='menu'?<Dialog label="Menu wioski" onBack={close}><span className="eyebrow">Chwila odpoczynku</span><h2>Twój spacer</h2><CameraSettings distance={state.camera.distance} onChange={changeCameraDistance}/><div className="quest-list">{state.location==='home'&&!state.flags.hosting&&<button className="secondary" onClick={()=>{setHousingItem(undefined);setOverlay('housing')}}>Urządź dom</button>}<button className="secondary" onClick={()=>setOverlay('journal')}>Otwórz dziennik</button><button className="secondary" onClick={()=>setOverlay('inventory')}>Zajrzyj do plecaka</button><button className="secondary" onClick={()=>setOverlay('new-game')}>Zacznij nową grę</button></div><dl className="control-list"><div><dt>Przód / tył, obrót</dt><dd>↑ ↓ / ← →</dd></div><div><dt>Ruch względem kamery</dt><dd>WASD · lewy drążek · joystick</dd></div><div><dt>Rozmowa i przedmioty</dt><dd>E · A na padzie</dd></div><div><dt>Odsłuch / dziennik</dt><dd>X / Y na padzie</dd></div></dl><p className="quiet">Postęp zapisuje się na tym urządzeniu.</p><button className="primary" onClick={close}>Wracam do spaceru.<Icon name="arrow"/></button></Dialog>
   :overlay==='new-game'?<Dialog label="Zacząć nową grę?" onBack={close}><span className="eyebrow">Nowa przygoda</span><h2>Zacząć nową grę?</h2><p>Dotychczasowy postęp zostanie usunięty. Kitek zacznie przygodę od początku.</p><div className="quest-list"><button className="primary" onClick={close}>Nie, wróć do menu</button><button className="secondary" onClick={startNewGame}>Tak, zacznij od nowa</button></div></Dialog>:null}
  </main>;
 }
