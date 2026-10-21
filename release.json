@@ -1,6 +1,6 @@
 {
-  "sourceCommit": "de31d01901ec512fda3f654d6d3b81f41808c55b",
+  "sourceCommit": "fdd7d6111510931d4b063430433c8ec47e361ec2",
   "sourceBranch": "feat/golden-hour",
-  "release": "golden-hour",
+  "release": "golden-hour-shadow-fix",
   "date": "2026-10-21"
 }
