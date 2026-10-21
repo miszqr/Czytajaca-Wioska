@@ -17,6 +17,9 @@ export function createVillage(scene:Scene,characters:readonly CharacterDefinitio
   for(let i=0;i<positions.length;i+=3){const x=positions[i],z=positions[i+2];positions[i+1]=terrainHeight(x,z);const tone=.92+random()*.08;colors.push(.56*tone,.70*tone,.38*tone,1)}
   VertexData.ComputeNormals(positions,ground.getIndices()!,normals);ground.updateVerticesData(VertexBuffer.PositionKind,positions);ground.updateVerticesData(VertexBuffer.NormalKind,normals);ground.setVerticesData(VertexBuffer.ColorKind,colors);ground.material=material('#FFFFFF');ground.isPickable=true;ground.metadata={cameraObstacle:true};
   function obstacle(mesh:Mesh){mesh.isPickable=true;mesh.metadata={cameraObstacle:true};return mesh}
+  // Thin surfaces lie almost on the terrain. Rendering them into the shadow
+  // map causes self-shadow stripes at the low golden-hour sun angle.
+  function groundDetail(mesh:Mesh){mesh.metadata={...mesh.metadata,castsShadow:false};return mesh}
   function path(points:number[][],width=2.7){
     const vertices:number[]=[],indices:number[]=[],normals:number[]=[];
     for(let i=0;i<=80;i++){
@@ -27,12 +30,12 @@ export function createVillage(scene:Scene,characters:readonly CharacterDefinitio
       for(const side of [-1,1]){const x=point[0]+side*d[1]/length*w/2,z=point[1]-side*d[0]/length*w/2;vertices.push(x,terrainHeight(x,z)+.026,z)}
       if(i<80){const j=i*2;indices.push(j,j+1,j+2,j+1,j+3,j+2)}
     }
-    VertexData.ComputeNormals(vertices,indices,normals);const data=new VertexData();Object.assign(data,{positions:vertices,indices,normals});const mesh=new Mesh('soft-village-path',scene);data.applyToMesh(mesh);mesh.material=material('#D7C396');mesh.parent=environment;
+    VertexData.ComputeNormals(vertices,indices,normals);const data=new VertexData();Object.assign(data,{positions:vertices,indices,normals});const mesh=groundDetail(new Mesh('soft-village-path',scene));data.applyToMesh(mesh);mesh.material=material('#D7C396');mesh.parent=environment;
   }
   path([[0,-49],[-5,-27],[5,-8],[0,0]],3.4);path([[0,0],[-2,10],[2,28],[4,49]],3.1);
   path([[-49,10],[-18,15],[-10,0],[0,0]],3);path([[0,0],[10,-2],[28,2],[49,-3]],3);
-  const plaza=shape('cylinder','village-square','#DCCA9F',environment,0,.035,0,4.3,.035,4.3);
-  for(let i=0;i<22;i++){const a=i/22*Math.PI*2;const p=shape('box','plaza-stone',i%2?'#E8D8B6':'#CEBB91',environment,Math.sin(a)*3.9,.06,Math.cos(a)*3.9,.70,.065,.38);p.rotation.y=a}
+  const plaza=groundDetail(shape('cylinder','village-square','#DCCA9F',environment,0,.035,0,4.3,.035,4.3));
+  for(let i=0;i<22;i++){const a=i/22*Math.PI*2;const p=groundDetail(shape('box','plaza-stone',i%2?'#E8D8B6':'#CEBB91',environment,Math.sin(a)*3.9,.06,Math.cos(a)*3.9,.70,.065,.38));p.rotation.y=a}
   void plaza;
   function cottage(name:string,x:number,z:number,width:number,depth:number,wall:string,roof:string){
     const y=terrainHeight(x,z),g=group(name,environment,x,y,z);solids.push({id:name,type:'box',x,z,halfX:width/2+.18,halfZ:depth/2+.18});
@@ -112,8 +115,10 @@ export function createVillage(scene:Scene,characters:readonly CharacterDefinitio
   const sign=group('garden-sign',environment,-3.7,.0,1.4);shape('cylinder','sign-post','#8C7150',sign,0,.52,0,.06,1.04,.06);shape('box','sign-board','#D8C49B',sign,0,.95,0,.8,.34,.10);shape('ball','sign-leaf','#7B9C61',sign,0,.97,-.07,.12,.08,.02);
   // Low draw-call count on mobile; obstacle batches remain available to camera raycasts.
   const batches=new Map<string,Mesh[]>();
-  for(const mesh of environment.getChildMeshes() as Mesh[]){mesh.computeWorldMatrix(true);const key=mesh.material!.uniqueId+':'+!!mesh.metadata?.cameraObstacle;const list=batches.get(key)||[];list.push(mesh);batches.set(key,list)}
-  for(const [key,meshes] of batches){const merged=Mesh.MergeMeshes(meshes,true,true,undefined,false,false);if(merged){merged.name='scenery-'+key;merged.parent=environment;merged.metadata={cameraObstacle:key.endsWith('true')};merged.isPickable=merged.metadata.cameraObstacle;merged.freezeWorldMatrix()}}
+  // Keep shadow roles separate even when a ground detail shares a material
+  // with a building; merging otherwise loses the receive-only flag.
+  for(const mesh of environment.getChildMeshes() as Mesh[]){mesh.computeWorldMatrix(true);const key=mesh.material!.uniqueId+':'+!!mesh.metadata?.cameraObstacle+':'+(mesh.metadata?.castsShadow!==false);const list=batches.get(key)||[];list.push(mesh);batches.set(key,list)}
+  for(const [key,meshes] of batches){const cameraObstacle=!!meshes[0].metadata?.cameraObstacle,castsShadow=meshes[0].metadata?.castsShadow!==false;const merged=Mesh.MergeMeshes(meshes,true,true,undefined,false,false);if(merged){merged.name='scenery-'+key;merged.parent=environment;merged.metadata={cameraObstacle,castsShadow};merged.isPickable=cameraObstacle;merged.freezeWorldMatrix()}}
   const kitek=createCharacter(scene,'kitek');
   const npcs=characters.map(definition=>{
     const {x,z,heading}=definition.position;

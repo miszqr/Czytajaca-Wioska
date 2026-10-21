@@ -1,5 +1,5 @@
 import {it,expect} from 'vitest';
-import {NullEngine,Scene,FreeCamera,Vector3,VertexBuffer,Ray} from '../src/game/babylon';
+import {NullEngine,Scene,FreeCamera,Vector3,VertexBuffer,Ray,DirectionalLight} from '../src/game/babylon';
 import {DEFAULT_CONTENT} from '../src/content/defaults';
 import {createVillage} from '../src/game/world';
 import {blocked} from '../src/game/movement';
@@ -16,6 +16,21 @@ it('buduje rzeczywistą scenę Babylon, bezpieczny start, pięć modeli i kolizj
   try{
     const world=createVillage(scene,DEFAULT_CONTENT.characters);const camera=new FreeCamera('test',new Vector3(0,3,-8),scene);scene.activeCamera=camera;camera.setTarget(new Vector3(0,0,0));
     const road=scene.meshes.find(m=>m.material?.name==='#D7C396')!;expect(road).toBeDefined();const normals=road.getVerticesData(VertexBuffer.NormalKind)!;for(let i=1;i<normals.length;i+=3)expect(normals[i]).toBeGreaterThan(.9);
+    // Inspect the final merged scene: ground decorations must receive real
+    // shadows without being written back into the shadow map themselves.
+    const sun=scene.getLightByName('golden-hour-sun') as DirectionalLight;
+    const casters=sun.getShadowGenerator()!.getShadowMap()!.renderList!;
+    const surfaceColors=['#D7C396','#DCCA9F','#E8D8B6','#CEBB91'];
+    const surfaces=scene.meshes.filter(m=>surfaceColors.includes(m.material?.name??'')&&m.metadata?.castsShadow===false);
+    expect(surfaces).toHaveLength(surfaceColors.length);
+    for(const mesh of [world.ground,...surfaces]){expect(mesh.receiveShadows).toBe(true);expect(casters.includes(mesh),mesh.name).toBe(false)}
+    // Other objects reuse the paving colors, but still need their own shadows.
+    expect(casters.some(m=>surfaceColors.includes(m.material?.name??''))).toBe(true);
+    expect(casters.some(m=>m.name==='golden-hour-sky-dome')).toBe(false);
+    expect(casters.some(m=>m.name==='contact-shadow')).toBe(false);
+    for(const actor of [world.kitek,...world.npcs.map(n=>n.character)])expect(actor.root.getChildMeshes().some(m=>casters.includes(m))).toBe(true);
+    const obstacles=world.environment.getChildMeshes().filter(m=>m.metadata?.cameraObstacle);
+    expect(obstacles.length).toBeGreaterThan(0);for(const mesh of obstacles){expect(mesh.isPickable).toBe(true);expect(casters.includes(mesh),mesh.name).toBe(true)}
     expect(blocked(CONFIG.spawn,world.solids)).toBe(false);expect(world.solids.some(s=>s.id==='pond')).toBe(true);
     expect(world.kitek.root.getChildMeshes().some(m=>m.name==='pack-body')).toBe(true);expect(world.npcs.find(n=>n.definition.id==='bruno')!.character.root.getChildMeshes().some(m=>m.name==='apron')).toBe(true);
     expect(world.npcs.map(n=>n.definition.id)).toEqual(['bruno','fela','tola','milus']);

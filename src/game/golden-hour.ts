@@ -59,7 +59,7 @@ export function createGoldenHour(scene:Scene){
   const shadows=new ShadowGenerator(1024,sun);
   shadows.usePercentageCloserFiltering=true;shadows.filteringQuality=ShadowGenerator.QUALITY_LOW;
   shadows.bias=.0004;shadows.normalBias=.035;shadows.setDarkness(.25);
-  for(const mesh of casters)if(mesh.name!=='contact-shadow')shadows.addShadowCaster(mesh,false);
+  for(const mesh of casters)if(mesh.metadata?.castsShadow!==false&&mesh.name!=='contact-shadow')shadows.addShadowCaster(mesh,false);
   for(const mesh of receivers)mesh.receiveShadows=true;
   return shadows;
  }

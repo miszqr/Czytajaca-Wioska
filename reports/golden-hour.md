@@ -17,3 +17,21 @@ build produkcyjny i test uruchomienia modułów zakończone powodzeniem.
 Test sceny obejmuje kompilację materiałów i render w NullEngine.
 Nie potwierdzono obrazu WebGL ani FPS na telefonie: środowisko nie ma
 zainstalowanej przeglądarki do lokalnego odbioru GPU.
+
+## Poprawka pasów na chodniku — 2026-10-21
+
+Odtworzono pasy na opublikowanej wersji `de31d01` w połączonym Chrome.
+Ścieżki, powierzchnia placu i jego płaskie kamienie były zarówno odbiorcami,
+jak i źródłami cieni. Przy niskim słońcu powodowało to artefakty samocieniowania.
+Te elementy teraz tylko odbierają cienie budynków, roślinności i postaci.
+Łączenie modeli zachowuje rolę cienia oddzielnie od materiału i osłony kamery;
+obiekty korzystające z tych samych kolorów nadal mogą rzucać cienie.
+
+Rozszerzony test końcowej, scalonej sceny sprawdza listę źródeł cieni,
+odbieranie cieni przez podłoże oraz zachowanie osłon kamery i cieni postaci.
+`npm run check`: 43 testy, walidacja treści, TypeScript, build produkcyjny
+i test uruchomienia zakończone powodzeniem; `git diff --check` bez błędów.
+
+Podgląd w chmurze zgłosił `WebGL not supported`. Poprawiona wersja wymaga
+jeszcze porównania tego samego widoku w Chrome po publikacji. Nie traktujemy
+testu NullEngine ani testu uruchomienia jako potwierdzenia wyglądu GPU.
