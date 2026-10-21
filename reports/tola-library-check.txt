@@ -1,0 +1,128 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> czytajaca-wioska@0.1.0 test
+> vitest run --reporter=dot
+
+
+ RUN  v5.0.5 /workspace/scratch/458f7d614290/czytajaca-wioska
+
+······················stdout | tests/world.test.ts > buduje rzeczywistą scenę Babylon, bezpieczny start, pięć modeli i kolizje
+BJS - [13:49:53]: Babylon.js v9.31.0 - Null engine
+
+stdout | tests/world.test.ts > drewniany dom Feli zachowuje budżet geometrii, osłonę kamery i drożną trasę spaceru
+BJS - [13:49:55]: Babylon.js v9.31.0 - Null engine
+
+····stdout | tests/world.test.ts > biblioteka w drzewie zachowuje wolne dojście do Toli i poprawne osłony kamery
+BJS - [13:49:55]: Babylon.js v9.31.0 - Null engine
+
+···stdout | tests/controls.test.ts > strzałki obracają w obie strony w miejscu, kamera pozostaje za plecami
+BJS - [13:49:54]: Babylon.js v9.31.0 - Null engine
+
+·stdout | tests/controls.test.ts > po obrocie idzie do przodu i cofa bez odwracania Kitka ani kamery
+BJS - [13:49:56]: Babylon.js v9.31.0 - Null engine
+
+·stdout | tests/controls.test.ts > ruch i obrót jednocześnie zakręcają względem bohatera, bez sprzężenia z kamerą
+BJS - [13:49:57]: Babylon.js v9.31.0 - Null engine
+
+·stdout | tests/controls.test.ts > po ręcznym obrocie kamera wraca najkrótszą drogą i kończy powrót po puszczeniu strzałek
+BJS - [13:49:58]: Babylon.js v9.31.0 - Null engine
+
+·stdout | tests/controls.test.ts > ręczne rozglądanie ma pierwszeństwo, a WASD nie wpada w orbitowanie
+BJS - [13:50:00]: Babylon.js v9.31.0 - Null engine
+
+·stdout | tests/controls.test.ts > pauza zamraża ruch i kamerę, po zamknięciu dialogu nie zostaje wciśnięta strzałka
+BJS - [13:50:01]: Babylon.js v9.31.0 - Null engine
+
+·stdout | tests/controls.test.ts > podgląd domu zmienia tylko kamerę edytora i usuwa geometrię po anulowaniu
+BJS - [13:50:02]: Babylon.js v9.31.0 - Null engine
+
+stdout | tests/controls.test.ts > wnętrze w osobnej scenie nie przybliża kamery na placu, ale ściany działają w domu
+BJS - [13:50:02]: Babylon.js v9.31.0 - Null engine
+
+···stdout | tests/controls.test.ts > drzwi przełączają scenę i kamerę, zachowują fabułę oraz właściwe punkty wejścia
+BJS - [13:50:03]: Babylon.js v9.31.0 - Null engine
+
+·stdout | tests/controls.test.ts > renderuje i aktualizuje tylko aktywną scenę, powroty nie mnożą zasobów, dispose sprząta obie
+BJS - [13:50:04]: Babylon.js v9.31.0 - Null engine
+
+·stdout | tests/controls.test.ts > wznawia zapis v3 bez tworzenia wioski i zachowuje meble oraz edytor przy kolejnych wizytach
+BJS - [13:50:05]: Babylon.js v9.31.0 - Null engine
+
+·stdout | tests/controls.test.ts > goście mają osobne modele we wnętrzu i nie przenoszą mieszkańców z wioski
+BJS - [13:50:06]: Babylon.js v9.31.0 - Null engine
+
+··
+
+ Test Files  8 passed (8)
+      Tests  43 passed (43)
+   Start at  13:49:53
+   Duration  13.81s (tests 84%, environment 9%, import 4%, transform 3%)
+
+
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> czytajaca-wioska@0.1.0 build
+> npm run content:check && tsc --noEmit && vite build
+
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> czytajaca-wioska@0.1.0 content:check
+> node scripts/validate-content.mjs
+
+Treści poprawne: 4 mieszkańców, 8 scen, 41 dialogów, 20 przedmiotów.
+vite v8.3.4 building client environment for production...
+transforming...
+✓ 506 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                             3.53 kB │ gzip:  0.75 kB
+dist/assets/index-Bahk9G1v.css             14.90 kB │ gzip:  4.11 kB
+dist/assets/runtime-C8YFaKUu.js             0.15 kB │ gzip:  0.14 kB
+dist/assets/rolldown-runtime-B0fFmPBj.js    0.33 kB │ gzip:  0.24 kB
+dist/assets/runtime-D5L2dhJ5.js             0.41 kB │ gzip:  0.24 kB
+dist/assets/runtime-Cr7K6u57.js             0.56 kB │ gzip:  0.36 kB
+dist/assets/runtime-B2WjJjNp.js             1.64 kB │ gzip:  0.87 kB
+dist/assets/runtime-DaI1iJB6.js             3.67 kB │ gzip:  1.31 kB
+dist/assets/runtime-BDvi3DYj.js             3.68 kB │ gzip:  1.61 kB
+dist/assets/runtime-B2z-2TWt.js             4.17 kB │ gzip:  2.30 kB
+dist/assets/runtime-CsGt9DdG.js             8.73 kB │ gzip:  3.23 kB
+dist/assets/runtime-CdzMPdLZ.js            11.64 kB │ gzip:  3.19 kB
+dist/assets/runtime-DAa-KQOJ.js            12.31 kB │ gzip:  3.99 kB
+dist/assets/runtime-DnKWLAOj.js            13.29 kB │ gzip:  2.64 kB
+dist/assets/runtime-BuW01BXy.js            18.00 kB │ gzip:  3.86 kB
+dist/assets/runtime-CH-MjxNX.js            19.47 kB │ gzip:  5.18 kB
+dist/assets/runtime-DgxNnTwU.js            19.89 kB │ gzip:  5.87 kB
+dist/assets/runtime-pfdx4zub.js            21.70 kB │ gzip:  5.19 kB
+dist/assets/runtime-C6rHFpab.js            21.89 kB │ gzip:  7.24 kB
+dist/assets/runtime-DJb7lFOz.js            22.69 kB │ gzip:  7.63 kB
+dist/assets/runtime-DnEksYpR.js            23.51 kB │ gzip:  5.54 kB
+dist/assets/runtime-CWzHmJCn.js            25.55 kB │ gzip:  6.42 kB
+dist/assets/runtime-DqtPBXuR.js            28.38 kB │ gzip:  7.43 kB
+dist/assets/runtime-B7H7--pY.js            29.03 kB │ gzip:  7.73 kB
+dist/assets/runtime-CjQ7PVM5.js            31.41 kB │ gzip:  8.26 kB
+dist/assets/runtime-BQEel2qq.js            32.37 kB │ gzip:  8.53 kB
+dist/assets/runtime-Cq9uIvUR.js            34.53 kB │ gzip: 11.06 kB
+dist/assets/runtime-DYatyUHi.js            37.77 kB │ gzip: 13.89 kB
+dist/assets/runtime-CcQNIwFT.js            50.43 kB │ gzip: 11.79 kB
+dist/assets/runtime-4IZg-G6C.js            50.98 kB │ gzip: 13.95 kB
+dist/assets/runtime-DR2L07HO.js            62.32 kB │ gzip: 14.51 kB
+dist/assets/runtime-DnlCyl2U.js            64.47 kB │ gzip: 14.13 kB
+dist/assets/runtime-pI-EaBUl.js            66.42 kB │ gzip: 16.51 kB
+dist/assets/runtime-CjC0acNO.js            73.10 kB │ gzip: 16.08 kB
+dist/assets/runtime-0EXqZmHZ.js            76.32 kB │ gzip: 19.37 kB
+dist/assets/runtime-Bn2WAhfS.js            76.45 kB │ gzip: 19.71 kB
+dist/assets/runtime-vfO6c378.js            77.08 kB │ gzip: 19.34 kB
+dist/assets/runtime-D8P_D3GI.js            89.40 kB │ gzip: 18.93 kB
+dist/assets/runtime-cu0kdNKT.js            98.69 kB │ gzip: 26.10 kB
+dist/assets/index-CFEP6DAx.js             114.42 kB │ gzip: 39.33 kB
+dist/assets/runtime-BUXFLWIC.js           154.98 kB │ gzip: 32.28 kB
+dist/assets/runtime-BircCc3h.js           181.98 kB │ gzip: 35.20 kB
+dist/assets/runtime-B55b6lUo.js           203.03 kB │ gzip: 63.51 kB
+
+✓ built in 265ms
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> czytajaca-wioska@0.1.0 test:build
+> node scripts/verify-build.mjs
+
+Production startup OK: module graph evaluated, game UI mounted, content loading started.

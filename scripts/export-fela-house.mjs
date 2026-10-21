@@ -1,5 +1,5 @@
 // Export the exact pre-batch house geometry for an offline inspection render.
-// Usage: node scripts/export-fela-house.mjs /absolute/path/model.json
+// Usage: node scripts/export-fela-house.mjs /absolute/path/model.json [house name]
 import {writeFileSync} from 'node:fs';
 import {createServer} from 'vite';
 const server=await createServer({server:{middlewareMode:true},appType:'custom'});
@@ -10,7 +10,7 @@ try{
  const engine=new NullEngine(),scene=new Scene(engine),meshes=[];
  const merge=Mesh.MergeMeshes;
  Mesh.MergeMeshes=function(parts,...args){
-  const root=scene.getTransformNodeByName('Sklep Feli');
+  const root=scene.getTransformNodeByName(process.argv[3]||'Sklep Feli');
   for(const mesh of parts)if(root&&mesh.isDescendantOf(root)){
    const matrix=mesh.computeWorldMatrix(true),nm=Matrix.Transpose(matrix.clone().invert());
    const p=mesh.getVerticesData(VertexBuffer.PositionKind),n=mesh.getVerticesData(VertexBuffer.NormalKind),c=mesh.getVerticesData(VertexBuffer.ColorKind),positions=[],normals=[],colors=[];

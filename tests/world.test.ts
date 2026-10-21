@@ -9,6 +9,7 @@ import {newSave} from '../src/persistence/state';
 import type {Solid} from '../src/game/movement';
 import {CONFIG} from '../src/game/config';
 import {createFelaHouse} from '../src/game/fela-house';
+import {createTolaLibrary} from '../src/game/tola-library';
 import {createShapes} from '../src/game/shapes';
 it('buduje rzeczywistą scenę Babylon, bezpieczny start, pięć modeli i kolizje',async()=>{
   const engine=new NullEngine(),scene=new Scene(engine),homeScene=new Scene(engine);
@@ -53,5 +54,28 @@ it('drewniany dom Feli zachowuje budżet geometrii, osłonę kamery i drożną t
   expect(roof?.hit).toBe(true);expect(roof?.pickedPoint?.y).toBeGreaterThan(5);expect(roof?.pickedPoint?.y).toBeLessThan(6);
   expect(blocked({x:10,z:9},solids)).toBe(true);expect(blocked({x:10,z:6},solids)).toBe(true);
   for(let x=9.5;x<=11.5;x+=.1)expect(blocked({x,z:4.8},solids,.5),`Fela at ${x}`).toBe(false);
+ }finally{scene.dispose();engine.dispose()}
+});
+
+it('biblioteka w drzewie zachowuje wolne dojście do Toli i poprawne osłony kamery',()=>{
+ const engine=new NullEngine(),scene=new Scene(engine),shapes=createShapes(scene),solids:Solid[]=[];
+ try{
+  const library=createTolaLibrary(scene,shapes,shapes.group('village'),0,0,23,solids),meshes=library.getChildMeshes();
+  expect(meshes.reduce((sum,m)=>sum+m.getTotalIndices()/3,0)).toBeLessThan(45000);
+  expect(new Set(meshes.map(m=>m.material)).size).toBe(1);
+  for(const mesh of meshes){
+   mesh.computeWorldMatrix(true);
+   for(const kind of [VertexBuffer.PositionKind,VertexBuffer.NormalKind,VertexBuffer.ColorKind,VertexBuffer.UVKind])expect(mesh.getVerticesData(kind)?.every(Number.isFinite),`${mesh.name}: ${kind}`).toBe(true);
+  }
+  const obstacle=(mesh:typeof meshes[number])=>mesh.metadata?.cameraObstacle===true&&mesh.isEnabled()&&mesh.isVisible&&mesh.isPickable;
+  const trunk=scene.pickWithRay(new Ray(new Vector3(0,5.9,10),new Vector3(0,0,1),20),obstacle);
+  expect(trunk?.hit).toBe(true);expect(trunk?.pickedPoint?.z).toBeGreaterThan(20);expect(trunk?.pickedPoint?.z).toBeLessThan(21.3);
+  // Winding must face outward, including after merging into the scene material.
+  expect(trunk?.getNormal(true)?.z).toBeLessThan(-.8);
+  const hood=scene.pickWithRay(new Ray(new Vector3(3,8,20.2),new Vector3(0,-1,0),10),obstacle);
+  expect(hood?.hit).toBe(true);expect(hood?.pickedPoint?.y).toBeGreaterThan(3);expect(hood?.pickedPoint?.y).toBeLessThan(4);
+  expect(blocked({x:0,z:23},solids)).toBe(true);expect(blocked({x:0,z:19.5},solids)).toBe(true);
+  // The entire front lane remains free with an NPC-sized safety margin.
+  for(let x=-4.5;x<=4.5;x+=.1)expect(blocked({x,z:18.2},solids,.5),`Tola approach at ${x}`).toBe(false);
  }finally{scene.dispose();engine.dispose()}
 });

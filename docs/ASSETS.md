@@ -12,6 +12,7 @@
 | Animacje | Zastępcze proceduralne: idle, walk, run, obrót, talk, pick-up, give, celebrate | Kod, bez rigu i klipów glTF |
 | Domy, ogród i staw | Stylizowana geometria prototypowa | Oryginalny kod `game/world.ts` |
 | Dom / sklep Feli | Dopracowana drewniana chatka: bale ze słojami, gontowy dach z wygiętymi okapami, komin, ganek, okiennice, kwietniki i szyld | Proceduralny model `game/fela-house.ts`, inspirowany ilustracją dostarczoną przez użytkownika |
+| Biblioteka Toli | Dom w drzewie: pień z korą i korzeniami, okrągłe okna z książkami, ganek, balkon, gont, latarnie, bluszcz i szyld | Proceduralny model `game/tola-library.ts`; referencja użytkownika `references/tola-library-exterior.png` |
 | Drzewa i roślinność | Dąb, jabłoń, brzoza, sosna; rozgałęzione pnie, korzenie, nieregularne korony, krzewy, trawa i kwiaty z płatkami | Oryginalny kod `game/vegetation.ts` i `game/world.ts` |
 | Portrety i ikony | Proste wektory interfejsu; nie finalne portrety 3D | Oryginalny SVG w `ui/Icons.tsx` |
 | `references/kitek-concept.png` | Dostarczona referencja wizualna, nie model ani spritesheet | Załącznik użytkownika |
@@ -47,6 +48,14 @@ Modele są nadal proceduralne i stylizowane. Nie dodano jeszcze wiatru, tekstur 
 
 Dom ma 17 860 trójkątów. Kolory drewna, gontów i detali są zapisane we wierzchołkach, dzięki czemu budynek używa jednego istniejącego materiału. Wszystkie elementy są scalane z otoczeniem przy tworzeniu wioski. Komin, ściany i dach mają uproszczone bryły do promieni kamery; kwiaty, litery i drobne zdobienia nie blokują kamery. Nie dodano tekstur, zależności, świateł punktowych ani pracy w pętli animacji.
 
-Sklep pozostaje w dotychczasowym miejscu. Ganek ma osobny obrys kolizji, zachowujący wolną trasę Feli i dostęp do rozmowy. Wnętrze sklepu nie jest częścią tej zmiany. Pozostałe domy korzystają z dotychczasowego modelu.
+Sklep pozostaje w dotychczasowym miejscu. Ganek ma osobny obrys kolizji, zachowujący wolną trasę Feli i dostęp do rozmowy. Wnętrze sklepu nie jest częścią tej zmiany. Domy Kitka, Brunona i Milusia korzystają z dotychczasowego modelu.
 
 Eksport do kontroli geometrii: `node scripts/export-fela-house.mjs /tmp/fela-house.json`. Render porównawczy: `python scripts/render-house-preview.py before.json after.json preview.webp` (Python, NumPy i Pillow; wyłącznie narzędzie dokumentacyjne). Pomiary i walidacja: [raport](../reports/fela-house-detail.md).
+
+## Biblioteka Toli w drzewie
+
+[Porównanie biblioteki](previews/tola-library.webp) przedstawia dokładną geometrię modeli, wyrenderowaną programowo, od przodu i od tyłu. Inspiracją jest [załączony projekt detali zewnętrznych](references/tola-library-exterior.png). Kolory kory, miodowego drewna, zielononiebieskich gontów, liści i kwiatów zapisano we wierzchołkach. Okrągłe okna zawierają małe półki i grzbiety książek; szyld „BIBLIOTEKA TOLI” i znak otwartej książki też są geometrią.
+
+Model ma 42 436 trójkątów i współdzieli jeden materiał z otoczeniem. Pień, grube konary, korzenie, daszek i podest balkonu osłaniają kamerę; małe zdobienia pozostają dekoracją. Biblioteka nadal stoi w `(0, 23)`, a Tola w `(0, 18.2)`. Jej dialogi i postęp historii pozostają bez zmian. Drzwi, schodki i balkon należą do modelu zewnętrznego; ta zmiana nie dodaje wnętrza biblioteki ani wspinania.
+
+Eksport: `node scripts/export-fela-house.mjs /tmp/tola-library.json 'Biblioteka Toli'`. Render: `python scripts/render-house-preview.py before.json after.json preview.webp 'Biblioteka Toli — dom w drzewie'`. Eksporter przyjmuje opcjonalną nazwę domu, a renderer automatycznie dopasowuje wysokość kadru. Pomiary, testy i ograniczenie kontroli WebGL opisuje [raport](../reports/tola-library-detail.md).

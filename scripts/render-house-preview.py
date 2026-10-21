@@ -8,7 +8,7 @@ im=Image.new('RGB',(1800,900),'#F6F3E9');draw=ImageDraw.Draw(im)
 font='/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'
 font_b='/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf'
 def text(x,y,s,size=24,fill='#354B38',bold=False):draw.text((x,y),s,font=ImageFont.truetype(font_b if bold else font,size),fill=fill)
-text(52,30,'Drewniany dom Feli',38,bold=True)
+text(52,30,sys.argv[4] if len(sys.argv)>4 else 'Drewniany dom Feli',38,bold=True)
 text(52,84,'Czytająca Wioska · szczegółowy model z kodu gry',23)
 light=np.array([-0.6,1,-0.8]);light/=np.linalg.norm(light)
 views=[(before,430,610,48,[7,-3.8,11],25,155,'Poprzedni model'),(after,790,670,78,[7,-3.8,11],465,135,'Nowy model'),(after,500,610,48,[-8,-3.8,-10],1280,155,'Widok z tyłu')]
@@ -17,12 +17,17 @@ for model,width,height,scale,direction,left,top,label in views:
  right=np.cross([0,1,0],forward);right/=np.linalg.norm(right);up=np.cross(forward,right)
  bg=Image.new('RGB',(width,height),'#F6F3E9')
  shade=Image.new('RGBA',(width,height));sd=ImageDraw.Draw(shade)
- origin=height-130
+ # Fit taller buildings as well as cottages without clipping their canopy.
+ all_points=np.concatenate([np.array(m['positions']).reshape(-1,3) for m in model['meshes']])
+ vertical=all_points@up;horizontal=all_points@right
+ scale=min(scale,(height-90)/(vertical.max()-vertical.min()),(width-40)/(horizontal.max()-horizontal.min()))
+ origin=height-45+vertical.min()*scale
+ center=width/2-(horizontal.min()+horizontal.max())*scale/2
  sd.ellipse((width*.16,origin-45,width*.84,origin+70),fill=(72,78,45,35));shade=shade.filter(ImageFilter.GaussianBlur(18));bg=Image.alpha_composite(bg.convert('RGBA'),shade).convert('RGB')
  pixels=np.array(bg,dtype=float)/255;depth=np.full((height,width),np.inf)
  for mesh in model['meshes']:
   p=np.array(mesh['positions']).reshape(-1,3);n=np.array(mesh['normals']).reshape(-1,3);colors=np.array(mesh['colors']).reshape(-1,3)
-  projected=np.stack([p@right*scale+width/2,origin-p@up*scale,p@forward],axis=1)
+  projected=np.stack([p@right*scale+center,origin-p@up*scale,p@forward],axis=1)
   for tri in np.array(mesh['indices']).reshape(-1,3):
    points=projected[tri];normal=n[tri].mean(axis=0)
    if normal@forward>=.01:continue

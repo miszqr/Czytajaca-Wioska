@@ -6,6 +6,7 @@ import type {CharacterDefinition} from '../content/types';
 import type {NpcMotion} from './npc';
 import {createVegetation,type TreeKind} from './vegetation';
 import {createFelaHouse} from './fela-house';
+import {createTolaLibrary} from './tola-library';
 export function createVillage(scene:Scene,characters:readonly CharacterDefinition[]){
   scene.clearColor=Color4.FromHexString('#DCE9DDFF');scene.fogMode=Scene.FOGMODE_EXP2;scene.fogDensity=.013;scene.fogColor=Color3.FromHexString('#DCE9DD');
   const sky=new HemisphericLight('warm-sky',new Vector3(0,1,0),scene);sky.intensity=.9;sky.groundColor=Color3.FromHexString('#71856C');
@@ -60,7 +61,7 @@ export function createVillage(scene:Scene,characters:readonly CharacterDefinitio
   path([[0,0],[8,0],[15,1],[18,4.7]],2);
   cottage('Dom Brunona',-10,10,5.2,4.5,'#E8D9AA','#839265');
   createFelaHouse(scene,shapes,environment,10,terrainHeight(10,9),9,solids);
-  cottage('Biblioteka Toli',0,23,7.4,5.5,'#E5DCC2','#768A93');
+  createTolaLibrary(scene,shapes,environment,0,terrainHeight(0,23),23,solids);
   cottage('Dom Milusia',13,-12,5,4.4,'#E8D9C3','#A48E6F');
   const stall=group('fela-stall',environment,8,terrainHeight(8,4.8),4.8);
   shape('box','stall-counter','#B79163',stall,0,.7,0,1.8,.13,.75);for(const x of [-.75,.75])shape('box','stall-leg','#92714E',stall,x,.34,0,.1,.68,.6);
