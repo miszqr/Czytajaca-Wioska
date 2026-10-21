@@ -11,6 +11,7 @@ import {CONFIG} from '../src/game/config';
 import {createFelaHouse} from '../src/game/fela-house';
 import {createTolaLibrary} from '../src/game/tola-library';
 import {createShapes} from '../src/game/shapes';
+import {createStorybookCottage,COTTAGES,type CottageKind} from '../src/game/storybook-cottage';
 it('buduje rzeczywistą scenę Babylon, bezpieczny start, pięć modeli i kolizje',async()=>{
   const engine=new NullEngine(),scene=new Scene(engine),homeScene=new Scene(engine);
   try{
@@ -92,5 +93,34 @@ it('biblioteka w drzewie zachowuje wolne dojście do Toli i poprawne osłony kam
   expect(blocked({x:0,z:23},solids)).toBe(true);expect(blocked({x:0,z:19.5},solids)).toBe(true);
   // The entire front lane remains free with an NPC-sized safety margin.
   for(let x=-4.5;x<=4.5;x+=.1)expect(blocked({x,z:18.2},solids,.5),`Tola approach at ${x}`).toBe(false);
+ }finally{scene.dispose();engine.dispose()}
+});
+
+it.each<CottageKind>(['kitek','bruno','milus'])('drewniany dom %s zachowuje przejścia, poprawne ściany i budżet geometrii',kind=>{
+ const engine=new NullEngine(),scene=new Scene(engine),shapes=createShapes(scene),solids:Solid[]=[];
+ try{
+  const cfg=COTTAGES[kind],house=createStorybookCottage(scene,shapes,shapes.group('village'),kind,0,solids),meshes=house.getChildMeshes();
+  expect(meshes.reduce((n,m)=>n+m.getTotalIndices()/3,0)).toBeLessThan(18000);
+  expect(new Set(meshes.map(m=>m.material)).size).toBe(1);
+  for(const mesh of meshes){
+   mesh.computeWorldMatrix(true);
+   for(const type of [VertexBuffer.PositionKind,VertexBuffer.NormalKind,VertexBuffer.ColorKind,VertexBuffer.UVKind])expect(mesh.getVerticesData(type)?.every(Number.isFinite),`${mesh.name}: ${type}`).toBe(true);
+  }
+  const obstacle=(mesh:typeof meshes[number])=>mesh.metadata?.cameraObstacle===true&&mesh.isPickable;
+  const facade=scene.pickWithRay(new Ray(new Vector3(cfg.x,1.6,cfg.z-10),new Vector3(0,0,1),20),obstacle);
+  expect(facade?.hit).toBe(true);expect(facade?.pickedPoint?.z).toBeCloseTo(cfg.z-cfg.depth/2+.08);
+  expect(facade?.getNormal(true)?.z).toBeLessThan(-.9);
+  const roof=scene.pickWithRay(new Ray(new Vector3(cfg.x+cfg.width*.3,10,cfg.z),new Vector3(0,-1,0),10),obstacle);
+  expect(roof?.hit).toBe(true);expect(roof?.pickedPoint?.y).toBeGreaterThan(3.5);expect(roof?.pickedPoint?.y).toBeLessThan(cfg.peak);
+  expect(roof?.getNormal(true)?.y).toBeGreaterThan(.4);
+  // Preserve the old blockers exactly; the doorway's approach remains open.
+  expect(solids).toEqual([{id:cfg.name,type:'box',x:cfg.x,z:cfg.z,halfX:cfg.width/2+.18,halfZ:cfg.depth/2+.18}]);
+  expect(blocked({x:cfg.x,z:cfg.z},solids)).toBe(true);
+  for(let dx=-1;dx<=1;dx+=.25)expect(blocked({x:cfg.x+dx,z:cfg.z-cfg.depth/2-.75},solids)).toBe(false);
+  const moss=meshes.filter(m=>m.name.endsWith('-roof-moss'));
+  expect(moss.length>0).toBe(kind!=='kitek');
+  for(const patch of moss){const n=patch.getVerticesData(VertexBuffer.NormalKind)!;for(let i=1;i<n.length;i+=3)expect(n[i]).toBeGreaterThan(0)}
+  if(kind==='kitek'){expect(scene.getMeshByName('home-blue-sign')).not.toBeNull();expect(blocked({x:18,z:4.2},solids)).toBe(false)}
+  if(kind==='milus')expect(blocked({x:13,z:-15.8},solids,.5)).toBe(false);
  }finally{scene.dispose();engine.dispose()}
 });

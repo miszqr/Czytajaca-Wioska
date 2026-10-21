@@ -8,6 +8,7 @@ import {createVegetation,type TreeKind} from './vegetation';
 import {createFelaHouse} from './fela-house';
 import {createTolaLibrary} from './tola-library';
 import {createGoldenHour} from './golden-hour';
+import {createStorybookCottage,COTTAGES} from './storybook-cottage';
 export function createVillage(scene:Scene,characters:readonly CharacterDefinition[]){
   const lighting=createGoldenHour(scene);
   const shapes=createShapes(scene),{shape,group,material}=shapes,environment=group('village'),solids:Solid[]=[];
@@ -37,34 +38,10 @@ export function createVillage(scene:Scene,characters:readonly CharacterDefinitio
   const plaza=groundDetail(shape('cylinder','village-square','#DCCA9F',environment,0,.035,0,4.3,.035,4.3));
   for(let i=0;i<22;i++){const a=i/22*Math.PI*2;const p=groundDetail(shape('box','plaza-stone',i%2?'#E8D8B6':'#CEBB91',environment,Math.sin(a)*3.9,.06,Math.cos(a)*3.9,.70,.065,.38));p.rotation.y=a}
   void plaza;
-  function cottage(name:string,x:number,z:number,width:number,depth:number,wall:string,roof:string){
-    const y=terrainHeight(x,z),g=group(name,environment,x,y,z);solids.push({id:name,type:'box',x,z,halfX:width/2+.18,halfZ:depth/2+.18});
-    obstacle(shape('box','cottage-stone-foot', '#A4A58B',g,0,.18,0,width+.3,.36,depth+.3));
-    obstacle(shape('box','cottage-walls',wall,g,0,1.8,0,width,3.2,depth));
-    const roofMesh=obstacle(shape('cone','cottage-roof',roof,g,0,4.15,0,width*.83,2.1,depth*.83));roofMesh.rotation.y=Math.PI/4;
-    for(const sx of [-1,1])for(const sz of [-1,1])shape('box','timber-post','#84614B',g,sx*(width/2-.08),1.8,sz*(depth/2-.08),.17,3.25,.17);
-    for(const sx of [-1,1]){
-      shape('box','window-frame','#866950',g,sx*width*.28,1.9,-depth/2-.03,1.1,1.25,.14);
-      shape('box','window-glass','#A9CFD0',g,sx*width*.28,1.9,-depth/2-.12,.90,1.05,.04);
-      shape('box','window-cross','#F4E4BC',g,sx*width*.28,1.9,-depth/2-.15,.07,1.1,.04);
-      shape('box','window-cross','#F4E4BC',g,sx*width*.28,1.9,-depth/2-.15,.95,.07,.04);
-      shape('box','window-box','#95754B',g,sx*width*.28,1.2,-depth/2-.22,1.2,.25,.4);
-      for(let i=0;i<4;i++)shape('ball','window-flowers',i%2?'#F1C461':'#DF947D',g,sx*width*.28-.4+i*.26,1.42,-depth/2-.24,.13,.15,.13);
-    }
-    shape('box','front-door','#816344',g,0,1.15,-depth/2-.07,.90,2,.12);shape('ball','door-knob','#E8BF65',g,.29,1.16,-depth/2-.16,.045);
-    shape('box','front-step','#C3BB9F',g,0,.10,-depth/2-.5,1.6,.2,.7);
-    obstacle(shape('box','chimney','#BC9575',g,width*.25,4.5,.3,.6,2,.6));
-    shape('box','chimney-cap','#D8C6A6',g,width*.25,5.5,.3,.77,.16,.77);
-    shape('box','timber-beam','#84614B',g,0,3.28,-depth/2-.06,width,.15,.16);
-    return g;
-  }
-  cottage('Dom Kitka',18,8,5.5,4.8,'#F0DFC0','#A77459');
-  shape('box','home-blue-sign','#77A8D7',environment,19.8,1.4,5.5,.7,.36,.10);
+  for(const kind of ['kitek','bruno','milus'] as const){const {x,z}=COTTAGES[kind];createStorybookCottage(scene,shapes,environment,kind,terrainHeight(x,z),solids)}
   path([[0,0],[8,0],[15,1],[18,4.7]],2);
-  cottage('Dom Brunona',-10,10,5.2,4.5,'#E8D9AA','#839265');
   createFelaHouse(scene,shapes,environment,10,terrainHeight(10,9),9,solids);
   createTolaLibrary(scene,shapes,environment,0,terrainHeight(0,23),23,solids);
-  cottage('Dom Milusia',13,-12,5,4.4,'#E8D9C3','#A48E6F');
   const stall=group('fela-stall',environment,8,terrainHeight(8,4.8),4.8);
   shape('box','stall-counter','#B79163',stall,0,.7,0,1.8,.13,.75);for(const x of [-.75,.75])shape('box','stall-leg','#92714E',stall,x,.34,0,.1,.68,.6);
   for(let i=0;i<4;i++)shape('ball','stall-apple',i%2?'#BC7865':'#D1AD64',stall,-.6+i*.35,.87,0,.12,.12,.12);
