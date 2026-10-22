@@ -19,6 +19,7 @@ import {Input as KeyboardInput} from '../src/game/input';
 import {Vector3} from '../src/game/babylon';
 import {CONFIG} from '../src/game/config';
 import {choose,findNode} from '../src/story/engine';
+import {POND,terrainHeight} from '../src/game/island-terrain';
 
 let game:VillageGame|undefined,input:Input|undefined;
 const errors=vi.fn();
@@ -147,6 +148,24 @@ it('ustawienie kamery działa w pauzie, zachowuje odległość przy centrowaniu 
  // Save validation accepts the extended range without changing the save format.
  expect(validateSave({...saved,...game.snapshot()})?.camera.distance).toBe(8);
 });
+
+it('Kitek wchodzi do stawu po dnie, wznawia zapis w wodzie i wychodzi na brzeg',()=>{
+ const saved=newSave();saved.player={x:POND.x,z:POND.z+POND.radiusZ,heading:Math.PI};saved.camera.yaw=Math.PI;
+ let {game}=start(saved);
+ expect(game.world.kitek.root.position.y).toBeGreaterThan(POND.waterLevel);
+ key('ArrowUp');key('ShiftLeft');frames(100);key('ArrowUp',false);key('ShiftLeft',false);
+ const middle=game.snapshot(),position=game.world.kitek.root.position;
+ expect(Math.abs(middle.player.z-POND.z)).toBeLessThan(.6);
+ expect(position.y).toBeCloseTo(terrainHeight(position.x,position.z));
+ expect(position.y).toBeLessThan(POND.waterLevel-.45);expect(game.camera.position.y).toBeGreaterThan(POND.waterLevel);
+ const restored=validateSave(JSON.parse(JSON.stringify({...saved,...middle})))!;
+ game.dispose();({game}=start(restored));
+ expect(game.snapshot().player).toEqual(middle.player);
+ expect(game.world.kitek.root.position.y).toBeLessThan(POND.waterLevel-.45);
+ key('ArrowDown');key('ShiftLeft');frames(105);key('ArrowDown',false);key('ShiftLeft',false);
+ expect(game.snapshot().player.z).toBeGreaterThan(POND.z+POND.radiusZ);
+ expect(game.world.kitek.root.position.y).toBeGreaterThan(POND.waterLevel);
+},15000);
 
 it('drzwi przełączają scenę i kamerę, zachowują fabułę oraz właściwe punkty wejścia',()=>{
  let state=newSave();const {game}=start(state),village=game.scene,villageCamera=game.camera,villageKitek=game.world.kitek;

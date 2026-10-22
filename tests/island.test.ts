@@ -1,5 +1,5 @@
 import {it,expect} from 'vitest';
-import {ISLAND,shoreRadius,terrainHeight,shoreDistance,beachApproach} from '../src/game/island-terrain';
+import {ISLAND,POND,pondRadius,shoreRadius,terrainHeight,shoreDistance,beachApproach} from '../src/game/island-terrain';
 import {blocked,moveWithSlide} from '../src/game/movement';
 import {CONFIG} from '../src/game/config';
 import {NullEngine,Scene,Vector3,Ray,VertexBuffer} from '../src/game/babylon';
@@ -31,9 +31,9 @@ it('morze otacza całą wyspę, a zejście do plaży jest ciągłe i łagodne',(
  }
 });
 
-it('nowy brzeg zachowuje wysokości domów, fabuły i stawu',()=>{
+it('brzeg i niecka stawu zachowują wysokości pozostałej wioski',()=>{
  for(let x=-35;x<=35;x+=1)for(let z=-35;z<=35;z+=1){
-  if(Math.hypot(x,z)>ISLAND.slopeStart)continue;
+  if(Math.hypot(x,z)>ISLAND.slopeStart||pondRadius(x,z)<1)continue;
   const edge=Math.min(1,Math.max(0,(Math.hypot(x,z)-12)/18));
   expect(terrainHeight(x,z)).toBe(edge*(.4*Math.sin(x*.11)*Math.cos(z*.09)+.15*Math.sin(z*.2)));
  }
@@ -56,5 +56,27 @@ it('widoczny stok zgadza się z chodzeniem i osłoną kamery, krawędzie siatki 
     expect(Math.abs(hit!.pickedPoint!.y-terrainHeight(x,z))).toBeLessThan(.025);
    }
   }
+  // Raycast the actual rendered basin, not just the height function used by feet.
+  for(let degrees=0;degrees<360;degrees+=30)for(let radius=0;radius<=1.1;radius+=.1){
+   const angle=degrees*Math.PI/180,x=POND.x+Math.cos(angle)*POND.radiusX*radius,z=POND.z+Math.sin(angle)*POND.radiusZ*radius;
+   const hit=scene.pickWithRay(new Ray(new Vector3(x,5,z),new Vector3(0,-1,0),12),m=>m===ground);
+   expect(hit?.hit).toBe(true);expect(hit!.getNormal(true)!.y).toBeGreaterThan(.94);
+   expect(Math.abs(hit!.pickedPoint!.y-terrainHeight(x,z))).toBeLessThan(.025);
+  }
  }finally{scene.dispose();engine.dispose()}
+});
+
+it('niecka ma płytkie dno, łagodne wejścia i suchy brzeg wokół całej wody',()=>{
+ expect(POND.waterLevel-terrainHeight(POND.x,POND.z)).toBeCloseTo(.5);
+ for(let degrees=0;degrees<360;degrees+=5){
+  const angle=degrees*Math.PI/180;
+  let last=terrainHeight(POND.x,POND.z);
+  for(let r=.01;r<=1.05;r+=.01){
+   const x=POND.x+Math.cos(angle)*POND.radiusX*r,z=POND.z+Math.sin(angle)*POND.radiusZ*r,y=terrainHeight(x,z);
+   expect(y).toBeGreaterThanOrEqual(POND.waterLevel-.5);
+   expect(Math.abs(y-last)/(.01*POND.radiusZ)).toBeLessThan(.35);last=y;
+  }
+  const x=POND.x+Math.cos(angle)*POND.radiusX,z=POND.z+Math.sin(angle)*POND.radiusZ;
+  expect(terrainHeight(x,z)).toBeGreaterThan(POND.waterLevel);
+ }
 });

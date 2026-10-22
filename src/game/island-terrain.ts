@@ -1,6 +1,9 @@
 // Shared by rendering, walking, vegetation and the ocean shader.
-// The village core keeps its existing elevations, including the pond banks.
+// The village keeps its existing elevations outside the shallow pond basin.
 export const ISLAND={radius:46,lobes:1.7,coves:.85,slopeStart:35.5,seaLevel:-1.5} as const;
+export const POND={x:23,z:17,radiusX:7.4,radiusZ:6.3,waterLevel:-.34,depth:.5} as const;
+/** Elliptical distance: 1 is the outer bank, where the old terrain resumes. */
+export function pondRadius(x:number,z:number){return Math.hypot((x-POND.x)/POND.radiusX,(z-POND.z)/POND.radiusZ)}
 export function smoothRange(start:number,end:number,value:number){
  const t=Math.max(0,Math.min(1,(value-start)/(end-start)));return t*t*(3-2*t);
 }
@@ -11,7 +14,7 @@ export function onDryLand(x:number,z:number,radius=0){
  // A little extra clearance accounts for the curved shore and the actor's feet.
  return Number.isFinite(x)&&Number.isFinite(z)&&shoreDistance(x,z)>radius*1.1+.45;
 }
-export function terrainHeight(x:number,z:number){
+function islandHeight(x:number,z:number){
  const r=Math.hypot(x,z),shore=shoreRadius(Math.atan2(z,x));
  const edge=Math.min(1,Math.max(0,(r-12)/18));
  const hill=edge*(.4*Math.sin(x*.11)*Math.cos(z*.09)+.15*Math.sin(z*.2));
@@ -19,6 +22,14 @@ export function terrainHeight(x:number,z:number){
  if(r>=shore)return ISLAND.seaLevel-2*smoothRange(0,8,r-shore);
  const descent=smoothRange(ISLAND.slopeStart,shore,r);
  return hill*(1-descent)+ISLAND.seaLevel*descent;
+}
+export function terrainHeight(x:number,z:number){
+ const base=islandHeight(x,z),r=pondRadius(x,z);
+ if(r>=1)return base;
+ // The same continuous floor drives the visible mesh and the actor's feet.
+ // A level, half-metre-deep centre rises gently into the existing bank.
+ const bottom=POND.waterLevel-POND.depth;
+ return bottom+(base-bottom)*smoothRange(.15,1,r);
 }
 export function beachApproach(x:number,z:number,inset=3.6){
  const angle=Math.atan2(z,x),r=shoreRadius(angle)-inset;return [Math.cos(angle)*r,Math.sin(angle)*r];

@@ -2,7 +2,7 @@ import {it,expect} from 'vitest';
 import {NullEngine,Scene,FreeCamera,Vector3,VertexBuffer,Ray,DirectionalLight} from '../src/game/babylon';
 import {DEFAULT_CONTENT} from '../src/content/defaults';
 import {createVillage} from '../src/game/world';
-import {blocked} from '../src/game/movement';
+import {blocked,moveWithSlide} from '../src/game/movement';
 import {createStoryWorld} from '../src/game/story-world';
 import {homeSolids} from '../src/housing/model';
 import {newSave} from '../src/persistence/state';
@@ -12,7 +12,7 @@ import {createFelaHouse} from '../src/game/fela-house';
 import {createTolaLibrary} from '../src/game/tola-library';
 import {createShapes} from '../src/game/shapes';
 import {createStorybookCottage,COTTAGES,type CottageKind} from '../src/game/storybook-cottage';
-import {ISLAND,beachApproach,shoreDistance} from '../src/game/island-terrain';
+import {ISLAND,POND,pondRadius,beachApproach,shoreDistance} from '../src/game/island-terrain';
 it('buduje rzeczywistą scenę Babylon, bezpieczny start, pięć modeli i kolizje',async()=>{
   const engine=new NullEngine(),scene=new Scene(engine),homeScene=new Scene(engine);
   try{
@@ -32,13 +32,26 @@ it('buduje rzeczywistą scenę Babylon, bezpieczny start, pięć modeli i kolizj
     expect(casters.some(m=>m.name==='contact-shadow')).toBe(false);
     expect(world.ocean.position.y).toBe(ISLAND.seaLevel);expect(world.ocean.isPickable).toBe(false);
     expect(casters.includes(world.ocean)).toBe(false);expect(world.ocean.parent).toBeNull();
-    for(const tree of world.solids.filter(s=>s.id==='tree'))expect(shoreDistance(tree.x,tree.z)).toBeGreaterThanOrEqual(8.8);
+    for(const tree of world.solids.filter(s=>s.id==='tree')){expect(shoreDistance(tree.x,tree.z)).toBeGreaterThanOrEqual(8.8);expect(pondRadius(tree.x,tree.z)).toBeGreaterThanOrEqual(1.15)}
+    expect(world.water.isDisposed()).toBe(false);expect(world.water.position.y).toBe(POND.waterLevel);
+    expect(world.water.isPickable).toBe(false);expect(world.water.metadata.cameraObstacle).toBe(false);
+    expect(casters.includes(world.water)).toBe(false);expect(world.water.material!.alpha).toBeLessThan(1);
+    const waterNormals=world.water.getVerticesData(VertexBuffer.NormalKind)!;
+    for(let i=1;i<waterNormals.length;i+=3)expect(waterNormals[i]).toBeGreaterThan(.99);
     const roadPositions=road.getVerticesData(VertexBuffer.PositionKind)!;
     for(let i=0;i<roadPositions.length;i+=3)expect(roadPositions[i+1]).toBeGreaterThan(ISLAND.seaLevel);
     for(const actor of [world.kitek,...world.npcs.map(n=>n.character)])expect(actor.root.getChildMeshes().some(m=>casters.includes(m))).toBe(true);
     const obstacles=world.environment.getChildMeshes().filter(m=>m.metadata?.cameraObstacle);
     expect(obstacles.length).toBeGreaterThan(0);for(const mesh of obstacles){expect(mesh.isPickable).toBe(true);expect(casters.includes(mesh),mesh.name).toBe(true)}
-    expect(blocked(CONFIG.spawn,world.solids)).toBe(false);expect(world.solids.some(s=>s.id==='pond')).toBe(true);
+    expect(blocked(CONFIG.spawn,world.solids)).toBe(false);expect(world.solids.some(s=>s.id==='pond')).toBe(false);
+    // Walk through both axes of the real pond and return onto each bank.
+    for(const [dx,dz] of [[POND.radiusX,0],[0,POND.radiusZ]]){
+      const entry={x:POND.x-dx,z:POND.z-dz},exit={x:POND.x+dx,z:POND.z+dz};
+      const end=moveWithSlide(entry,{x:dx*2,z:dz*2},world.solids);
+      expect(end.x).toBeCloseTo(exit.x);expect(end.z).toBeCloseTo(exit.z);
+      const back=moveWithSlide(end,{x:-dx*2,z:-dz*2},world.solids);
+      expect(back.x).toBeCloseTo(entry.x);expect(back.z).toBeCloseTo(entry.z);
+    }
     expect(world.kitek.root.getChildMeshes().some(m=>m.name==='pack-body')).toBe(true);expect(world.npcs.find(n=>n.definition.id==='bruno')!.character.root.getChildMeshes().some(m=>m.name==='apron')).toBe(true);
     expect(world.npcs.map(n=>n.definition.id)).toEqual(['bruno','fela','tola','milus']);
     expect(scene.meshes.filter(m=>m.name.startsWith('scenery-')).length).toBeLessThan(80);
@@ -49,6 +62,7 @@ it('buduje rzeczywistą scenę Babylon, bezpieczny start, pięć modeli i kolizj
       for(let i=0;i<queue.length;i++){const p=queue[i];for(const [dx,dz] of [[.5,0],[-.5,0],[0,.5],[0,-.5]]){const next={x:p.x+dx,z:p.z+dz},key=`${next.x},${next.z}`;if(Math.abs(next.x)>bounds||Math.abs(next.z)>bounds||seen.has(key)||blocked(next,solids)||blocked({x:p.x+dx/2,z:p.z+dz/2},solids))continue;seen.add(key);queue.push(next)}}return queue;
     }
     const outside=flood({x:0,z:-5},world.solids,49);
+    expect(outside.some(p=>Math.hypot(p.x-POND.x,p.z-POND.z)<.3),'pond reachable from spawn').toBe(true);
     for(const target of [...DEFAULT_CONTENT.interactions.filter(t=>t.location==='village'),...DEFAULT_CONTENT.characters])expect(outside.some(p=>Math.hypot(p.x-target.position.x,p.z-target.position.z)<1.8),`reachable ${target.id}`).toBe(true);
     for(const [x,z] of [[0,-49],[-49,10],[4,49],[49,-3]]){const [px,pz]=beachApproach(x,z);expect(outside.some(p=>Math.hypot(p.x-px,p.z-pz)<.7),`beach ${x},${z}`).toBe(true)}
     const state=newSave();state.location='home';const room=createStoryWorld(homeScene,DEFAULT_CONTENT,'home');room.sync(state);const inside=flood({x:0,z:-2.5},homeSolids(state,DEFAULT_CONTENT),5);

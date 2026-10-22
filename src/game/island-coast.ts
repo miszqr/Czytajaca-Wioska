@@ -1,7 +1,7 @@
 import {Scene,CreateGround,VertexBuffer,VertexData,Color3,Vector3} from './babylon';
 import {ShaderMaterial} from '@babylonjs/core/Materials/shaderMaterial';
 import type {Shapes} from './shapes';
-import {ISLAND,shoreDistance,smoothRange,terrainHeight} from './island-terrain';
+import {ISLAND,pondRadius,shoreDistance,smoothRange,terrainHeight} from './island-terrain';
 
 export function createIslandGround(scene:Scene,shapes:Shapes){
  const ground=CreateGround('village-ground',{width:110,height:110,subdivisions:140,updatable:true},scene);
@@ -14,6 +14,8 @@ export function createIslandGround(scene:Scene,shapes:Shapes){
   const sandAmount=1-smoothRange(3.8,8.5,inland+variation*.25);
   const color=Color3.Lerp(grass,sand,sandAmount);
   Color3.LerpToRef(color,wetSand,1-smoothRange(.3,1.8,inland),color);
+  // The pond bed and bank belong to the ground, with no raised collision rim.
+  Color3.LerpToRef(color,wetSand,1-smoothRange(.68,1,pondRadius(x,z)),color);
   colors.push(color.r*tone,color.g*tone,color.b*tone,1);
  }
  VertexData.ComputeNormals(positions,ground.getIndices()!,normals);
