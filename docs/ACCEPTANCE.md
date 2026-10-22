@@ -44,7 +44,7 @@ NullEngine i jsdom nie potwierdzają obrazu na GPU ani działania fizycznego urz
 - [ ] Przesuń mebel, anuluj, schowaj i ustaw ponownie. Własność przedmiotu zostaje zachowana.
 - [ ] Nie da się zablokować wyjścia, szafki ani zamknąć Kitka za meblami.
 - [ ] Po edycji kamera wraca zza pleców; po przeładowaniu meble stoją tak samo.
-- [ ] Odsłuch jest dostępny na żądanie; brak polskiego głosu nie blokuje przejścia.
+- [ ] Dziecko czyta samodzielnie; dialogi, listy i dziennik nie mają przycisków ani skrótów do odsłuchu.
 - [ ] Na Pixelu 8 sprawdź pion/poziom, czytelność, dotyk, jednoczesny ruch i kamerę.
 - [ ] Na 8BitDo sprawdź A/B/X/Y, oba drążki, D-pad, Start, odłączenie i powrót pada.
 - [ ] W edytorze D-pad przesuwa, X obraca, A ustawia, B anuluje podgląd.

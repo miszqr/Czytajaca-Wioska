@@ -25,6 +25,12 @@ async function settle(){await act(async()=>{await new Promise(r=>setTimeout(r,25
 function button(text:string){const b=Array.from(document.querySelectorAll('button')).find(b=>b.textContent?.trim()===text);expect(b,`button: ${text}`).toBeDefined();return b!}
 async function click(text:string){await act(async()=>button(text).click());await settle()}
 async function approach(targetId:string){mock.nearId=targetId;await act(async()=>mock.callbacks.onNear({targetId,label:targetId,near:true,distance:1,x:200,y:200,visible:true}));await act(async()=>mock.callbacks.onAction('confirm'));await settle()}
+async function expectIndependentReading(){
+ const dialog=document.querySelector('[role="dialog"]')!,before=dialog.textContent;
+ expect(Array.from(dialog.querySelectorAll('button')).map(b=>b.getAttribute('aria-label')??b.textContent).join(' ')).not.toMatch(/posłuchaj|odsłuch/i);
+ // R / pad X is now a furniture-only action; it must leave reading unchanged.
+ await act(async()=>mock.callbacks.onAction('rotate'));expect(dialog.textContent).toBe(before);
+}
 it('menu zmienia i zapisuje odległość kamery, obsługuje suwak, przyciski i pad',async()=>{
  const before=prepareStorage(newSave(),DEFAULT_CONTENT);before.welcomed=true;before.camera.distance=3.5;before.flags['met-bruno']=true;
  const store=new SaveStore();await store.save(before);const container=document.createElement('div');document.body.append(container);let root=createRoot(container);
@@ -54,10 +60,11 @@ it('P0: ręczny dialog, wejście do domu, list, dziennik i wznowienie',async()=>
  const store=new SaveStore();await store.save(newSave());const container=document.createElement('div');document.body.append(container);let root=createRoot(container);
  try{
   await act(async()=>root.render(<App/>));await settle();await click('Ruszamy');await approach('bruno');expect(document.querySelector('.dialogue-text')?.textContent).toContain('Witaj, Kitku!');expect((document.activeElement as HTMLElement).textContent).toBe('Dalej');
+  await expectIndependentReading();
   await click('Dalej');await click('Rozejrzę się.');await approach('home-door');await click('Otwieram drzwi.');await approach('fela-letter');expect(document.querySelector('.dialogue-text')?.textContent).toContain('Cześć, Kitku!');await click('Dalej');await click('Zachowam ten list.');
   expect(document.querySelector('.syllable')).toBeNull();expect(document.body.textContent).not.toMatch(/odpowiedź|punkty|ćwiczenie/i);
   const saved=await store.load();expect(saved?.location).toBe('home');expect(saved?.read).toEqual(['fela-letter']);
-  await act(async()=>document.querySelector<HTMLButtonElement>('[aria-label="Otwórz dziennik"]')!.click());await click('List od Feli');await click('Dalej');await click('Zamknij list.');await click('Wracam do spaceru.');
+  await act(async()=>document.querySelector<HTMLButtonElement>('[aria-label="Otwórz dziennik"]')!.click());expect(document.activeElement?.textContent).toBe('Dziennik Kitka');await expectIndependentReading();await click('List od Feli');await expectIndependentReading();await click('Dalej');await click('Zamknij list.');await click('Wracam do spaceru.');
   await act(async()=>root.unmount());root=createRoot(container);await act(async()=>root.render(<App/>));await settle();expect(document.querySelector('[role="dialog"]')).toBeNull();expect((await store.load())?.read).toEqual(['fela-letter']);
  }finally{await act(async()=>root.unmount());container.remove();await store.close()}
 });
@@ -72,7 +79,7 @@ it('P2: lampa trafia z plecaka do pokoju przez podgląd, kolizje i sterowanie pa
  try{
   await act(async()=>root.render(<App/>));await settle();await approach('bedside');expect(document.querySelector('[role="dialog"]')?.getAttribute('aria-label')).toBe('Ustaw: Lampa od Feli');
   await act(async()=>mock.callbacks.onAction('left'));await settle();expect(button('Postaw tutaj').disabled).toBe(true);expect(document.querySelector('.placement-status')?.textContent).toContain('mebel');
-  await act(async()=>mock.callbacks.onAction('right'));await act(async()=>mock.callbacks.onAction('listen'));await settle();expect(button('Postaw tutaj').disabled).toBe(false);
+  await act(async()=>mock.callbacks.onAction('right'));await act(async()=>mock.callbacks.onAction('rotate'));await settle();expect(button('Postaw tutaj').disabled).toBe(false);
   await act(async()=>mock.callbacks.onAction('confirm'));await settle();expect(document.querySelector('.housing-items')?.textContent).toContain('Lampa od Feli');await click('Gotowe, wracam do pokoju.');
   const saved=await store.load();expect(saved?.flags['lamp-placed']).toBe(true);expect(saved?.inventory.lamp).toBeUndefined();expect(saved?.furniture.filter(f=>f.itemId==='lamp')).toHaveLength(1);expect(saved?.furniture.find(f=>f.itemId==='lamp')?.rotation).toBe(1);
   await click('Urządź dom');await click('W pokoju');await click('Przesuń Lampa od Feli');await act(async()=>mock.callbacks.onAction('right'));await click('Wróć do wyboru');await click('Gotowe, wracam do pokoju.');expect((await store.load())?.furniture).toEqual(saved?.furniture);

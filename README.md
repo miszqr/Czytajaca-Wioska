@@ -58,9 +58,9 @@ P2: przycisk „Urządź dom” działa także przed ukończeniem historii. Wybi
 | Powrót | Esc | B | Przycisk powrotu |
 | Menu | M / Esc | Start | Przycisk menu |
 | Edytor: miejsce / obrót / postaw | Strzałki / R / E | D-pad / X / A | Przyciski edytora |
-| Odsłuch / dziennik | Przyciski na ekranie | X / Y | Przyciski na ekranie |
+| Dziennik | Przycisk na ekranie | Y | Przycisk na ekranie |
 
-Dialog zatrzymuje kamerę i ruch. Wypowiedzi przewija się ręcznie; nie ma automatycznego odsłuchu ani presji czasu. Dziennik przypomina cel, bez rysowania dokładnej trasy.
+Dialog zatrzymuje kamerę i ruch. Dziecko samodzielnie czyta tekst i ręcznie przewija wypowiedzi, bez presji czasu. Gra nie odczytuje tekstu na głos. Dziennik przypomina cel, bez rysowania dokładnej trasy.
 
 ## Treści i stan gry
 
