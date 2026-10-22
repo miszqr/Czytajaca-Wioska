@@ -1,6 +1,6 @@
 {
-  "sourceCommit": "efc39b351b5c261cbb04e78f8469c266706229ad",
-  "sourceBranch": "fix/fox-tail-shape",
-  "release": "continuous-fox-tail",
+  "sourceCommit": "ac17f867bc7f4329abd2134002f13d4cf925d80d",
+  "sourceBranch": "fix/journal-text-no-narration",
+  "release": "journal-independent-reading",
   "date": "2026-10-22"
 }
