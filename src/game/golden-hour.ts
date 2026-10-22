@@ -17,7 +17,9 @@ export function createGoldenHour(scene:Scene){
  const sun=new DirectionalLight('golden-hour-sun',sunDirection.negate(),scene);
  sun.position=sunDirection.scale(90);sun.intensity=1.05;
  sun.diffuse=Color3.FromHexString('#FFD092');sun.specular=Color3.FromHexString('#FFE0B0');
- sun.shadowMinZ=1;sun.shadowMaxZ=180;sun.shadowFrustumSize=145;
+ // Fixed world-space projection: camera movement must not move the texel grid.
+ // Cover the island without spending most of the map on the surrounding sea.
+ sun.shadowMinZ=1;sun.shadowMaxZ=180;sun.shadowFrustumSize=104;
 
  const sky=CreateSphere('golden-hour-sky-dome',{diameter:240,segments:24,sideOrientation:Mesh.BACKSIDE},scene);
  sky.infiniteDistance=true;sky.isPickable=false;sky.applyFog=false;
@@ -56,9 +58,16 @@ export function createGoldenHour(scene:Scene){
  material.backFaceCulling=false;material.disableDepthWrite=true;sky.material=material;
 
  function addShadows(casters:AbstractMesh[],receivers:AbstractMesh[]){
-  const shadows=new ShadowGenerator(1024,sun);
-  shadows.usePercentageCloserFiltering=true;shadows.filteringQuality=ShadowGenerator.QUALITY_LOW;
-  shadows.bias=.0004;shadows.normalBias=.035;shadows.setDarkness(.25);
+  const shadows=new ShadowGenerator(2048,sun);
+  shadows.usePercentageCloserFiltering=true;shadows.filteringQuality=ShadowGenerator.QUALITY_MEDIUM;
+  shadows.bias=.0004;shadows.normalBias=.02;shadows.setDarkness(.25);
+  // Babylon invokes this before configuring culling for each shadow draw.
+  // Closed character volumes use their far surface to avoid shadow acne on
+  // their own skin. Scenery keeps normal culling, including single-sided roofs.
+  shadows.customAllowRendering=subMesh=>{
+   shadows.forceBackFacesOnly=subMesh.getRenderingMesh().metadata?.shadowBackFaces===true;
+   return true;
+  };
   for(const mesh of casters)if(mesh.metadata?.castsShadow!==false&&mesh.name!=='contact-shadow')shadows.addShadowCaster(mesh,false);
   for(const mesh of receivers)mesh.receiveShadows=true;
   return shadows;

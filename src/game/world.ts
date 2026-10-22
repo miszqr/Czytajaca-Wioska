@@ -106,7 +106,8 @@ export function createVillage(scene:Scene,characters:readonly CharacterDefinitio
     const solid:Solid={id:`npc:${definition.id}`,type:'circle',x,z,radius:.42};solids.push(solid);
     const motion:NpcMotion={x,z,heading,waypoint:0,waiting:0,stuck:0};return {definition,character,solid,motion};
   });
-  for(const character of [kitek,...npcs.map(npc=>npc.character)]){const shadow=shape('cylinder','contact-shadow','#66784F',character.root,0,.018,0,.31,.012,.22);shadow.material=material('#66784F')}
+  // Outdoors the sun supplies the ground shadow. A flat contact disk would
+  // intersect slopes and paving, flickering as the character walks over them.
   const scenery=environment.getChildMeshes(),actors=[kitek,...npcs.map(n=>n.character)].flatMap(c=>c.root.getChildMeshes());
   lighting.addShadows([...scenery,...actors],[ground,water,...scenery,...actors]);
   return {environment,ground,kitek,npcs,solids,water,ocean};

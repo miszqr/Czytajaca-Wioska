@@ -1,5 +1,8 @@
 import type {Scene,TransformNode} from '../game/babylon';
 import {createShapes} from '../game/shapes';
+// These overlays add color/detail, not a meaningful shadow silhouette. Some
+// are thinner than one shadow texel and the normal offset used for shadows.
+const SHADOW_SURFACE_DETAILS=new Set(['inner-ear','rabbit-ear-inner','bear-inner-ear','owl-face','eye-white','eye-green','pupil','eye-glint','eyebrow','smile','owl-glasses','tunic-hem','pack-strap','leather-strap','buckle','buckle-hole','leaf-charm','shop-apron','shop-pocket','apron','apron-pocket','hat-band']);
 // Original procedural prototype. The supplied turnaround is a reference, not a rigged asset.
 export function createCharacter(scene:Scene,kind:'kitek'|'bruno'|'fela'|'tola'|'milus'){
   const {group,shape}=createShapes(scene),fox=kind==='kitek'||kind==='fela',root=group(kind),body=group(`${kind}-body`,root),fur=fox?'#C98755':kind==='milus'?'#C4AC93':kind==='tola'?'#A58B73':'#967052',cream='#FFE0BC',cloth=kind==='fela'?'#4F8065':fox?'#77A8D7':kind==='tola'?'#8EA4B0':'#8CA878';
@@ -55,6 +58,9 @@ export function createCharacter(scene:Scene,kind:'kitek'|'bruno'|'fela'|'tola'|'
   }
   if(kind==='milus'){shape('ball','rabbit-tail','#EEE4CC',tail,0,0,-.07,.11);shape('box','mail-bag','#A58260',body,.22,.45,.03,.22,.28,.22)}
   if(kind==='tola'){for(const side of [-1,1]){shape('ball','owl-wing',fur,body,side*.29,.6,-.04,.1,.26,.14);shape('ring','owl-glasses','#6D6451',head,side*.105,.015,.258,.20,.20,.10)}root.scaling.setAll(1.05)}
+  // All remaining pieces are closed primitives. Back-face shadow rendering
+  // keeps the head/body lit without disabling shadows received from the world.
+  for(const mesh of root.getChildMeshes())mesh.metadata={...mesh.metadata,castsShadow:!SHADOW_SURFACE_DETAILS.has(mesh.name),shadowBackFaces:true};
   function animate(time:number,speed:number,celebrate=false,reduced=false,gesture:'idle'|'talk'|'pick-up'|'give'='idle'){
     const phase=time*(speed>2.6?12:8),stride=Math.min(1,speed/2.4);
     limbs.forEach((limb,i)=>limb.rotation.x=reduced?0:Math.sin(phase+(i%2)*Math.PI)*(i<2?.52:-.52)*stride);

@@ -40,7 +40,26 @@ it('buduje rzeczywistą scenę Babylon, bezpieczny start, pięć modeli i kolizj
     for(let i=1;i<waterNormals.length;i+=3)expect(waterNormals[i]).toBeGreaterThan(.99);
     const roadPositions=road.getVerticesData(VertexBuffer.PositionKind)!;
     for(let i=0;i<roadPositions.length;i+=3)expect(roadPositions[i+1]).toBeGreaterThan(ISLAND.seaLevel);
-    for(const actor of [world.kitek,...world.npcs.map(n=>n.character)])expect(actor.root.getChildMeshes().some(m=>casters.includes(m))).toBe(true);
+    expect(scene.getMeshByName('contact-shadow')).toBeNull();
+    for(const actor of [world.kitek,...world.npcs.map(n=>n.character)]){
+      const meshes=actor.root.getChildMeshes(),head=meshes.find(m=>m.name==='head-fur')!;
+      expect(casters.includes(head)).toBe(true);expect(head.receiveShadows).toBe(true);
+      for(const detail of meshes.filter(m=>['eye-glint','pupil','inner-ear','pack-strap'].includes(m.name))){
+        expect(casters.includes(detail),detail.name).toBe(false);expect(detail.receiveShadows).toBe(true);
+      }
+    }
+    // Validate actual vertices: merged bounding boxes contain empty corners
+    // extending far beyond the island and cannot measure shadow coverage.
+    const shadowTransform=sun.getShadowGenerator()!.getTransformMatrix(),point=new Vector3();let edge=0;
+    for(const mesh of casters){
+      const positions=mesh.getVerticesData(VertexBuffer.PositionKind)!;
+      const transform=mesh.computeWorldMatrix(true).multiply(shadowTransform);
+      for(let i=0;i<positions.length;i+=3){
+        Vector3.TransformCoordinatesFromFloatsToRef(positions[i],positions[i+1],positions[i+2],transform,point);
+        edge=Math.max(edge,Math.abs(point.x),Math.abs(point.y),Math.abs(point.z));
+      }
+    }
+    expect(edge,'all shadow casters inside the fixed projection').toBeLessThan(1);
     const obstacles=world.environment.getChildMeshes().filter(m=>m.metadata?.cameraObstacle);
     expect(obstacles.length).toBeGreaterThan(0);for(const mesh of obstacles){expect(mesh.isPickable).toBe(true);expect(casters.includes(mesh),mesh.name).toBe(true)}
     expect(blocked(CONFIG.spawn,world.solids)).toBe(false);expect(world.solids.some(s=>s.id==='pond')).toBe(false);
