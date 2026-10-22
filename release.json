@@ -1,6 +1,6 @@
 {
-  "sourceCommit": "ac17f867bc7f4329abd2134002f13d4cf925d80d",
-  "sourceBranch": "fix/journal-text-no-narration",
-  "release": "journal-independent-reading",
+  "sourceCommit": "fa551de2cba5b1a48650f9925c2ce02c9a09d7d4",
+  "sourceBranch": "fix/readable-backpack",
+  "release": "readable-backpack",
   "date": "2026-10-22"
 }
