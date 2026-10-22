@@ -1,6 +1,6 @@
 {
-  "sourceCommit": "24e083f142b0db18b91a039fe9c7e1e2647b99a0",
-  "sourceBranch": "fix/stable-character-shadows",
-  "release": "stable-character-shadows",
+  "sourceCommit": "efc39b351b5c261cbb04e78f8469c266706229ad",
+  "sourceBranch": "fix/fox-tail-shape",
+  "release": "continuous-fox-tail",
   "date": "2026-10-22"
 }
