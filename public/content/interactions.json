@@ -157,5 +157,39 @@
     },
     "model": "bell",
     "when": []
+  },
+  {
+    "id": "apple-tree-plaza",
+    "label": "Zbierz jabłko",
+    "location": "village",
+    "position": {
+      "x": 5,
+      "z": 4
+    },
+    "model": "none",
+    "when": [
+      {
+        "type": "flag",
+        "key": "apple-tree-plaza-fruit-6-picked",
+        "value": false
+      }
+    ]
+  },
+  {
+    "id": "apple-tree-home",
+    "label": "Zbierz jabłko",
+    "location": "village",
+    "position": {
+      "x": 15,
+      "z": 1
+    },
+    "model": "none",
+    "when": [
+      {
+        "type": "flag",
+        "key": "apple-tree-home-fruit-6-picked",
+        "value": false
+      }
+    ]
   }
 ]

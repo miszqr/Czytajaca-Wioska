@@ -45,6 +45,8 @@ P1: po liście odwiedź Felę. Przynieś lampę do domu i ustaw przy łóżku w 
 
 P2: przycisk „Urządź dom” działa także przed ukończeniem historii. Wybierz mebel ze schowka lub plecaka, przesuń podgląd, obróć i postaw. Meble można przenosić i chować. Gości można pożegnać dzwonkiem i zaprosić ponownie. Nie ma końcowego ekranu blokującego świat.
 
+Na dwóch jabłoniach, przy placu i przy drodze do domu, rośnie po sześć czerwonych jabłek. Podejdź do drzewa, wybierz „Zbierz jabłko”, przeczytaj opis i wybierz „Zrywam jabłko.”. Każdy owoc znika z gałęzi i zwiększa licznik jabłek w jednym miejscu plecaka. Pełny plecak bez stosu jabłek pozostawia owoc na drzewie. Zbiory zapisują się wraz z grą; wejście do domu i odświeżenie strony nie odnawiają owoców. Nowa gra przywraca wszystkie jabłka.
+
 ## Sterowanie
 
 | Czynność | Klawiatura / mysz | Pad | Dotyk |

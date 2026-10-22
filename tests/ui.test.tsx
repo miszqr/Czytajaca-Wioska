@@ -72,6 +72,21 @@ it('błędna konfiguracja pokazuje diagnozę i nie nadpisuje zapisu',async()=>{
  mock.loadError=true;const store=new SaveStore(),before=newSave();before.player.x=7;await store.save(before);const saved=await store.load(),spy=vi.spyOn(SaveStore.prototype,'save');const container=document.createElement('div');document.body.append(container);const root=createRoot(container);
  try{await act(async()=>root.render(<App/>));await settle();expect(document.querySelector('[role="alert"]')?.textContent).toContain('story.json');expect(spy).not.toHaveBeenCalled();expect(await store.load()).toEqual(saved)}finally{await act(async()=>root.unmount());container.remove();await store.close();spy.mockRestore();mock.loadError=false}
 });
+it('jabłoń: można zrezygnować, zebrać dwa owoce i zobaczyć zachowany licznik w plecaku po wznowieniu',async()=>{
+ const before=newSave();before.welcomed=true;
+ const store=new SaveStore();await store.save(before);const container=document.createElement('div');document.body.append(container);let root=createRoot(container);
+ try{
+  await act(async()=>root.render(<App/>));await settle();await approach('apple-tree-plaza');
+  expect(document.querySelector('.dialogue-text')?.textContent).toContain('czerwone jabłko');
+  await click('Jeszcze się rozejrzę.');expect((await store.load())?.inventory.apple).toBeUndefined();
+  await approach('apple-tree-plaza');await click('Zrywam jabłko.');await approach('apple-tree-plaza');await click('Zrywam jabłko.');
+  expect((await store.load())?.inventory.apple).toBe(2);
+  await act(async()=>root.unmount());root=createRoot(container);await act(async()=>root.render(<App/>));await settle();
+  await act(async()=>document.querySelector<HTMLButtonElement>('[aria-label="Otwórz plecak"]')!.click());
+  const slots=document.querySelectorAll('.inventory-slot:not(.empty)');expect(slots).toHaveLength(1);expect(slots[0].textContent).toContain('Jabłko× 2');
+  expect((await store.load())?.flags['apple-tree-plaza-fruit-2-picked']).toBe(true);
+ }finally{await act(async()=>root.unmount());container.remove();await store.close()}
+});
 it('P2: lampa trafia z plecaka do pokoju przez podgląd, kolizje i sterowanie padem',async()=>{
  const {DEFAULT_CONTENT}=await import('../src/content/defaults'),{findNode,choose}=await import('../src/story/engine');
  let state=newSave();state.welcomed=true;for(const target of ['bruno','home-door','fela-letter','home-exit','fela','home-door']){const n=findNode(DEFAULT_CONTENT,state,target)!;state=choose(DEFAULT_CONTENT,state,n.id,n.choices[0].id).state}

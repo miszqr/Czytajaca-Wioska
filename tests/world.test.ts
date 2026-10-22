@@ -13,6 +13,7 @@ import {createTolaLibrary} from '../src/game/tola-library';
 import {createShapes} from '../src/game/shapes';
 import {createStorybookCottage,COTTAGES,type CottageKind} from '../src/game/storybook-cottage';
 import {ISLAND,POND,pondRadius,beachApproach,shoreDistance} from '../src/game/island-terrain';
+import {APPLE_TREES,APPLES_PER_TREE,applePickedFlag} from '../src/game/orchard';
 it('buduje rzeczywistą scenę Babylon, bezpieczny start, pięć modeli i kolizje',async()=>{
   const engine=new NullEngine(),scene=new Scene(engine),homeScene=new Scene(engine);
   try{
@@ -89,6 +90,17 @@ it('buduje rzeczywistą scenę Babylon, bezpieczny start, pięć modeli i kolizj
     expect(homeScene.getTransformNodeByName('starter-bed')).not.toBeNull();
     expect(scene.getTransformNodeByName('home-interior')).toBeNull();
     expect(homeScene.getMeshByName('village-ground')).toBeNull();
+    // Fruit survives static scenery merging and disappears independently,
+    // including its stem, leaf and shadow, according to the saved harvest.
+    expect(world.orchard.map(t=>t.id)).toEqual(APPLE_TREES.map(t=>t.id));
+    for(const tree of world.orchard){
+      expect(tree.fruits).toHaveLength(APPLES_PER_TREE);
+      for(const fruit of tree.fruits){expect(fruit.getChildMeshes()).toHaveLength(3);for(const mesh of fruit.getChildMeshes()){expect(mesh.isDisposed()).toBe(false);expect(casters.includes(mesh)).toBe(true)}}
+    }
+    const harvest=newSave(),first=world.orchard[0];harvest.flags[applePickedFlag(first.id,0)]=true;world.syncHarvest(harvest);
+    expect(first.fruits[0].getChildMeshes().every(m=>!m.isEnabled())).toBe(true);
+    expect(first.fruits.slice(1).every(f=>f.isEnabled())).toBe(true);expect(world.orchard[1].fruits.every(f=>f.isEnabled())).toBe(true);
+    world.syncHarvest(newSave());expect(first.fruits.every(f=>f.isEnabled())).toBe(true);
     world.kitek.animate(.5,2.4);expect(world.kitek.limbs[0].rotation.x).not.toBe(0);
     await Promise.all(scene.meshes.filter(m=>m.material).map(m=>m.material!.forceCompilationAsync(m)));
     scene.render();expect(scene.getActiveMeshes().length).toBeGreaterThan(0);

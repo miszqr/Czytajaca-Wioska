@@ -12,10 +12,13 @@ import {createStorybookCottage,COTTAGES} from './storybook-cottage';
 import {createIslandGround,createOcean} from './island-coast';
 import {beachApproach,shoreDistance,POND,pondRadius} from './island-terrain';
 import {createPondWater} from './pond';
+import {APPLE_TREES,applePickedFlag} from './orchard';
+import type {SaveState} from '../persistence/state';
 export function createVillage(scene:Scene,characters:readonly CharacterDefinition[]){
   const lighting=createGoldenHour(scene);
   const shapes=createShapes(scene),{shape,group,material}=shapes,environment=group('village'),solids:Solid[]=[];
   const vegetation=createVegetation(scene,shapes);
+  const orchard:{id:string;fruits:ReturnType<typeof vegetation.tree>['fruits']}[]=[];
   let seed=923;const random=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296};
   const ground=createIslandGround(scene,shapes),ocean=createOcean(scene,lighting.sun.direction.negate().normalize());
   // Preserve the scenery seed previously consumed by the 71×71 ground vertices.
@@ -65,11 +68,18 @@ export function createVillage(scene:Scene,characters:readonly CharacterDefinitio
   // Kitek can wade across the basin; vegetation still stays on the dry bank.
   const water=createPondWater(scene);
   for(let i=0;i<12;i++){const a=random()*Math.PI*2;groundDetail(shape('ball','lily-leaf','#729F69',environment,POND.x+Math.cos(a)*4.2,POND.waterLevel+.025,POND.z+Math.sin(a)*3.3,.35,.02,.25))}
-  function tree(x:number,z:number,scale:number,kind:TreeKind){
+  function tree(x:number,z:number,scale:number,kind:TreeKind,id?:string){
     if(shoreDistance(x,z)<8.8||pondRadius(x,z)<1.15||blocked({x,z},solids,.8))return;
-    vegetation.tree(environment,x,terrainHeight(x,z),z,scale,kind);solids.push({id:'tree',type:'circle',x,z,radius:.23*scale});
+    const grown=vegetation.tree(environment,x,terrainHeight(x,z),z,scale,kind);
+    if(id){grown.root.name=id;orchard.push({id,fruits:grown.fruits})}
+    solids.push({id:'tree',type:'circle',x,z,radius:.23*scale});
   }
-  for(const [i,[x,z,s]] of [[-6,-5,1.1],[5,4,1],[-14,1,1.3],[8,-16,1.1],[15,1,1.2],[-4,15,1],[7,19,1]].entries())tree(x,z,s,(['oak','apple','birch'] as const)[i%3]);
+  const landmarks:{x:number;z:number;scale:number;kind:TreeKind;id?:string}[]=[
+    {x:-6,z:-5,scale:1.1,kind:'oak'},{...APPLE_TREES[0],kind:'apple'},
+    {x:-14,z:1,scale:1.3,kind:'birch'},{x:8,z:-16,scale:1.1,kind:'oak'},
+    {...APPLE_TREES[1],kind:'apple'},{x:-4,z:15,scale:1,kind:'birch'},{x:7,z:19,scale:1,kind:'oak'},
+  ];
+  for(const {x,z,scale,kind,id} of landmarks)tree(x,z,scale,kind,id);
   for(let i=0;i<100;i++){
     const x=random()*96-48,z=random()*96-48;if(Math.hypot(x,z)<18||Math.abs(x)<4||Math.abs(z)<4)continue;tree(x,z,.8+random()*.65,i%3===0?'pine':i%4===0?'birch':'oak');
   }
@@ -95,7 +105,7 @@ export function createVillage(scene:Scene,characters:readonly CharacterDefinitio
   const batches=new Map<string,Mesh[]>();
   // Keep shadow roles separate even when a ground detail shares a material
   // with a building; merging otherwise loses the receive-only flag.
-  for(const mesh of environment.getChildMeshes() as Mesh[]){mesh.computeWorldMatrix(true);const key=mesh.material!.uniqueId+':'+!!mesh.metadata?.cameraObstacle+':'+(mesh.metadata?.castsShadow!==false);const list=batches.get(key)||[];list.push(mesh);batches.set(key,list)}
+  for(const mesh of environment.getChildMeshes() as Mesh[]){if(mesh.metadata?.dynamicScenery)continue;mesh.computeWorldMatrix(true);const key=mesh.material!.uniqueId+':'+!!mesh.metadata?.cameraObstacle+':'+(mesh.metadata?.castsShadow!==false);const list=batches.get(key)||[];list.push(mesh);batches.set(key,list)}
   for(const [key,meshes] of batches){const cameraObstacle=!!meshes[0].metadata?.cameraObstacle,castsShadow=meshes[0].metadata?.castsShadow!==false;const merged=Mesh.MergeMeshes(meshes,true,true,undefined,false,false);if(merged){merged.name='scenery-'+key;merged.parent=environment;merged.metadata={cameraObstacle,castsShadow};merged.isPickable=cameraObstacle;merged.freezeWorldMatrix()}}
   const kitek=createCharacter(scene,'kitek');
   const npcs=characters.map(definition=>{
@@ -110,5 +120,6 @@ export function createVillage(scene:Scene,characters:readonly CharacterDefinitio
   // intersect slopes and paving, flickering as the character walks over them.
   const scenery=environment.getChildMeshes(),actors=[kitek,...npcs.map(n=>n.character)].flatMap(c=>c.root.getChildMeshes());
   lighting.addShadows([...scenery,...actors],[ground,water,...scenery,...actors]);
-  return {environment,ground,kitek,npcs,solids,water,ocean};
+  function syncHarvest(state:SaveState){for(const {id,fruits} of orchard)fruits.forEach((fruit,index)=>fruit.setEnabled(!state.flags[applePickedFlag(id,index)]))}
+  return {environment,ground,kitek,npcs,solids,water,ocean,orchard,syncHarvest};
 }

@@ -1564,6 +1564,488 @@
           "effects": []
         }
       ]
+    },
+    {
+      "id": "pick-apple-tree-plaza-1",
+      "target": "apple-tree-plaza",
+      "event": "interact",
+      "priority": 1,
+      "once": true,
+      "when": [
+        {
+          "type": "flag",
+          "key": "apple-tree-plaza-fruit-1-picked",
+          "value": false
+        }
+      ],
+      "speaker": "Jabłoń",
+      "lines": [
+        "Na gałęzi wisi czerwone jabłko. Włożę je do plecaka."
+      ],
+      "choices": [
+        {
+          "id": "pick",
+          "label": "Zrywam jabłko.",
+          "effects": [
+            {
+              "type": "giveItem",
+              "itemId": "apple",
+              "quantity": 1
+            },
+            {
+              "type": "flag",
+              "key": "apple-tree-plaza-fruit-1-picked",
+              "value": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pick-apple-tree-plaza-2",
+      "target": "apple-tree-plaza",
+      "event": "interact",
+      "priority": 2,
+      "once": true,
+      "when": [
+        {
+          "type": "flag",
+          "key": "apple-tree-plaza-fruit-2-picked",
+          "value": false
+        },
+        {
+          "type": "flag",
+          "key": "apple-tree-plaza-fruit-1-picked",
+          "value": true
+        }
+      ],
+      "speaker": "Jabłoń",
+      "lines": [
+        "Na gałęzi wisi czerwone jabłko. Włożę je do plecaka."
+      ],
+      "choices": [
+        {
+          "id": "pick",
+          "label": "Zrywam jabłko.",
+          "effects": [
+            {
+              "type": "giveItem",
+              "itemId": "apple",
+              "quantity": 1
+            },
+            {
+              "type": "flag",
+              "key": "apple-tree-plaza-fruit-2-picked",
+              "value": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pick-apple-tree-plaza-3",
+      "target": "apple-tree-plaza",
+      "event": "interact",
+      "priority": 3,
+      "once": true,
+      "when": [
+        {
+          "type": "flag",
+          "key": "apple-tree-plaza-fruit-3-picked",
+          "value": false
+        },
+        {
+          "type": "flag",
+          "key": "apple-tree-plaza-fruit-2-picked",
+          "value": true
+        }
+      ],
+      "speaker": "Jabłoń",
+      "lines": [
+        "Na gałęzi wisi czerwone jabłko. Włożę je do plecaka."
+      ],
+      "choices": [
+        {
+          "id": "pick",
+          "label": "Zrywam jabłko.",
+          "effects": [
+            {
+              "type": "giveItem",
+              "itemId": "apple",
+              "quantity": 1
+            },
+            {
+              "type": "flag",
+              "key": "apple-tree-plaza-fruit-3-picked",
+              "value": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pick-apple-tree-plaza-4",
+      "target": "apple-tree-plaza",
+      "event": "interact",
+      "priority": 4,
+      "once": true,
+      "when": [
+        {
+          "type": "flag",
+          "key": "apple-tree-plaza-fruit-4-picked",
+          "value": false
+        },
+        {
+          "type": "flag",
+          "key": "apple-tree-plaza-fruit-3-picked",
+          "value": true
+        }
+      ],
+      "speaker": "Jabłoń",
+      "lines": [
+        "Na gałęzi wisi czerwone jabłko. Włożę je do plecaka."
+      ],
+      "choices": [
+        {
+          "id": "pick",
+          "label": "Zrywam jabłko.",
+          "effects": [
+            {
+              "type": "giveItem",
+              "itemId": "apple",
+              "quantity": 1
+            },
+            {
+              "type": "flag",
+              "key": "apple-tree-plaza-fruit-4-picked",
+              "value": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pick-apple-tree-plaza-5",
+      "target": "apple-tree-plaza",
+      "event": "interact",
+      "priority": 5,
+      "once": true,
+      "when": [
+        {
+          "type": "flag",
+          "key": "apple-tree-plaza-fruit-5-picked",
+          "value": false
+        },
+        {
+          "type": "flag",
+          "key": "apple-tree-plaza-fruit-4-picked",
+          "value": true
+        }
+      ],
+      "speaker": "Jabłoń",
+      "lines": [
+        "Na gałęzi wisi czerwone jabłko. Włożę je do plecaka."
+      ],
+      "choices": [
+        {
+          "id": "pick",
+          "label": "Zrywam jabłko.",
+          "effects": [
+            {
+              "type": "giveItem",
+              "itemId": "apple",
+              "quantity": 1
+            },
+            {
+              "type": "flag",
+              "key": "apple-tree-plaza-fruit-5-picked",
+              "value": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pick-apple-tree-plaza-6",
+      "target": "apple-tree-plaza",
+      "event": "interact",
+      "priority": 6,
+      "once": true,
+      "when": [
+        {
+          "type": "flag",
+          "key": "apple-tree-plaza-fruit-6-picked",
+          "value": false
+        },
+        {
+          "type": "flag",
+          "key": "apple-tree-plaza-fruit-5-picked",
+          "value": true
+        }
+      ],
+      "speaker": "Jabłoń",
+      "lines": [
+        "Na gałęzi wisi czerwone jabłko. Włożę je do plecaka."
+      ],
+      "choices": [
+        {
+          "id": "pick",
+          "label": "Zrywam jabłko.",
+          "effects": [
+            {
+              "type": "giveItem",
+              "itemId": "apple",
+              "quantity": 1
+            },
+            {
+              "type": "flag",
+              "key": "apple-tree-plaza-fruit-6-picked",
+              "value": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pick-apple-tree-home-1",
+      "target": "apple-tree-home",
+      "event": "interact",
+      "priority": 1,
+      "once": true,
+      "when": [
+        {
+          "type": "flag",
+          "key": "apple-tree-home-fruit-1-picked",
+          "value": false
+        }
+      ],
+      "speaker": "Jabłoń",
+      "lines": [
+        "Na gałęzi wisi czerwone jabłko. Włożę je do plecaka."
+      ],
+      "choices": [
+        {
+          "id": "pick",
+          "label": "Zrywam jabłko.",
+          "effects": [
+            {
+              "type": "giveItem",
+              "itemId": "apple",
+              "quantity": 1
+            },
+            {
+              "type": "flag",
+              "key": "apple-tree-home-fruit-1-picked",
+              "value": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pick-apple-tree-home-2",
+      "target": "apple-tree-home",
+      "event": "interact",
+      "priority": 2,
+      "once": true,
+      "when": [
+        {
+          "type": "flag",
+          "key": "apple-tree-home-fruit-2-picked",
+          "value": false
+        },
+        {
+          "type": "flag",
+          "key": "apple-tree-home-fruit-1-picked",
+          "value": true
+        }
+      ],
+      "speaker": "Jabłoń",
+      "lines": [
+        "Na gałęzi wisi czerwone jabłko. Włożę je do plecaka."
+      ],
+      "choices": [
+        {
+          "id": "pick",
+          "label": "Zrywam jabłko.",
+          "effects": [
+            {
+              "type": "giveItem",
+              "itemId": "apple",
+              "quantity": 1
+            },
+            {
+              "type": "flag",
+              "key": "apple-tree-home-fruit-2-picked",
+              "value": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pick-apple-tree-home-3",
+      "target": "apple-tree-home",
+      "event": "interact",
+      "priority": 3,
+      "once": true,
+      "when": [
+        {
+          "type": "flag",
+          "key": "apple-tree-home-fruit-3-picked",
+          "value": false
+        },
+        {
+          "type": "flag",
+          "key": "apple-tree-home-fruit-2-picked",
+          "value": true
+        }
+      ],
+      "speaker": "Jabłoń",
+      "lines": [
+        "Na gałęzi wisi czerwone jabłko. Włożę je do plecaka."
+      ],
+      "choices": [
+        {
+          "id": "pick",
+          "label": "Zrywam jabłko.",
+          "effects": [
+            {
+              "type": "giveItem",
+              "itemId": "apple",
+              "quantity": 1
+            },
+            {
+              "type": "flag",
+              "key": "apple-tree-home-fruit-3-picked",
+              "value": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pick-apple-tree-home-4",
+      "target": "apple-tree-home",
+      "event": "interact",
+      "priority": 4,
+      "once": true,
+      "when": [
+        {
+          "type": "flag",
+          "key": "apple-tree-home-fruit-4-picked",
+          "value": false
+        },
+        {
+          "type": "flag",
+          "key": "apple-tree-home-fruit-3-picked",
+          "value": true
+        }
+      ],
+      "speaker": "Jabłoń",
+      "lines": [
+        "Na gałęzi wisi czerwone jabłko. Włożę je do plecaka."
+      ],
+      "choices": [
+        {
+          "id": "pick",
+          "label": "Zrywam jabłko.",
+          "effects": [
+            {
+              "type": "giveItem",
+              "itemId": "apple",
+              "quantity": 1
+            },
+            {
+              "type": "flag",
+              "key": "apple-tree-home-fruit-4-picked",
+              "value": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pick-apple-tree-home-5",
+      "target": "apple-tree-home",
+      "event": "interact",
+      "priority": 5,
+      "once": true,
+      "when": [
+        {
+          "type": "flag",
+          "key": "apple-tree-home-fruit-5-picked",
+          "value": false
+        },
+        {
+          "type": "flag",
+          "key": "apple-tree-home-fruit-4-picked",
+          "value": true
+        }
+      ],
+      "speaker": "Jabłoń",
+      "lines": [
+        "Na gałęzi wisi czerwone jabłko. Włożę je do plecaka."
+      ],
+      "choices": [
+        {
+          "id": "pick",
+          "label": "Zrywam jabłko.",
+          "effects": [
+            {
+              "type": "giveItem",
+              "itemId": "apple",
+              "quantity": 1
+            },
+            {
+              "type": "flag",
+              "key": "apple-tree-home-fruit-5-picked",
+              "value": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pick-apple-tree-home-6",
+      "target": "apple-tree-home",
+      "event": "interact",
+      "priority": 6,
+      "once": true,
+      "when": [
+        {
+          "type": "flag",
+          "key": "apple-tree-home-fruit-6-picked",
+          "value": false
+        },
+        {
+          "type": "flag",
+          "key": "apple-tree-home-fruit-5-picked",
+          "value": true
+        }
+      ],
+      "speaker": "Jabłoń",
+      "lines": [
+        "Na gałęzi wisi czerwone jabłko. Włożę je do plecaka."
+      ],
+      "choices": [
+        {
+          "id": "pick",
+          "label": "Zrywam jabłko.",
+          "effects": [
+            {
+              "type": "giveItem",
+              "itemId": "apple",
+              "quantity": 1
+            },
+            {
+              "type": "flag",
+              "key": "apple-tree-home-fruit-6-picked",
+              "value": true
+            }
+          ]
+        }
+      ]
     }
   ]
 }
