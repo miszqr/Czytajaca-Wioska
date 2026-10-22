@@ -12,6 +12,7 @@ import {Icon,Portrait} from './Icons';
 import {Dialog} from './Dialog';
 import {TouchControls} from './TouchControls';
 import {CameraSettings} from './CameraSettings';
+import {QuestHint} from './QuestHint';
 type Overlay='welcome'|'dialogue'|'journal'|'document'|'menu'|'new-game'|'inventory'|'housing'|null;
 export function App(){
  const canvas=useRef<HTMLCanvasElement>(null),game=useRef<VillageGame|null>(null),[store]=useState(()=>new SaveStore());
@@ -79,7 +80,7 @@ export function App(){
    <button className="icon-button menu-button" aria-label="Otwórz menu" disabled={!ready||!!overlay} onClick={openMenu}><Icon name="menu"/></button>
   </div></header>
   {ready&&!overlay&&!error&&<>
-   <button className="quest-card" onClick={()=>setOverlay('journal')} aria-label="Zobacz cel w dzienniku"><span className="quest-icon"><Icon name="book"/></span><div><span className="eyebrow">Dziennik Kitka</span><h2>{scene?.title??'Jestem u siebie'}</h2><p>{scene?.objective??(state.flags['story-complete']?'Dobrze być u siebie. Mogę odwiedzić sąsiadów.':'Mogę pospacerować i odwiedzić sąsiadów.')}</p></div></button>
+   <QuestHint title={scene?.title??'Jestem u siebie'} objective={scene?.objective??(state.flags['story-complete']?'Dobrze być u siebie. Mogę odwiedzić sąsiadów.':'Mogę pospacerować i odwiedzić sąsiadów.')} onOpenJournal={()=>setOverlay('journal')}/>
    {near.targetId&&near.visible&&near.distance<10&&<button className={'npc-label '+(near.near?'available':'')} style={{left:near.x,top:near.y}} onClick={interact} disabled={!near.near}>{near.near&&<Icon name="chat" size={19}/>}<span>{near.label}</span>{near.near&&<kbd>{pad?'A':'E'}</kbd>}</button>}
    <div className="bottom-hud"><div className="controls-help"><span><kbd>↑ ↓</kbd> przód / tył</span><span><kbd>← →</kbd> obrót</span><span><kbd>Shift</kbd> bieg</span>{pad&&<span className="pad-connected">Pad połączony</span>}</div><button className="interact-button" disabled={!near.near} onClick={interact}><Icon name="chat" size={22}/>{near.near?near.label:'Rozejrzyj się'}<kbd>{pad?'A':'E'}</kbd></button></div>
    <button className="icon-button camera-button" aria-label="Ustaw kamerę za Kitkiem" onClick={()=>game.current?.recenter()}><Icon name="camera" size={23}/></button>
