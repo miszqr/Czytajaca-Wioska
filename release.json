@@ -1,6 +1,6 @@
 {
-  "sourceCommit": "d097ce21ba021e508e0a37f386c1a8f567bf738d",
-  "sourceBranch": "feat/wadeable-pond",
-  "release": "wadeable-pond",
+  "sourceCommit": "5cecba72d87c6b1a83e3f98b5fb8820d934c962e",
+  "sourceBranch": "fix/readable-journal-text",
+  "release": "readable-journal-text",
   "date": "2026-10-22"
 }
