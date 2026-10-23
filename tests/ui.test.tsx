@@ -72,6 +72,23 @@ it('błędna konfiguracja pokazuje diagnozę i nie nadpisuje zapisu',async()=>{
  mock.loadError=true;const store=new SaveStore(),before=newSave();before.player.x=7;await store.save(before);const saved=await store.load(),spy=vi.spyOn(SaveStore.prototype,'save');const container=document.createElement('div');document.body.append(container);const root=createRoot(container);
  try{await act(async()=>root.render(<App/>));await settle();expect(document.querySelector('[role="alert"]')?.textContent).toContain('story.json');expect(spy).not.toHaveBeenCalled();expect(await store.load()).toEqual(saved)}finally{await act(async()=>root.unmount());container.remove();await store.close();spy.mockRestore();mock.loadError=false}
 });
+it('menu zapisuje tryb nocy, pad obsługuje przełącznik, a zapalenie latarni wymaga potwierdzenia',async()=>{
+ const before=newSave();before.welcomed=true;before.inventory.apple=2;
+ const store=new SaveStore();await store.save(before);const container=document.createElement('div');document.body.append(container);let root=createRoot(container);
+ const nightSwitch=()=>document.querySelector<HTMLButtonElement>('[role="switch"][aria-label="Zapada noc"]')!;
+ try{
+  await act(async()=>root.render(<App/>));await settle();await act(async()=>mock.callbacks.onAction('menu'));
+  expect(nightSwitch().getAttribute('aria-checked')).toBe('false');
+  await act(async()=>nightSwitch().focus());await act(async()=>mock.callbacks.onAction('confirm'));await settle();
+  expect(nightSwitch().getAttribute('aria-checked')).toBe('true');await click('Wracam do spaceru.');
+  await approach('lantern-arrival');await click('Jeszcze się rozejrzę.');expect((await store.load())?.flags['lantern-arrival-lit']).toBeUndefined();
+  await approach('lantern-arrival');await click('Zapalam latarnię.');expect((await store.load())?.flags['lantern-arrival-lit']).toBe(true);
+  await act(async()=>root.unmount());root=createRoot(container);await act(async()=>root.render(<App/>));await settle();await act(async()=>mock.callbacks.onAction('menu'));
+  expect(nightSwitch().getAttribute('aria-checked')).toBe('true');
+  await act(async()=>nightSwitch().click());await settle();const saved=await store.load();
+  expect(saved?.flags['night-mode']).toBe(false);expect(saved?.flags['lantern-arrival-lit']).toBe(true);expect(saved?.inventory).toEqual({apple:2});
+ }finally{await act(async()=>root.unmount());container.remove();await store.close()}
+});
 it('jabłoń: można zrezygnować, zebrać dwa owoce i zobaczyć zachowany licznik w plecaku po wznowieniu',async()=>{
  const before=newSave();before.welcomed=true;
  const store=new SaveStore();await store.save(before);const container=document.createElement('div');document.body.append(container);let root=createRoot(container);

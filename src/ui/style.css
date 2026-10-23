@@ -56,3 +56,12 @@
 .quest-journal-link{font-size:18px;line-height:1.4;margin-top:8px;padding:8px 0;justify-content:flex-start;text-align:left;color:#365b41}
 .quest-journal-link svg{flex:none}
 @media(max-height:520px) and (min-width:600px){.quest-card{--quest-open-width:min(480px,calc(100vw - 190px))}}
+.night-setting{display:flex;align-items:center;justify-content:space-between;gap:16px;width:100%;padding:18px;border:1px solid #c8d2ba;border-radius:16px;background:#edf0df;color:#2d4a38;text-align:left;margin:20px 0}
+.night-setting strong{display:block;font-size:22px;line-height:1.3}
+.night-setting small{display:block;font-size:18px;line-height:1.4;margin-top:6px}
+.night-setting-state{display:grid;justify-items:center;gap:6px;font-size:16px;font-weight:700;flex:none}
+.night-setting-state i{display:block;position:relative;width:52px;height:30px;border-radius:16px;background:#a6b49a}
+.night-setting-state i:after{content:'';position:absolute;width:24px;height:24px;left:3px;top:3px;border-radius:50%;background:#fff9e9}
+.night-setting-state.on i{background:#365b41}
+.night-setting-state.on i:after{left:25px}
+@media(max-width:400px){.night-setting{padding:14px;gap:10px}.night-setting strong{font-size:21px}.night-setting small{font-size:17px}}

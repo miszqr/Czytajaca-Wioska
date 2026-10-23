@@ -191,5 +191,141 @@
         "value": false
       }
     ]
+  },
+  {
+    "id": "lantern-arrival",
+    "label": "Zapal latarnię",
+    "location": "village",
+    "position": {
+      "x": -2.8,
+      "z": -6.5
+    },
+    "model": "none",
+    "when": [
+      {
+        "type": "flag",
+        "key": "lantern-arrival-lit",
+        "value": false
+      }
+    ]
+  },
+  {
+    "id": "lantern-square",
+    "label": "Zapal latarnię",
+    "location": "village",
+    "position": {
+      "x": 3.4,
+      "z": 2
+    },
+    "model": "none",
+    "when": [
+      {
+        "type": "flag",
+        "key": "lantern-square-lit",
+        "value": false
+      }
+    ]
+  },
+  {
+    "id": "lantern-bruno",
+    "label": "Zapal latarnię",
+    "location": "village",
+    "position": {
+      "x": -4.8,
+      "z": 8.2
+    },
+    "model": "none",
+    "when": [
+      {
+        "type": "flag",
+        "key": "lantern-bruno-lit",
+        "value": false
+      }
+    ]
+  },
+  {
+    "id": "lantern-fela",
+    "label": "Zapal latarnię",
+    "location": "village",
+    "position": {
+      "x": 6.2,
+      "z": 7.2
+    },
+    "model": "none",
+    "when": [
+      {
+        "type": "flag",
+        "key": "lantern-fela-lit",
+        "value": false
+      }
+    ]
+  },
+  {
+    "id": "lantern-home",
+    "label": "Zapal latarnię",
+    "location": "village",
+    "position": {
+      "x": 14,
+      "z": -1.5
+    },
+    "model": "none",
+    "when": [
+      {
+        "type": "flag",
+        "key": "lantern-home-lit",
+        "value": false
+      }
+    ]
+  },
+  {
+    "id": "lantern-library",
+    "label": "Zapal latarnię",
+    "location": "village",
+    "position": {
+      "x": -2.7,
+      "z": 17
+    },
+    "model": "none",
+    "when": [
+      {
+        "type": "flag",
+        "key": "lantern-library-lit",
+        "value": false
+      }
+    ]
+  },
+  {
+    "id": "lantern-pond",
+    "label": "Zapal latarnię",
+    "location": "village",
+    "position": {
+      "x": 14,
+      "z": 14.8
+    },
+    "model": "none",
+    "when": [
+      {
+        "type": "flag",
+        "key": "lantern-pond-lit",
+        "value": false
+      }
+    ]
+  },
+  {
+    "id": "lantern-milus",
+    "label": "Zapal latarnię",
+    "location": "village",
+    "position": {
+      "x": 9.5,
+      "z": -8
+    },
+    "model": "none",
+    "when": [
+      {
+        "type": "flag",
+        "key": "lantern-milus-lit",
+        "value": false
+      }
+    ]
   }
 ]

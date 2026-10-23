@@ -1,5 +1,6 @@
 import {Scene,Mesh,VertexData,StandardMaterial,Color3} from './babylon';
 import {POND} from './island-terrain';
+import {VILLAGE_LIGHT_LIMIT} from './lantern-layout';
 
 export function createPondWater(scene:Scene){
  const water=new Mesh('pond-water',scene),positions=[0,0,0],indices:number[]=[],normals:number[]=[];
@@ -13,6 +14,7 @@ export function createPondWater(scene:Scene){
  const data=new VertexData();Object.assign(data,{positions,indices,normals});data.applyToMesh(water);
  water.position.set(POND.x,POND.waterLevel,POND.z);
  const material=new StandardMaterial('pond-water-material',scene);
+ material.maxSimultaneousLights=VILLAGE_LIGHT_LIMIT;
  material.diffuseColor=Color3.FromHexString('#79B5B8');
  material.specularColor=Color3.FromHexString('#5A7776');material.specularPower=64;
  material.alpha=.72;water.material=material;

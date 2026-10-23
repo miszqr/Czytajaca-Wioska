@@ -47,6 +47,8 @@ P2: przycisk „Urządź dom” działa także przed ukończeniem historii. Wybi
 
 Na dwóch jabłoniach, przy placu i przy drodze do domu, rośnie po sześć czerwonych jabłek. Podejdź do drzewa, wybierz „Zbierz jabłko”, przeczytaj opis i wybierz „Zrywam jabłko.”. Każdy owoc znika z gałęzi i zwiększa licznik jabłek w jednym miejscu plecaka. Pełny plecak bez stosu jabłek pozostawia owoc na drzewie. Zbiory zapisują się wraz z grą; wejście do domu i odświeżenie strony nie odnawiają owoców. Nowa gra przywraca wszystkie jabłka.
 
+Przy ścieżkach stoi osiem latarni gazowych. Podejdź do wybranej latarni, użyj „Zapal latarnię” (E / A na padzie / przycisk działania), przeczytaj krótki opis i wybierz „Zapalam latarnię.”. Każda zapala się osobno i oświetla otoczenie ciepłym światłem. W menu przełącznik **Zapada noc** płynnie przyciemnia wioskę, niebo i morze; wyłączenie przywraca dzień. Ustawienie oraz zapalone latarnie zapisują się razem z postępem. Nowa gra rozpoczyna się za dnia ze zgaszonymi latarniami.
+
 ## Sterowanie
 
 | Czynność | Klawiatura / mysz | Pad | Dotyk |

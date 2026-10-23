@@ -20,6 +20,7 @@ import {Vector3} from '../src/game/babylon';
 import {CONFIG} from '../src/game/config';
 import {choose,findNode} from '../src/story/engine';
 import {POND,terrainHeight} from '../src/game/island-terrain';
+import {GAS_LANTERNS,NIGHT_FLAG,lanternLitFlag} from '../src/game/lantern-layout';
 
 let game:VillageGame|undefined,input:Input|undefined;
 const errors=vi.fn();
@@ -182,6 +183,17 @@ it('drzwi przełączają scenę i kamerę, zachowują fabułę oraz właściwe p
  expect(game.snapshot().player).toEqual({x:18,z:4.2,heading:3.14159});expect(state.read).toEqual(['fela-letter']);
  act('home-door');expect(game.scene).toBe(home);expect(game.camera).toBe(homeCamera);expect(game.engine.scenes).toHaveLength(2);
  expect(state.read).toEqual(['fela-letter']);expect(state.completed).toContain('home');
+});
+
+it('zmierzch postępuje w otwartym menu, a powrót z domu zachowuje zapaloną latarnię',()=>{
+ const state=newSave(),{game}=start(state),village=game.scene,sun=village.getLightByName('golden-hour-sun')!,day=sun.intensity;
+ game.setPaused(true);const night=structuredClone(state);night.flags[NIGHT_FLAG]=true;night.flags[lanternLitFlag(GAS_LANTERNS[0].id)]=true;
+ game.syncState(night);frames(90);expect(sun.intensity).toBeLessThan(day);expect(sun.intensity).toBeGreaterThan(.14);
+ expect(village.getLightByName(`${GAS_LANTERNS[0].id}-light`)!.isEnabled()).toBe(true);
+ expect(village.getLightByName(`${GAS_LANTERNS[1].id}-light`)!.isEnabled()).toBe(false);
+ game.syncState({...night,location:'home'});expect(game.scene).not.toBe(village);expect(game.scene.getLightByName(`${GAS_LANTERNS[0].id}-light`)).toBeNull();
+ game.syncState(night);expect(game.scene).toBe(village);frames(360);
+ expect(sun.intensity).toBeCloseTo(.14);expect(village.getLightByName(`${GAS_LANTERNS[0].id}-light`)!.isEnabled()).toBe(true);
 });
 
 it('renderuje i aktualizuje tylko aktywną scenę, powroty nie mnożą zasobów, dispose sprząta obie',()=>{

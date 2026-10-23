@@ -7,6 +7,7 @@ export {Color3,Color4} from '@babylonjs/core/Maths/math.color';
 export {Viewport} from '@babylonjs/core/Maths/math.viewport';
 export {HemisphericLight} from '@babylonjs/core/Lights/hemisphericLight';
 export {DirectionalLight} from '@babylonjs/core/Lights/directionalLight';
+export {PointLight} from '@babylonjs/core/Lights/pointLight';
 export {Mesh} from '@babylonjs/core/Meshes/mesh';
 export {TransformNode} from '@babylonjs/core/Meshes/transformNode';
 export {VertexData} from '@babylonjs/core/Meshes/mesh.vertexData';

@@ -7,7 +7,7 @@ import {createVillage} from './world';
 import {createShapes} from './shapes';
 import {createStoryWorld,drawItem} from './story-world';
 
-type LocationWorld=Pick<ReturnType<typeof createVillage>,'kitek'|'npcs'|'solids'>&{syncHarvest?:(state:SaveState)=>void};
+type LocationWorld=Pick<ReturnType<typeof createVillage>,'kitek'|'npcs'|'solids'>&Partial<Pick<ReturnType<typeof createVillage>,'syncHarvest'|'syncEnvironment'|'updateEnvironment'>>;
 export type LocationScene={
  location:Location;
  scene:Scene;
@@ -55,7 +55,7 @@ export class LocationScenes{
  }
 
  prepare(state:SaveState):LocationScene{
-  const view=this.get(state.location);view.story.sync(state);view.world.syncHarvest?.(state);view.carriedCrate?.setEnabled(!!state.inventory.crate);return view;
+  const view=this.get(state.location);view.story.sync(state);view.world.syncHarvest?.(state);view.world.syncEnvironment?.(state);view.carriedCrate?.setEnabled(!!state.inventory.crate);return view;
  }
 
  dispose(){for(const view of this.cache.values())view.scene.dispose();this.cache.clear()}

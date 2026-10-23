@@ -28,7 +28,7 @@ export function createIslandGround(scene:Scene,shapes:Shapes){
 
 // One opaque water draw call, no reflection target or downloaded texture.
 // The land occludes the sea; foam follows the same shoreline as walking.
-export function createOcean(scene:Scene,sunDirection:Vector3){
+export function createOcean(scene:Scene,sunDirection:Vector3,nightAmount:()=>number=()=>0){
  const ocean=CreateGround('island-ocean',{width:1400,height:1400,subdivisions:1},scene);
  ocean.position.y=ISLAND.seaLevel;ocean.isPickable=false;ocean.metadata={cameraObstacle:false,castsShadow:false};
  const material=new ShaderMaterial('island-ocean-material',scene,{
@@ -39,7 +39,7 @@ export function createOcean(scene:Scene,sunDirection:Vector3){
    void main(){seaPosition=(world*vec4(position,1.0)).xyz;gl_Position=worldViewProjection*vec4(position,1.0);}`,
   fragmentSource:`precision highp float;
    varying vec3 seaPosition;
-   uniform float time,fogDensity;
+   uniform float time,fogDensity,nightAmount;
    uniform vec3 eyePosition,sunDirection,fogColor;
    void main(){
     vec2 p=seaPosition.xz;float angle=atan(p.y,p.x);
@@ -55,10 +55,12 @@ export function createOcean(scene:Scene,sunDirection:Vector3){
     vec3 viewDirection=normalize(eyePosition-seaPosition);
     float shine=pow(max(dot(reflect(-sunDirection,normal),viewDirection),0.0),90.0);
     color+=vec3(.65,.39,.15)*shine*.6;
+    color=mix(color,color*vec3(.14,.23,.37)+vec3(.09,.13,.20)*shine,nightAmount);
     float fog=1.0-exp(-pow(length(eyePosition-seaPosition)*fogDensity,2.0));
     gl_FragColor=vec4(mix(color,fogColor,fog),1.0);
    }`,
- },{attributes:['position'],uniforms:['world','worldViewProjection','time','eyePosition','sunDirection','fogColor','fogDensity']});
+ },{attributes:['position'],uniforms:['world','worldViewProjection','time','eyePosition','sunDirection','fogColor','fogDensity','nightAmount']});
+ material.setFloat('nightAmount',nightAmount());
  material.setFloat('time',0);material.setFloat('fogDensity',scene.fogDensity);
  material.setColor3('fogColor',scene.fogColor);material.setVector3('sunDirection',sunDirection);
  material.setVector3('eyePosition',Vector3.Zero());ocean.material=material;ocean.freezeWorldMatrix();
@@ -67,6 +69,7 @@ export function createOcean(scene:Scene,sunDirection:Vector3){
  scene.onBeforeRenderObservable.add(()=>{
   if(!reduced?.matches)time+=Math.min(.05,scene.getEngine().getDeltaTime()/1000||0);
   material.setFloat('time',time);
+  material.setFloat('nightAmount',nightAmount());material.setColor3('fogColor',scene.fogColor);
   if(scene.activeCamera)material.setVector3('eyePosition',scene.activeCamera.globalPosition);
  });
  return ocean;

@@ -14,13 +14,15 @@ import {beachApproach,shoreDistance,POND,pondRadius} from './island-terrain';
 import {createPondWater} from './pond';
 import {APPLE_TREES,applePickedFlag} from './orchard';
 import type {SaveState} from '../persistence/state';
+import {createGasLanterns} from './gas-lanterns';
+import {NIGHT_FLAG} from './lantern-layout';
 export function createVillage(scene:Scene,characters:readonly CharacterDefinition[]){
   const lighting=createGoldenHour(scene);
   const shapes=createShapes(scene),{shape,group,material}=shapes,environment=group('village'),solids:Solid[]=[];
   const vegetation=createVegetation(scene,shapes);
   const orchard:{id:string;fruits:ReturnType<typeof vegetation.tree>['fruits']}[]=[];
   let seed=923;const random=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296};
-  const ground=createIslandGround(scene,shapes),ocean=createOcean(scene,lighting.sun.direction.negate().normalize());
+  const ground=createIslandGround(scene,shapes),ocean=createOcean(scene,lighting.sun.direction.negate().normalize(),()=>lighting.nightAmount);
   // Preserve the scenery seed previously consumed by the 71×71 ground vertices.
   for(let i=0;i<71*71;i++)random();
   function obstacle(mesh:Mesh){mesh.isPickable=true;mesh.metadata={cameraObstacle:true};return mesh}
@@ -102,6 +104,7 @@ export function createVillage(scene:Scene,characters:readonly CharacterDefinitio
   }
   const sign=group('garden-sign',environment,-3.7,.0,1.4);shape('cylinder','sign-post','#8C7150',sign,0,.52,0,.06,1.04,.06);shape('box','sign-board','#D8C49B',sign,0,.95,0,.8,.34,.10);shape('ball','sign-leaf','#7B9C61',sign,0,.97,-.07,.12,.08,.02);
   // Low draw-call count on mobile; obstacle batches remain available to camera raycasts.
+  const gasLanterns=createGasLanterns(scene,shapes,environment,solids);
   const batches=new Map<string,Mesh[]>();
   // Keep shadow roles separate even when a ground detail shares a material
   // with a building; merging otherwise loses the receive-only flag.
@@ -121,5 +124,8 @@ export function createVillage(scene:Scene,characters:readonly CharacterDefinitio
   const scenery=environment.getChildMeshes(),actors=[kitek,...npcs.map(n=>n.character)].flatMap(c=>c.root.getChildMeshes());
   lighting.addShadows([...scenery,...actors],[ground,water,...scenery,...actors]);
   function syncHarvest(state:SaveState){for(const {id,fruits} of orchard)fruits.forEach((fruit,index)=>fruit.setEnabled(!state.flags[applePickedFlag(id,index)]))}
-  return {environment,ground,kitek,npcs,solids,water,ocean,orchard,syncHarvest};
+  let environmentReady=false;
+  function syncEnvironment(state:SaveState){lighting.setNight(!!state.flags[NIGHT_FLAG],!environmentReady);environmentReady=true;gasLanterns.sync(state);gasLanterns.update(lighting.nightAmount)}
+  function updateEnvironment(dt:number,reducedMotion:boolean){gasLanterns.update(lighting.update(dt,reducedMotion))}
+  return {environment,ground,kitek,npcs,solids,water,ocean,orchard,syncHarvest,lighting,gasLanterns,syncEnvironment,updateEnvironment};
 }

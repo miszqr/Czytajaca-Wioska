@@ -110,6 +110,8 @@ export class VillageGame {
         npc.character.root.position.set(motion.x,terrainHeight(motion.x,motion.z),motion.z);npc.character.root.rotation.y=motion.heading;
         npc.character.animate(this.time+.5,speed,false,this.reduced.matches,this.paused&&this.talkingNpc===npc.definition.id?'talk':'idle');
       }
+      // Twilight also progresses while the menu is open and movement is paused.
+      this.world.updateEnvironment?.(dt,this.reduced.matches);
       this.scene.render();
       this.infoTime+=dt;if(this.infoTime>.12){
         this.infoTime=0;const target=this.nearestTarget();
