@@ -65,3 +65,32 @@
 .night-setting-state.on i{background:#365b41}
 .night-setting-state.on i:after{left:25px}
 @media(max-width:400px){.night-setting{padding:14px;gap:10px}.night-setting strong{font-size:21px}.night-setting small{font-size:17px}}
+
+/* Reserve the bottom-right corner for the map, beside desktop controls and
+   above touch controls. It never captures camera or joystick gestures. */
+.game-shell{--minimap-size:clamp(180px,18vw,220px)}
+.minimap{position:absolute;right:max(28px,env(safe-area-inset-right));bottom:max(40px,env(safe-area-inset-bottom));width:var(--minimap-size);padding:10px;border:1px solid #fff9;border-radius:20px;background:#fff9e9f2;color:#2d4a38;box-shadow:0 8px 26px #203e3b30;pointer-events:none}
+.minimap-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 2px 7px;line-height:1.25}
+.minimap-heading strong{font-size:18px}.minimap-heading span{display:flex;align-items:center;gap:5px;font-size:16px;font-weight:700}
+.minimap-heading i{display:block;width:12px;height:15px;background:#d66a32;clip-path:polygon(50% 0,100% 100%,50% 78%,0 100%)}
+.minimap>svg{display:block;width:100%;height:auto;aspect-ratio:1;border-radius:13px}
+.minimap-sea{fill:#8ebbc6}.minimap-land{fill:#a7bd7f;stroke:#e9d3a3;stroke-linejoin:round}.minimap-pond{fill:#80b3bf;stroke:#d4dfac}
+.minimap-night .minimap-sea{fill:#344f6a}.minimap-night .minimap-land{fill:#82976c}.minimap-night .minimap-pond{fill:#557e97}
+.has-minimap .bottom-hud{right:calc(var(--minimap-size) + max(28px,env(safe-area-inset-right)) + 20px);pointer-events:none}
+.has-minimap .bottom-hud>*{pointer-events:auto}.has-minimap .interact-button{max-width:260px;flex-shrink:0;margin-left:auto}
+.has-minimap .camera-button{right:calc(var(--minimap-size) + max(28px,env(safe-area-inset-right)) + 20px)}
+@media(max-width:1000px){.has-minimap .controls-help{display:none}}
+@media(pointer:coarse),(max-width:700px){
+ .game-shell{--minimap-size:160px}
+ .minimap{right:max(16px,env(safe-area-inset-right));bottom:calc(150px + env(safe-area-inset-bottom))}
+ .has-minimap .camera-button{right:calc(var(--minimap-size) + max(16px,env(safe-area-inset-right)) + 12px);bottom:calc(184px + env(safe-area-inset-bottom))}
+}
+@media(max-height:520px){
+ .game-shell{--minimap-size:130px}
+ .minimap{padding:7px;border-radius:15px}.minimap-heading{gap:4px;margin:0 0 5px}.minimap-heading strong{font-size:16px}.minimap-heading span{font-size:14px}
+}
+@media(max-height:520px) and (pointer:coarse),(max-height:520px) and (max-width:700px){
+ .minimap{bottom:calc(120px + env(safe-area-inset-bottom))}
+ .has-minimap .camera-button{bottom:calc(140px + env(safe-area-inset-bottom))}
+}
+@media(max-height:360px){.game-shell{--minimap-size:90px}.minimap-heading{justify-content:center}.minimap-heading span{display:none}}

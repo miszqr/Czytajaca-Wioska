@@ -148,3 +148,23 @@ it.each(['village','home'] as const)('nowa gra z %s: anulowanie chroni zapis, po
   expect(await store.load()).toMatchObject({...fresh,welcomed:true});
  }finally{await act(async()=>root.unmount());container.remove();await store.close()}
 });
+
+
+it('minimapa pokazuje zapis, ruch i kierunek Kitka, znika w dialogach oraz w domu',async()=>{
+ const saved=newSave();saved.welcomed=true;saved.player={x:12,z:-7,heading:Math.PI/2};saved.flags['met-bruno']=true;
+ const store=new SaveStore();await store.save(saved);const container=document.createElement('div');document.body.append(container);const root=createRoot(container);
+ const marker=()=>document.querySelector('.minimap-player');
+ try{
+  await act(async()=>root.render(<App/>));await settle();
+  expect(marker()?.getAttribute('transform')).toBe('translate(12,7) rotate(90)');
+  expect(document.querySelector('.minimap svg')?.getAttribute('aria-label')).toContain('kierunek Kitka');
+  await act(async()=>mock.callbacks.onMapPose({x:4,z:9,heading:Math.PI}));
+  expect(marker()?.getAttribute('transform')).toBe('translate(4,-9) rotate(180)');
+  expect((await store.load())?.player).toEqual(saved.player);
+  await act(async()=>mock.callbacks.onAction('menu'));expect(marker()).toBeNull();await click('Wracam do spaceru.');expect(marker()).not.toBeNull();
+  await approach('home-door');expect(marker()).toBeNull();await click('Otwieram drzwi.');expect((await store.load())?.location).toBe('home');expect(marker()).toBeNull();
+  // The runtime reports the doorway pose synchronously when changing scenes.
+  await act(async()=>mock.callbacks.onMapPose({x:18,z:4.2,heading:0}));await approach('home-exit');await click('Wyjdź na spacer.');
+  expect(marker()?.getAttribute('transform')).toBe('translate(18,-4.2) rotate(0)');
+ }finally{await act(async()=>root.unmount());container.remove();await store.close()}
+});

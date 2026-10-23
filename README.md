@@ -51,6 +51,8 @@ Przy ścieżkach stoi osiem latarni gazowych. Podejdź do wybranej latarni, uży
 
 ## Sterowanie
 
+W prawym dolnym rogu jest minimapa wyspy: pokazuje ścieżki, domki i staw. Pomarańczowa strzałka wskazuje bieżącą pozycję i kierunek Kitka. Na telefonie mapa znajduje się nad przyciskami działania; we wnętrzu domu i podczas dialogów jest ukryta.
+
 | Czynność | Klawiatura / mysz | Pad | Dotyk |
 | --- | --- | --- | --- |
 | Przód, tył i obrót z kamerą za Kitkiem | ↑ ↓ / ← → | — | — |

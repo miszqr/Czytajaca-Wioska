@@ -6,11 +6,8 @@ import type {Solid} from './movement';
 type Point=[number,number,number];
 type Outline=[number,number][];
 export type CottageKind='kitek'|'bruno'|'milus';
-export const COTTAGES={
- kitek:{name:'Dom Kitka',x:18,z:8,width:5.5,depth:4.8,peak:5.8,accent:'#77A8C6',accentLight:'#9ABED1',roof:['#B77652','#CB8D62','#B97D58','#D39B70'],wood:['#B78253','#C18D5C','#AD794D'],moss:0},
- bruno:{name:'Dom Brunona',x:-10,z:10,width:5.2,depth:4.5,peak:5.35,accent:'#708863',accentLight:'#9CAB7C',roof:['#8B7954','#A08B60','#947E53','#AF986D'],wood:['#A8784D','#B68557','#9D714A'],moss:.75},
- milus:{name:'Dom Milusia',x:13,z:-12,width:5,depth:4.4,peak:5.6,accent:'#AE7765',accentLight:'#D39E82',roof:['#7C7970','#928B7D','#837C70','#A29882'],wood:['#B8865F','#C6956A','#AC7C56'],moss:.3},
-} as const;
+import {COTTAGES} from './village-layout';
+export {COTTAGES} from './village-layout';
 const DARK='#684B36',CUT='#D7AE78',TRIM='#E9C58E';
 
 // Smaller relatives of Fela's timber shop. Dimensions and collision footprints

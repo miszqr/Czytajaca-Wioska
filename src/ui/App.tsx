@@ -2,7 +2,7 @@ import {useCallback,useEffect,useRef,useState} from 'react';
 import {VillageGame,type NearInfo} from '../game/runtime';
 import type {Action} from '../game/input';
 import {SaveStore} from '../persistence/store';
-import {newSave,type SaveState} from '../persistence/state';
+import {newSave,type SaveState,type PlayerPose} from '../persistence/state';
 import {loadContent} from '../content/load';
 import type {ContentPack,StoryNode,Furniture} from '../content/types';
 import {prepareStorage} from '../housing/model';
@@ -15,6 +15,7 @@ import {CameraSettings} from './CameraSettings';
 import {QuestHint} from './QuestHint';
 import {NightSettings} from './NightSettings';
 import {NIGHT_FLAG} from '../game/lantern-layout';
+import {MiniMap} from './MiniMap';
 type Overlay='welcome'|'dialogue'|'journal'|'document'|'menu'|'new-game'|'inventory'|'housing'|null;
 export function App(){
  const canvas=useRef<HTMLCanvasElement>(null),game=useRef<VillageGame|null>(null),[store]=useState(()=>new SaveStore());
@@ -22,13 +23,14 @@ export function App(){
  const [overlay,setOverlay]=useState<Overlay>('welcome'),[node,setNode]=useState<StoryNode|null>(null),[documentId,setDocumentId]=useState(''),[line,setLine]=useState(0),[message,setMessage]=useState('');
  const [saveMode,setSaveMode]=useState<'indexeddb'|'localStorage'|'memory'>('indexeddb'),[pad,setPad]=useState(false);
  const [session,setSession]=useState(0);
+ const [mapPosition,setMapPosition]=useState<PlayerPose|null>(null);
  const [near,setNear]=useState<NearInfo>({targetId:null,label:'',near:false,distance:99,x:0,y:0,visible:false});
  const housingActions=useRef<((a:Action)=>void)|null>(null),[housingItem,setHousingItem]=useState<string|undefined>();
  const preview=useCallback((f:Furniture|null,valid:boolean)=>game.current?.previewFurniture(f,valid),[]);
  const actions=useRef<(a:Action)=>void>(()=>{});
  const update=useCallback((change:(s:SaveState)=>SaveState)=>{const next=change(stateRef.current);stateRef.current=next;setState(next);game.current?.syncState(next);void store.save(next).then(()=>setSaveMode(store.mode));return next},[store]);
  useEffect(()=>{let alive=true;void Promise.all([loadContent(),store.load()]).then(([pack,saved])=>{if(!alive)return;const initial=prepareStorage(saved??newSave(),pack);stateRef.current=initial;setState(initial);setSaveMode(store.mode);setOverlay(initial.welcomed?null:'welcome');setContent(pack)}).catch(error=>{if(alive)setError(error instanceof Error?error.message:'Nie udało się wczytać wioski.')});return()=>{alive=false}},[store]);
- useEffect(()=>{if(!content||!canvas.current)return;try{game.current=new VillageGame(canvas.current,stateRef.current,{onReady:()=>setReady(true),onError:()=>{setError('Nie udało się wyświetlić świata 3D. Sprawdź obsługę WebGL i odśwież stronę.');setReady(false)},onNear:setNear,onGamepad:setPad,onAction:a=>actions.current(a),onSave:snapshot=>update(s=>({...s,...snapshot}))},content)}catch(error){console.error('Village initialization failed:',error);setError(error instanceof Error?error.message:'Nie udało się uruchomić grafiki 3D.')}return()=>{game.current?.dispose();game.current=null}},[content,update,session]);
+ useEffect(()=>{if(!content||!canvas.current)return;try{game.current=new VillageGame(canvas.current,stateRef.current,{onReady:()=>setReady(true),onError:()=>{setError('Nie udało się wyświetlić świata 3D. Sprawdź obsługę WebGL i odśwież stronę.');setReady(false)},onNear:setNear,onMapPose:setMapPosition,onGamepad:setPad,onAction:a=>actions.current(a),onSave:snapshot=>update(s=>({...s,...snapshot}))},content)}catch(error){console.error('Village initialization failed:',error);setError(error instanceof Error?error.message:'Nie udało się uruchomić grafiki 3D.')}return()=>{game.current?.dispose();game.current=null}},[content,update,session]);
  useEffect(()=>{game.current?.editHome(overlay==='housing')},[overlay,ready]);
  useEffect(()=>{game.current?.setPaused(!ready||overlay!==null||!!error)},[overlay,ready,error]);
  const scene=content?currentScene(content,state):undefined,doc=content?.story.documents.find(d=>d.id===documentId),speaker=content?.characters.find(c=>c.id===node?.speaker);
@@ -47,6 +49,7 @@ export function App(){
   // when both sessions start in the village, so poses and cached scenes reset.
   const previous=game.current;game.current=null;previous?.dispose();
   setReady(false);setPad(false);
+  setMapPosition(null);
   update(()=>prepareStorage(newSave(),content));
   setNear({targetId:null,label:'',near:false,distance:99,x:0,y:0,visible:false});
   setNode(null);setDocumentId('');setLine(0);setMessage('');setHousingItem(undefined);
@@ -75,7 +78,8 @@ export function App(){
   else if(action==='hint')setOverlay('journal');
  };
  const inventory=Object.entries(state.inventory);
- return <main className="game-shell">
+ const showMap=ready&&!overlay&&!error&&state.location==='village';
+ return <main className={'game-shell'+(showMap?' has-minimap':'')}>
   <canvas ref={canvas} className="world-canvas" tabIndex={-1} aria-label="Czytająca Wioska 3D. Strzałki: przód, tył i obrót. WASD: ruch względem kamery. E: rozmowa lub użycie przedmiotu."/>
   <div className="vignette"/>
   <header className="hud-header"><div className="brand"><span className="brand-leaf"><Icon name="leaf" size={28}/></span><div><span className="brand-small">Nowy dom Kitka</span><h1>Czytająca Wioska</h1></div></div><div className="header-actions">
@@ -90,6 +94,7 @@ export function App(){
    <button className="icon-button camera-button" aria-label="Ustaw kamerę za Kitkiem" onClick={()=>game.current?.recenter()}><Icon name="camera" size={23}/></button>
    {state.location==='home'&&!state.flags.hosting&&<button className="home-edit-button secondary" onClick={()=>{setHousingItem(undefined);setOverlay('housing')}}>Urządź dom</button>}
    <TouchControls move={(x,y)=>game.current?.moveTouch(x,y)} run={value=>game.current?.runTouch(value)} interact={interact} near={near.near}/>
+   {showMap&&<MiniMap player={mapPosition??state.player} night={!!state.flags[NIGHT_FLAG]}/>}
   </>}
   <div className="save-status" role="status">{saveMode==='memory'?'Zapis niedostępny — postęp zniknie po zamknięciu.':ready?'Postęp zapisuje się na tym urządzeniu':''}</div>
   {error?<div className="scrim"><section className="dialog" role="alert"><Icon name="help" size={36}/><h2>Nie udało się otworzyć wioski</h2><p>Odśwież stronę, aby ponownie wczytać zapis.</p><details className="load-error"><summary>Szczegóły dla rodzica</summary><p>{error}</p></details><button className="primary" onClick={()=>location.reload()}>Spróbuj ponownie</button></section></div>

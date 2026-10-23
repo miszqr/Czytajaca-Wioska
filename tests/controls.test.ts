@@ -29,12 +29,13 @@ function frames(count=1){for(let i=0;i<count;i++)loop.frame!();expect(errors).no
 function start(state:SaveState=newSave()){
   const canvas=document.createElement('canvas');canvas.width=800;canvas.height=600;
   canvas.setPointerCapture=vi.fn();
-  game=new VillageGame(canvas,state,{onReady:vi.fn(),onError:errors,onNear:vi.fn(),onSave:vi.fn(),onAction:vi.fn(),onGamepad:vi.fn()},DEFAULT_CONTENT);
+  const onMapPose=vi.fn(),onSave=vi.fn();
+  game=new VillageGame(canvas,state,{onReady:vi.fn(),onError:errors,onNear:vi.fn(),onMapPose,onSave,onAction:vi.fn(),onGamepad:vi.fn()},DEFAULT_CONTENT);
   // Exercise the real input, frame loop, collision rays and camera transforms;
   // only GPU rendering is skipped in this deterministic control test.
   vi.spyOn(game.scene,'render').mockImplementation(()=>{});
   game.setPaused(false);
-  return {game,canvas};
+  return {game,canvas,onMapPose,onSave};
 }
 function angleDifference(a:number,b:number){return Math.atan2(Math.sin(a-b),Math.cos(a-b))}
 beforeEach(()=>{
@@ -238,4 +239,21 @@ it('goście mają osobne modele we wnętrzu i nie przenoszą mieszkańców z wio
  expect(villagers.map(n=>n.character.root.position.asArray())).toEqual(before);
  game.syncState({...inside,flags:{hosting:false}});expect(guests.every(n=>!n.character.root.isEnabled())).toBe(true);
  game.syncState(outside);expect(game.world.npcs).toBe(villagers);expect(villagers.every(n=>n.character.root.isEnabled())).toBe(true);
+});
+
+
+it('minimapa śledzi ruch przed autozapisem i natychmiast otrzymuje pozycję po przejściu drzwiami',()=>{
+ const saved=newSave(),{game,onMapPose,onSave}=start(saved);
+ expect(onMapPose).toHaveBeenLastCalledWith(saved.player);
+ key('ArrowUp');key('ArrowRight');frames(32);key('ArrowUp',false);key('ArrowRight',false);
+ const shown=onMapPose.mock.lastCall![0],actual=game.snapshot().player;
+ expect(shown.x).toBeGreaterThan(saved.player.x);expect(shown.z).toBeGreaterThan(saved.player.z);expect(shown.heading).toBeGreaterThan(0);
+ expect(Math.hypot(shown.x-actual.x,shown.z-actual.z)).toBeLessThan(.35);
+ expect(onSave).not.toHaveBeenCalled();expect(onMapPose.mock.calls.length).toBeLessThan(10);
+ shown.x=999;expect(game.snapshot().player.x).not.toBe(999);
+ const inside={...saved,location:'home' as const,player:{x:0,z:-2.5,heading:0}};game.syncState(inside);
+ expect(onMapPose).toHaveBeenLastCalledWith(inside.player);
+ const outside={...saved,player:{x:18,z:4.2,heading:Math.PI}};game.syncState(outside);
+ expect(onMapPose).toHaveBeenLastCalledWith(outside.player);
+ game.dispose();expect(loop.frame).toBeNull();
 });

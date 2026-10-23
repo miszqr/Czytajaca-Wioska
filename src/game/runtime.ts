@@ -11,7 +11,7 @@ import {Input,type Action} from './input';
 import type {SaveState,PlayerPose,CameraPose} from '../persistence/state';
 export type WorldSnapshot={player:PlayerPose;camera:CameraPose;location:SaveState['location']};
 export type NearInfo={targetId:string|null;label:string;near:boolean;distance:number;x:number;y:number;visible:boolean};
-export type RuntimeCallbacks={onReady:()=>void;onError:(error:unknown)=>void;onNear:(info:NearInfo)=>void;onSave:(snapshot:WorldSnapshot)=>void;onAction:(action:Action)=>void;onGamepad:(connected:boolean)=>void};
+export type RuntimeCallbacks={onReady:()=>void;onError:(error:unknown)=>void;onNear:(info:NearInfo)=>void;onMapPose?:(pose:PlayerPose)=>void;onSave:(snapshot:WorldSnapshot)=>void;onAction:(action:Action)=>void;onGamepad:(connected:boolean)=>void};
 export class VillageGame {
   readonly engine:Engine;
   private locations:LocationScenes;private view:LocationScene;
@@ -34,6 +34,7 @@ export class VillageGame {
     this.pose={...state.player};if(blocked(this.pose,this.solids))this.pose=state.location==='home'?{x:0,z:-2.5,heading:0}:{...CONFIG.spawn};
     this.cameraPose={...state.camera};this.cameraLength=state.camera.distance;
     this.placePlayer();this.updateCamera(1);
+    this.callbacks.onMapPose?.({...this.pose});
     this.observer=new ResizeObserver(()=>{this.engine.resize();if(this.editing)this.updateCamera(1)});this.observer.observe(canvas);this.engine.resize();
     canvas.addEventListener('pointerdown',this.down);canvas.addEventListener('pointermove',this.move);canvas.addEventListener('pointerup',this.up);canvas.addEventListener('pointercancel',this.up);canvas.addEventListener('wheel',this.wheel,{passive:false});canvas.addEventListener('contextmenu',this.context);canvas.addEventListener('webglcontextlost',this.contextLost);
     window.addEventListener('blur',this.blur);window.addEventListener('pagehide',this.flush);document.addEventListener('visibilitychange',this.visibility);
@@ -114,6 +115,8 @@ export class VillageGame {
       this.world.updateEnvironment?.(dt,this.reduced.matches);
       this.scene.render();
       this.infoTime+=dt;if(this.infoTime>.12){
+        // A small HUD update follows movement independently of the save timer.
+        this.callbacks.onMapPose?.({...this.pose});
         this.infoTime=0;const target=this.nearestTarget();
         if(target){const distance=Math.hypot(this.pose.x-target.x,this.pose.z-target.z),point=new Vector3(target.x,this.height(target.x,target.z)+1.7,target.z),p=Vector3.Project(point,Matrix.Identity(),this.camera.getTransformationMatrix(),new Viewport(0,0,this.canvas.clientWidth,this.canvas.clientHeight));this.callbacks.onNear({targetId:target.id,label:target.label,near:distance<=CONFIG.interactionRadius,distance,x:p.x,y:p.y,visible:p.z>0&&p.z<1&&p.x>0&&p.x<this.canvas.clientWidth&&p.y>0&&p.y<this.canvas.clientHeight})}
         else this.callbacks.onNear({targetId:null,label:'',near:false,distance:99,x:0,y:0,visible:false});
@@ -150,6 +153,7 @@ export class VillageGame {
     if(travel){
       this.pose={...state.player};this.cameraPose={...state.camera};this.cameraLength=this.cameraPose.distance;
       this.placePlayer();this.updateCamera(1);this.infoTime=1;
+      this.callbacks.onMapPose?.({...this.pose});
       this.callbacks.onNear({targetId:null,label:'',near:false,distance:99,x:0,y:0,visible:false});
     }
   }

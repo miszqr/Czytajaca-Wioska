@@ -8,9 +8,10 @@ import {createVegetation,type TreeKind} from './vegetation';
 import {createFelaHouse} from './fela-house';
 import {createTolaLibrary} from './tola-library';
 import {createGoldenHour} from './golden-hour';
-import {createStorybookCottage,COTTAGES} from './storybook-cottage';
+import {createStorybookCottage} from './storybook-cottage';
+import {COTTAGES,FELA_HOUSE,TOLA_LIBRARY,VILLAGE_PATHS} from './village-layout';
 import {createIslandGround,createOcean} from './island-coast';
-import {beachApproach,shoreDistance,POND,pondRadius} from './island-terrain';
+import {shoreDistance,POND,pondRadius} from './island-terrain';
 import {createPondWater} from './pond';
 import {APPLE_TREES,applePickedFlag} from './orchard';
 import type {SaveState} from '../persistence/state';
@@ -41,15 +42,13 @@ export function createVillage(scene:Scene,characters:readonly CharacterDefinitio
     }
     VertexData.ComputeNormals(vertices,indices,normals);const data=new VertexData();Object.assign(data,{positions:vertices,indices,normals});const mesh=groundDetail(new Mesh('soft-village-path',scene));data.applyToMesh(mesh);mesh.material=material('#D7C396');mesh.parent=environment;
   }
-  path([beachApproach(0,-49),[-5,-27],[5,-8],[0,0]],3.4);path([[0,0],[-2,10],[2,28],beachApproach(4,49)],3.1);
-  path([beachApproach(-49,10),[-18,15],[-10,0],[0,0]],3);path([[0,0],[10,-2],[28,2],beachApproach(49,-3)],3);
+  for(const {points,width} of VILLAGE_PATHS)path(points,width);
   const plaza=groundDetail(shape('cylinder','village-square','#DCCA9F',environment,0,.035,0,4.3,.035,4.3));
   for(let i=0;i<22;i++){const a=i/22*Math.PI*2;const p=groundDetail(shape('box','plaza-stone',i%2?'#E8D8B6':'#CEBB91',environment,Math.sin(a)*3.9,.06,Math.cos(a)*3.9,.70,.065,.38));p.rotation.y=a}
   void plaza;
   for(const kind of ['kitek','bruno','milus'] as const){const {x,z}=COTTAGES[kind];createStorybookCottage(scene,shapes,environment,kind,terrainHeight(x,z),solids)}
-  path([[0,0],[8,0],[15,1],[18,4.7]],2);
-  createFelaHouse(scene,shapes,environment,10,terrainHeight(10,9),9,solids);
-  createTolaLibrary(scene,shapes,environment,0,terrainHeight(0,23),23,solids);
+  createFelaHouse(scene,shapes,environment,FELA_HOUSE.x,terrainHeight(FELA_HOUSE.x,FELA_HOUSE.z),FELA_HOUSE.z,solids);
+  createTolaLibrary(scene,shapes,environment,TOLA_LIBRARY.x,terrainHeight(TOLA_LIBRARY.x,TOLA_LIBRARY.z),TOLA_LIBRARY.z,solids);
   const stall=group('fela-stall',environment,8,terrainHeight(8,4.8),4.8);
   shape('box','stall-counter','#B79163',stall,0,.7,0,1.8,.13,.75);for(const x of [-.75,.75])shape('box','stall-leg','#92714E',stall,x,.34,0,.1,.68,.6);
   for(let i=0;i<4;i++)shape('ball','stall-apple',i%2?'#BC7865':'#D1AD64',stall,-.6+i*.35,.87,0,.12,.12,.12);
