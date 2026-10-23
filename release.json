@@ -1,6 +1,6 @@
 {
-  "sourceCommit": "a0a40bb350532a91e68197b39dfbe54a4c9ff1ae",
-  "sourceBranch": "feat/village-minimap",
-  "release": "village-minimap",
+  "sourceCommit": "8eb0e989aade485548f9b2ef404d64a750a6c57b",
+  "sourceBranch": "feat/mobile-minimap-toggle",
+  "release": "mobile-minimap-toggle",
   "date": "2026-10-23"
 }
