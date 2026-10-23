@@ -157,7 +157,7 @@ it('minimapa pokazuje zapis, ruch i kierunek Kitka, znika w dialogach oraz w dom
  try{
   await act(async()=>root.render(<App/>));await settle();
   expect(marker()?.getAttribute('transform')).toBe('translate(12,7) rotate(90)');
-  expect(document.querySelector('.minimap svg')?.getAttribute('aria-label')).toContain('kierunek Kitka');
+  expect(document.querySelector('.minimap-content svg')?.getAttribute('aria-label')).toContain('kierunek Kitka');
   await act(async()=>mock.callbacks.onMapPose({x:4,z:9,heading:Math.PI}));
   expect(marker()?.getAttribute('transform')).toBe('translate(4,-9) rotate(180)');
   expect((await store.load())?.player).toEqual(saved.player);
