@@ -2046,6 +2046,254 @@
           ]
         }
       ]
+    },
+    {
+      "id": "light-lantern-arrival",
+      "target": "lantern-arrival",
+      "event": "interact",
+      "priority": 1,
+      "once": true,
+      "when": [
+        {
+          "type": "flag",
+          "key": "lantern-arrival-lit",
+          "value": false
+        }
+      ],
+      "speaker": "Latarnia gazowa",
+      "lines": [
+        "Ta latarnia jest zgaszona. Zapalę ją, aby oświetlić ścieżkę."
+      ],
+      "choices": [
+        {
+          "id": "light",
+          "label": "Zapalam latarnię.",
+          "effects": [
+            {
+              "type": "flag",
+              "key": "lantern-arrival-lit",
+              "value": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "light-lantern-square",
+      "target": "lantern-square",
+      "event": "interact",
+      "priority": 1,
+      "once": true,
+      "when": [
+        {
+          "type": "flag",
+          "key": "lantern-square-lit",
+          "value": false
+        }
+      ],
+      "speaker": "Latarnia gazowa",
+      "lines": [
+        "Ta latarnia jest zgaszona. Zapalę ją, aby oświetlić ścieżkę."
+      ],
+      "choices": [
+        {
+          "id": "light",
+          "label": "Zapalam latarnię.",
+          "effects": [
+            {
+              "type": "flag",
+              "key": "lantern-square-lit",
+              "value": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "light-lantern-bruno",
+      "target": "lantern-bruno",
+      "event": "interact",
+      "priority": 1,
+      "once": true,
+      "when": [
+        {
+          "type": "flag",
+          "key": "lantern-bruno-lit",
+          "value": false
+        }
+      ],
+      "speaker": "Latarnia gazowa",
+      "lines": [
+        "Ta latarnia jest zgaszona. Zapalę ją, aby oświetlić ścieżkę."
+      ],
+      "choices": [
+        {
+          "id": "light",
+          "label": "Zapalam latarnię.",
+          "effects": [
+            {
+              "type": "flag",
+              "key": "lantern-bruno-lit",
+              "value": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "light-lantern-fela",
+      "target": "lantern-fela",
+      "event": "interact",
+      "priority": 1,
+      "once": true,
+      "when": [
+        {
+          "type": "flag",
+          "key": "lantern-fela-lit",
+          "value": false
+        }
+      ],
+      "speaker": "Latarnia gazowa",
+      "lines": [
+        "Ta latarnia jest zgaszona. Zapalę ją, aby oświetlić ścieżkę."
+      ],
+      "choices": [
+        {
+          "id": "light",
+          "label": "Zapalam latarnię.",
+          "effects": [
+            {
+              "type": "flag",
+              "key": "lantern-fela-lit",
+              "value": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "light-lantern-home",
+      "target": "lantern-home",
+      "event": "interact",
+      "priority": 1,
+      "once": true,
+      "when": [
+        {
+          "type": "flag",
+          "key": "lantern-home-lit",
+          "value": false
+        }
+      ],
+      "speaker": "Latarnia gazowa",
+      "lines": [
+        "Ta latarnia jest zgaszona. Zapalę ją, aby oświetlić ścieżkę."
+      ],
+      "choices": [
+        {
+          "id": "light",
+          "label": "Zapalam latarnię.",
+          "effects": [
+            {
+              "type": "flag",
+              "key": "lantern-home-lit",
+              "value": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "light-lantern-library",
+      "target": "lantern-library",
+      "event": "interact",
+      "priority": 1,
+      "once": true,
+      "when": [
+        {
+          "type": "flag",
+          "key": "lantern-library-lit",
+          "value": false
+        }
+      ],
+      "speaker": "Latarnia gazowa",
+      "lines": [
+        "Ta latarnia jest zgaszona. Zapalę ją, aby oświetlić ścieżkę."
+      ],
+      "choices": [
+        {
+          "id": "light",
+          "label": "Zapalam latarnię.",
+          "effects": [
+            {
+              "type": "flag",
+              "key": "lantern-library-lit",
+              "value": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "light-lantern-pond",
+      "target": "lantern-pond",
+      "event": "interact",
+      "priority": 1,
+      "once": true,
+      "when": [
+        {
+          "type": "flag",
+          "key": "lantern-pond-lit",
+          "value": false
+        }
+      ],
+      "speaker": "Latarnia gazowa",
+      "lines": [
+        "Ta latarnia jest zgaszona. Zapalę ją, aby oświetlić ścieżkę."
+      ],
+      "choices": [
+        {
+          "id": "light",
+          "label": "Zapalam latarnię.",
+          "effects": [
+            {
+              "type": "flag",
+              "key": "lantern-pond-lit",
+              "value": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "light-lantern-milus",
+      "target": "lantern-milus",
+      "event": "interact",
+      "priority": 1,
+      "once": true,
+      "when": [
+        {
+          "type": "flag",
+          "key": "lantern-milus-lit",
+          "value": false
+        }
+      ],
+      "speaker": "Latarnia gazowa",
+      "lines": [
+        "Ta latarnia jest zgaszona. Zapalę ją, aby oświetlić ścieżkę."
+      ],
+      "choices": [
+        {
+          "id": "light",
+          "label": "Zapalam latarnię.",
+          "effects": [
+            {
+              "type": "flag",
+              "key": "lantern-milus-lit",
+              "value": true
+            }
+          ]
+        }
+      ]
     }
   ]
 }
