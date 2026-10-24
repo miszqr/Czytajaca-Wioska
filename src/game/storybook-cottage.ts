@@ -179,6 +179,12 @@ export function createStorybookCottage(scene:Scene,{shape,group,material}:Shapes
  }
  for(const h of [.34,1.44]){box('door-hinge',DARK,[-.33,h,-.23],[.3,.06,.035],door);ball('door-rivet',CUT,[-.43,h,-.26],[.022,.022,.02],door)}
  box('handle-plate',DARK,[.32,.94,-.23],[.1,.22,.03],door);ball('door-knob','#E8BC62',[.32,.95,-.29],[.055,.055,.045],door);
+ // The door projects beyond the wall shell. Reserve camera clearance at its
+ // visible surface, including the frame and fittings, before scenery batching.
+ // Otherwise an outward-facing Kitek leaves the camera behind the door.
+ for(const mesh of door.getChildMeshes()){
+  mesh.isPickable=true;mesh.metadata={...mesh.metadata,cameraObstacle:true};
+ }
  for(let i=0;i<2;i++){const step=box('door-step',i?CUT:'#BAAE93',[0,.09+i*.12,front-.5+i*.12],[1.4,.12,.32]);step.metadata={cameraObstacle:false,castsShadow:false}}
 
  const lantern=group(`${kind}-lantern`,root,.78,2.48,front-.4);

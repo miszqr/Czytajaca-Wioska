@@ -16,7 +16,7 @@ import {VillageGame} from '../src/game/runtime';
 import {newSave,validateSave} from '../src/persistence/state';
 import type {SaveState} from '../src/persistence/state';
 import {Input as KeyboardInput} from '../src/game/input';
-import {Vector3} from '../src/game/babylon';
+import {Ray,Vector3} from '../src/game/babylon';
 import {CONFIG} from '../src/game/config';
 import {choose,findNode} from '../src/story/engine';
 import {POND,terrainHeight} from '../src/game/island-terrain';
@@ -184,6 +184,30 @@ it('drzwi przełączają scenę i kamerę, zachowują fabułę oraz właściwe p
  expect(game.snapshot().player).toEqual({x:18,z:4.2,heading:3.14159});expect(state.read).toEqual(['fela-letter']);
  act('home-door');expect(game.scene).toBe(home);expect(game.camera).toBe(homeCamera);expect(game.engine.scenes).toHaveLength(2);
  expect(state.read).toEqual(['fela-letter']);expect(state.completed).toContain('home');
+});
+
+it.each([CONFIG.cameraMinPitch,.3,CONFIG.cameraMaxPitch])('po wyjściu drzwi nie zasłaniają kamery przy nachyleniu %s',pitch=>{
+ let state=newSave();state.location='home';state.player={x:0,z:-2.5,heading:Math.PI};state.camera.pitch=pitch;
+ const {game}=start(state);
+ state=choose(DEFAULT_CONTENT,state,'exit-home','out').state;game.syncState(state);
+ vi.spyOn(game.scene,'render').mockImplementation(()=>{});
+ const scenery=game.scene.getTransformNodeByName('village')!;
+ function expectClearView(){
+  const target=game.world.kitek.root.position.add(new Vector3(0,CONFIG.cameraTargetHeight,0));
+  const sight=game.camera.position.subtract(target),length=sight.length();
+  // Check rendered scenery, including geometry NOT registered as an obstacle.
+  // Otherwise a missing obstacle flag would make this regression invisible.
+  const hit=game.scene.pickWithRay(new Ray(target,sight.normalize(),length+.08),mesh=>mesh.isDescendantOf(scenery)&&mesh.isEnabled()&&mesh.isVisible);
+  expect(hit?.hit,`Camera ${game.camera.position}, obstruction ${hit?.pickedPoint}`).toBe(false);expect(game.world.kitek.root.isEnabled()).toBe(true);
+ }
+ for(const distance of [CONFIG.cameraMinDistance,CONFIG.cameraMaxDistance]){game.setCameraDistance(distance);expectClearView()}
+ const exitDistance=Vector3.Distance(game.camera.position,game.world.kitek.root.position.add(new Vector3(0,CONFIG.cameraTargetHeight,0)));
+ key('ArrowUp');frames(90);key('ArrowUp',false);
+ const walkingDistance=Vector3.Distance(game.camera.position,game.world.kitek.root.position.add(new Vector3(0,CONFIG.cameraTargetHeight,0)));
+ expect(walkingDistance).toBeGreaterThan(exitDistance);
+ expect(game.snapshot().player.z).toBeLessThan(state.player.z-2);
+ // Collision changes actual camera placement, not the user's chosen distance.
+ expect(game.snapshot().camera.distance).toBe(CONFIG.cameraMaxDistance);
 });
 
 it('zmierzch postępuje w otwartym menu, a powrót z domu zachowuje zapaloną latarnię',()=>{

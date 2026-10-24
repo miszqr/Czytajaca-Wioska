@@ -176,9 +176,11 @@ it.each<CottageKind>(['kitek','bruno','milus'])('drewniany dom %s zachowuje prze
    for(const type of [VertexBuffer.PositionKind,VertexBuffer.NormalKind,VertexBuffer.ColorKind,VertexBuffer.UVKind])expect(mesh.getVerticesData(type)?.every(Number.isFinite),`${mesh.name}: ${type}`).toBe(true);
   }
   const obstacle=(mesh:typeof meshes[number])=>mesh.metadata?.cameraObstacle===true&&mesh.isPickable;
-  const facade=scene.pickWithRay(new Ray(new Vector3(cfg.x,1.6,cfg.z-10),new Vector3(0,0,1),20),obstacle);
+  const facade=scene.pickWithRay(new Ray(new Vector3(cfg.x+1,1.6,cfg.z-10),new Vector3(0,0,1),20),obstacle);
   expect(facade?.hit).toBe(true);expect(facade?.pickedPoint?.z).toBeCloseTo(cfg.z-cfg.depth/2+.08);
   expect(facade?.getNormal(true)?.z).toBeLessThan(-.9);
+  const door=scene.pickWithRay(new Ray(new Vector3(cfg.x,1.6,cfg.z-10),new Vector3(0,0,1),20),obstacle);
+  expect(door?.hit).toBe(true);expect(door?.pickedPoint?.z).toBeLessThan(cfg.z-cfg.depth/2-.4);
   const roof=scene.pickWithRay(new Ray(new Vector3(cfg.x+cfg.width*.3,10,cfg.z),new Vector3(0,-1,0),10),obstacle);
   expect(roof?.hit).toBe(true);expect(roof?.pickedPoint?.y).toBeGreaterThan(3.5);expect(roof?.pickedPoint?.y).toBeLessThan(cfg.peak);
   expect(roof?.getNormal(true)?.y).toBeGreaterThan(.4);
