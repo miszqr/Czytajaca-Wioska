@@ -12,7 +12,7 @@ import type {SaveState,PlayerPose,CameraPose} from '../persistence/state';
 import {PondSecret} from './pond-secret';
 export type WorldSnapshot={player:PlayerPose;camera:CameraPose;location:SaveState['location']};
 export type NearInfo={targetId:string|null;label:string;near:boolean;distance:number;x:number;y:number;visible:boolean};
-export type RuntimeCallbacks={onReady:()=>void;onError:(error:unknown)=>void;onNear:(info:NearInfo)=>void;onMapPose?:(pose:PlayerPose)=>void;onSave:(snapshot:WorldSnapshot)=>void;onStegosaurus?:(snapshot:WorldSnapshot)=>void;onAction:(action:Action)=>void;onGamepad:(connected:boolean)=>void};
+export type RuntimeCallbacks={onReady:()=>void;onError:(error:unknown)=>void;onNear:(info:NearInfo)=>void;onMapPose?:(pose:PlayerPose)=>void;onPondProgress?:(laps:number|null)=>void;onSave:(snapshot:WorldSnapshot)=>void;onStegosaurus?:(snapshot:WorldSnapshot)=>void;onAction:(action:Action)=>void;onGamepad:(connected:boolean)=>void};
 export class VillageGame {
   readonly engine:Engine;
   private locations:LocationScenes;private view:LocationScene;
@@ -121,6 +121,7 @@ export class VillageGame {
       this.infoTime+=dt;if(this.infoTime>.12){
         // A small HUD update follows movement independently of the save timer.
         this.callbacks.onMapPose?.({...this.pose});
+        this.callbacks.onPondProgress?.(this.pondSecret.progress);
         this.infoTime=0;const target=this.nearestTarget();
         if(target){const distance=Math.hypot(this.pose.x-target.x,this.pose.z-target.z),point=new Vector3(target.x,this.height(target.x,target.z)+1.7,target.z),p=Vector3.Project(point,Matrix.Identity(),this.camera.getTransformationMatrix(),new Viewport(0,0,this.canvas.clientWidth,this.canvas.clientHeight));this.callbacks.onNear({targetId:target.id,label:target.label,near:distance<=CONFIG.interactionRadius,distance,x:p.x,y:p.y,visible:p.z>0&&p.z<1&&p.x>0&&p.x<this.canvas.clientWidth&&p.y>0&&p.y<this.canvas.clientHeight})}
         else this.callbacks.onNear({targetId:null,label:'',near:false,distance:99,x:0,y:0,visible:false});

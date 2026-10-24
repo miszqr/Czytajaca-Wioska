@@ -1,5 +1,5 @@
 import {expect,it} from 'vitest';
-import {PondSecret,STEGOSAURUS_FLAG} from '../src/game/pond-secret';
+import {PondSecret,STEGOSAURUS_FLAG,onPondBank} from '../src/game/pond-secret';
 import {ISLAND,POND,pondRadius,shoreDistance,terrainHeight} from '../src/game/island-terrain';
 import {newSave,validateSave} from '../src/persistence/state';
 import {NullEngine,Scene,Vector3,VertexBuffer,FreeCamera} from '../src/game/babylon';
@@ -24,6 +24,35 @@ it('wymaga trzech pełnych okrążeń CCW z dowolnego startu, wyzwala tylko raz'
  expect(walk(tracker,s,start+TAU*2.99,start+TAU*3)).toBe(1);
  expect(walk(tracker,s,start+TAU*3,start+TAU*7)).toBe(0);
  expect(s.inventory.apple).toBe(3);
+});
+it('zalicza spacer po widocznym suchym brzegu wewnątrz elipsy terenu',()=>{
+ const tracker=new PondSecret(),s=state();
+ for(let i=0;i<360;i++){
+  const p=point(i*TAU/360,.9);
+  expect(terrainHeight(p.x,p.z)).toBeGreaterThan(POND.waterLevel);
+ }
+ expect(walk(tracker,s,0,TAU*3,.9)).toBe(1);
+});
+it('liczy nierówny brzeg i płytką wodę, lecz nadal odrzuca skrót przez środek',()=>{
+ const tracker=new PondSecret(),s=state();let events=0,shallowSamples=0;
+ for(let i=0;i<=2400;i++){
+  const angle=i/2400*TAU*3;let radius=1;
+  while(radius>.5){const p=point(angle,radius-.005);if(!onPondBank(p))break;radius-=.005}
+  const p=point(angle,radius+.015);
+  if(terrainHeight(p.x,p.z)<POND.waterLevel)shallowSamples++;
+  if(tracker.update(p,s))events++;
+ }
+ expect(shallowSamples).toBeGreaterThan(0);expect(events).toBe(1);
+ expect(onPondBank(point(0,.4))).toBe(false);
+ // The sea beach is lower than the pond, but is still dry land outside its basin.
+ const beach=point(.54,2);
+ expect(shoreDistance(beach.x,beach.z)).toBeGreaterThan(1);
+ expect(terrainHeight(beach.x,beach.z)).toBeLessThan(POND.waterLevel);
+ expect(onPondBank(beach)).toBe(true);
+ const crossing=new PondSecret();walk(crossing,s,0,TAU*2,.9);
+ for(let r=.9;r>=.2;r-=.02)crossing.update(point(0,r),s);
+ expect(crossing.laps).toBe(0);expect(crossing.progress).toBeNull();
+ expect(walk(crossing,s,0,TAU*2.9,.9)).toBe(0);
 });
 it.each([undefined,0,1,2,4,12])('nie wyzwala sekretu przy %s jabłkach ani z jabłkami w schowku',apples=>{
  const s=state();if(apples===undefined)delete s.inventory.apple;else s.inventory.apple=apples;s.storage.apple=3;

@@ -1,4 +1,4 @@
-import {POND,pondRadius} from './island-terrain';
+import {POND,pondRadius,terrainHeight} from './island-terrain';
 import type {Point} from './movement';
 import type {SaveState} from '../persistence/state';
 
@@ -7,12 +7,21 @@ export const SECRET_LAPS=3;
 const TAU=Math.PI*2;
 type SecretState=Pick<SaveState,'location'|'inventory'|'flags'>;
 
+export function onPondBank(point:Point){
+ const radius=pondRadius(point.x,point.z);
+ // radius=1 is where the basin rejoins the terrain, NOT the visible waterline.
+ // Count the actual dry bank and allow a small step into the shallows. Crossing
+ // the deeper water or taking a distant lap around the village still resets.
+ return Number.isFinite(radius)&&radius>=.5&&radius<=2.3&&(radius>=1||terrainHeight(point.x,point.z)>=POND.waterLevel-.12);
+}
+
 /** Session-only progress. The discovery itself lives in the ordinary save flags. */
 export class PondSecret{
  private previous:Point|null=null;
  private angle=0;
  private fired=false;
  get laps(){return this.angle/TAU}
+ get progress(){return this.previous?Math.min(SECRET_LAPS,this.laps):null}
  reset(){this.previous=null;this.angle=0}
  sync(state:SecretState){
   if(state.location!=='village'||state.inventory.apple!==3||state.flags[STEGOSAURUS_FLAG])this.reset();
@@ -20,10 +29,7 @@ export class PondSecret{
  update(point:Point,state:SecretState){
   this.sync(state);
   if(this.fired||state.flags[STEGOSAURUS_FLAG]||state.location!=='village'||state.inventory.apple!==3)return false;
-  const radius=pondRadius(point.x,point.z);
-  // Wide enough for trees/fences, but crossing the water or circling the island
-  // cannot count as following the pond's bank.
-  if(!Number.isFinite(radius)||radius<1||radius>2.3){this.reset();return false}
+  if(!onPondBank(point)){this.reset();return false}
   const previous=this.previous;this.previous={x:point.x,z:point.z};
   if(!previous)return false;
   // Runtime samples every frame (max 0.2 m at running speed). Reject warps.

@@ -37,10 +37,17 @@ it('odkrycie stegozaura zapisuje się natychmiast z pozycją, zachowuje jabłka 
  const store=new SaveStore();await store.save(before);const container=document.createElement('div');document.body.append(container);let root=createRoot(container);
  try{
   await act(async()=>root.render(<App/>));await settle();
+  expect(document.querySelector('.pond-progress')).toBeNull();
+  await act(async()=>mock.callbacks.onPondProgress(1.4));
+  expect(document.querySelector('.pond-progress')?.textContent).toContain('1 / 3');
+  expect(document.querySelector('progress')?.value).toBe(1.4);
+  await act(async()=>mock.callbacks.onPondProgress(null));expect(document.querySelector('.pond-progress')).toBeNull();
+  await act(async()=>mock.callbacks.onPondProgress(2.9));
   const snapshot={player:{x:30,z:17,heading:1.2},camera:before.camera,location:'village'};
   await act(async()=>mock.callbacks.onStegosaurus(snapshot));await settle();
   const saved=await store.load();expect(saved?.flags[STEGOSAURUS_FLAG]).toBe(true);expect(saved?.flags['met-bruno']).toBe(true);
   expect(saved?.player).toEqual(snapshot.player);expect(saved?.inventory).toEqual({apple:3});
+  expect(document.querySelector('.pond-progress')).toBeNull();
   expect(document.querySelector('.secret-notice')?.textContent).toContain('stegozaur');expect(document.querySelector('[role="dialog"]')).toBeNull();
   await act(async()=>root.unmount());root=createRoot(container);await act(async()=>root.render(<App/>));await settle();
   expect(mock.sessions.at(-1).state.flags[STEGOSAURUS_FLAG]).toBe(true);expect(document.querySelector('.secret-notice')).toBeNull();
