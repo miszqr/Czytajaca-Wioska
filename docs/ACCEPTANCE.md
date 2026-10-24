@@ -12,6 +12,15 @@ Test pełnej historii przechodzi wszystkie osiem scen i odtwarza zapis po każdy
 
 NullEngine i jsdom nie potwierdzają obrazu na GPU ani działania fizycznego urządzenia. Udostępniona wcześniej przeglądarka zgłaszała `WebGL not supported`. Poniższy odbiór ręczny pozostaje do wykonania na komputerze i telefonie z działającym WebGL.
 
+## Sekret stegozaura
+
+- [ ] Zbierz 3 jabłka i obejdź jeziorko trzy razy z wodą po lewej. Przy płocie koło domu Kitka przejdź przez nowy prześwit. Dinozaur nie powinien pojawić się przed końcem trzeciego okrążenia.
+- [ ] Sprawdź wyjście z morza po wschodniej stronie jeziorka: stegozaur stopniowo wynurza się i dochodzi do plaży, bez nagłego przeskoku i przenikania drzew.
+- [ ] Podejdź do zwierzęcia. Nie można wejść w jego tułów; jeśli Kitek stanie na drodze, stegozaur czeka, aż odejdzie.
+- [ ] Przy 2 lub 4 jabłkach oraz okrążeniach zgodnych z ruchem wskazówek zegara sekret się nie uruchamia.
+- [ ] Otwórz menu w trakcie wynurzania: animacja czeka. Po odświeżeniu strony odkryty stegozaur stoi na plaży, a wszystkie 3 jabłka pozostają w plecaku.
+- [ ] „Zacznij nową grę” usuwa zwierzę i pozwala odkryć sekret ponownie.
+
 ## P0 — dom i list
 
 - [ ] Uruchom `npm run dev` i otwórz `http://localhost:4173`.

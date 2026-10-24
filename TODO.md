@@ -35,6 +35,11 @@ Aktualna specyfikacja: `docs/WORK_BRIEF.md`, 2026-10-19. Zastępuje dawny plan s
 
 ## Odbiór na urządzeniu
 
+- [x] Sekret jeziorka: trzy okrążenia CCW z dokładnie trzema jabłkami, jednorazowe odkrycie w zapisie v3.
+- [x] Proceduralny stegozaur dorosłej wielkości, animowane wyjście z morza, kolizje i zatrzymywanie przed Kitkiem.
+- [x] Prześwit przy płocie nad jeziorkiem umożliwiający obejście brzegu bez wchodzenia do wody.
+- [ ] Odbiór wyglądu, chodu i wyjścia stegozaura na GPU na urządzeniu użytkownika.
+
 - [ ] Wygląd i shadery na GPU; przeglądarka udostępniona wcześniej zgłaszała brak WebGL.
 - [ ] Pixel 8: dotyk, orientacja, płynność i pamięć.
 - [ ] Fizyczny 8BitDo, ponowne połączenie i układ przycisków.

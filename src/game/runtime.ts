@@ -9,9 +9,10 @@ import {matches,findNode} from '../story/engine';
 import {advanceNpc} from './npc';
 import {Input,type Action} from './input';
 import type {SaveState,PlayerPose,CameraPose} from '../persistence/state';
+import {PondSecret} from './pond-secret';
 export type WorldSnapshot={player:PlayerPose;camera:CameraPose;location:SaveState['location']};
 export type NearInfo={targetId:string|null;label:string;near:boolean;distance:number;x:number;y:number;visible:boolean};
-export type RuntimeCallbacks={onReady:()=>void;onError:(error:unknown)=>void;onNear:(info:NearInfo)=>void;onMapPose?:(pose:PlayerPose)=>void;onSave:(snapshot:WorldSnapshot)=>void;onAction:(action:Action)=>void;onGamepad:(connected:boolean)=>void};
+export type RuntimeCallbacks={onReady:()=>void;onError:(error:unknown)=>void;onNear:(info:NearInfo)=>void;onMapPose?:(pose:PlayerPose)=>void;onSave:(snapshot:WorldSnapshot)=>void;onStegosaurus?:(snapshot:WorldSnapshot)=>void;onAction:(action:Action)=>void;onGamepad:(connected:boolean)=>void};
 export class VillageGame {
   readonly engine:Engine;
   private locations:LocationScenes;private view:LocationScene;
@@ -23,6 +24,7 @@ export class VillageGame {
   private pointer:{id:number;x:number;y:number}|null=null;private observer:ResizeObserver;private pad=false;
   private followHeading=false;private gesture:'idle'|'pick-up'|'give'='idle';private gestureUntil=0;private talkingNpc='';private editing=false;private guestSpots:Record<string,{x:number;z:number}>={};private guestKey='';private state:SaveState;
   private reduced=window.matchMedia('(prefers-reduced-motion: reduce)');
+  private pondSecret=new PondSecret();
   constructor(private canvas:HTMLCanvasElement,state:SaveState,private callbacks:RuntimeCallbacks,private content:ContentPack){
     this.state=state;
     try{this.engine=new Engine(canvas,true,{powerPreference:'low-power',preserveDrawingBuffer:false,stencil:true},false)}catch(e){this.input.dispose();throw e}
@@ -100,6 +102,7 @@ export class VillageGame {
           this.cameraPose.yaw+=offset*(1-Math.exp(-CONFIG.cameraFollowSpeed*dt));
         }
         this.pose.x=next.x;this.pose.z=next.z;this.placePlayer();this.world.kitek.animate(this.time,actualSpeed,this.time<this.celebrateUntil,this.reduced.matches,this.time<this.gestureUntil?this.gesture:'idle');this.updateCamera(dt);
+        if(this.pondSecret.update(this.pose,this.state))this.callbacks.onStegosaurus?.(this.snapshot());
         this.saveTime+=dt;if(this.saveTime>2){this.saveTime=0;this.flush()}
       }else this.world.kitek.animate(this.time,0,this.time<this.celebrateUntil,this.reduced.matches,this.time<this.gestureUntil?this.gesture:'idle');
       for(const npc of this.world.npcs){
@@ -113,6 +116,7 @@ export class VillageGame {
       }
       // Twilight also progresses while the menu is open and movement is paused.
       this.world.updateEnvironment?.(dt,this.reduced.matches);
+      this.world.stegosaurus?.update(dt,this.pose,this.paused,this.reduced.matches);
       this.scene.render();
       this.infoTime+=dt;if(this.infoTime>.12){
         // A small HUD update follows movement independently of the save timer.
@@ -147,6 +151,7 @@ export class VillageGame {
       this.input.clear();this.pointer=null;this.vx=this.vz=0;this.followHeading=false;this.talkingNpc='';
     }
     this.state=state;this.view=nextView;
+    this.pondSecret.sync(state);
     const guestKey=JSON.stringify([state.flags.hosting,state.furniture]);
     if(guestKey!==this.guestKey){this.guestKey=guestKey;this.guestSpots=guestPositions(state,this.content)}
     this.syncActors();

@@ -17,6 +17,7 @@ import {APPLE_TREES,applePickedFlag} from './orchard';
 import type {SaveState} from '../persistence/state';
 import {createGasLanterns} from './gas-lanterns';
 import {NIGHT_FLAG} from './lantern-layout';
+import {createSeaStegosaurus} from './sea-stegosaurus';
 export function createVillage(scene:Scene,characters:readonly CharacterDefinition[]){
   const lighting=createGoldenHour(scene);
   const shapes=createShapes(scene),{shape,group,material}=shapes,environment=group('village'),solids:Solid[]=[];
@@ -60,7 +61,9 @@ export function createVillage(scene:Scene,characters:readonly CharacterDefinitio
     for(const y of [.35,.72])obstacle(shape('box','fence-rail','#C5AE80',g,0,y,0,length,.12,.09));
     solids.push({id:'fence',type:'box',x,z,halfX:angle? .12:length/2,halfZ:angle?length/2:.12});
   }
-  fence(-7,7.1,7);fence(-11,3.7,5.5,Math.PI/2);fence(8,-5,5);fence(17,10,8,Math.PI/2);
+  fence(-7,7.1,7);fence(-11,3.7,5.5,Math.PI/2);fence(8,-5,5);
+  // Leave a walkable gap before the pond bank for the three-lap secret.
+  fence(17,9,6,Math.PI/2);
   for(const x of [-7.9,-5.8]){
     const z=3.2;shape('box','garden-soil','#94714F',environment,x,.12,z,1.5,.22,3.6);solids.push({id:'raised-bed',type:'box',x,z,halfX:.8,halfZ:1.85});
     for(const side of [-1,1])shape('box','garden-border','#B59869',environment,x+side*.77,.17,z,.09,.3,3.8);
@@ -121,10 +124,11 @@ export function createVillage(scene:Scene,characters:readonly CharacterDefinitio
   // Outdoors the sun supplies the ground shadow. A flat contact disk would
   // intersect slopes and paving, flickering as the character walks over them.
   const scenery=environment.getChildMeshes(),actors=[kitek,...npcs.map(n=>n.character)].flatMap(c=>c.root.getChildMeshes());
-  lighting.addShadows([...scenery,...actors],[ground,water,...scenery,...actors]);
+  const shadows=lighting.addShadows([...scenery,...actors],[ground,water,...scenery,...actors]);
+  const stegosaurus=createSeaStegosaurus(scene,solids,meshes=>{for(const mesh of meshes)shadows.addShadowCaster(mesh,false)});
   function syncHarvest(state:SaveState){for(const {id,fruits} of orchard)fruits.forEach((fruit,index)=>fruit.setEnabled(!state.flags[applePickedFlag(id,index)]))}
   let environmentReady=false;
-  function syncEnvironment(state:SaveState){lighting.setNight(!!state.flags[NIGHT_FLAG],!environmentReady);environmentReady=true;gasLanterns.sync(state);gasLanterns.update(lighting.nightAmount)}
+  function syncEnvironment(state:SaveState){lighting.setNight(!!state.flags[NIGHT_FLAG],!environmentReady);environmentReady=true;gasLanterns.sync(state);gasLanterns.update(lighting.nightAmount);stegosaurus.sync(state)}
   function updateEnvironment(dt:number,reducedMotion:boolean){gasLanterns.update(lighting.update(dt,reducedMotion))}
-  return {environment,ground,kitek,npcs,solids,water,ocean,orchard,syncHarvest,lighting,gasLanterns,syncEnvironment,updateEnvironment};
+  return {environment,ground,kitek,npcs,solids,water,ocean,orchard,syncHarvest,lighting,gasLanterns,syncEnvironment,updateEnvironment,stegosaurus};
 }

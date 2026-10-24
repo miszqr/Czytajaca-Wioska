@@ -20,6 +20,7 @@ import {newSave} from '../src/persistence/state';
 import {prepareStorage} from '../src/housing/model';
 import {DEFAULT_CONTENT} from '../src/content/defaults';
 import {CONFIG} from '../src/game/config';
+import {STEGOSAURUS_FLAG} from '../src/game/pond-secret';
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT=true;
 async function settle(){await act(async()=>{await new Promise(r=>setTimeout(r,25))})}
 function button(text:string){const b=Array.from(document.querySelectorAll('button')).find(b=>b.textContent?.trim()===text);expect(b,`button: ${text}`).toBeDefined();return b!}
@@ -31,6 +32,22 @@ async function expectIndependentReading(){
  // R / pad X is now a furniture-only action; it must leave reading unchanged.
  await act(async()=>mock.callbacks.onAction('rotate'));expect(dialog.textContent).toBe(before);
 }
+it('odkrycie stegozaura zapisuje się natychmiast z pozycją, zachowuje jabłka i znika po nowej grze',async()=>{
+ const before=newSave();before.welcomed=true;before.inventory.apple=3;before.flags['met-bruno']=true;
+ const store=new SaveStore();await store.save(before);const container=document.createElement('div');document.body.append(container);let root=createRoot(container);
+ try{
+  await act(async()=>root.render(<App/>));await settle();
+  const snapshot={player:{x:30,z:17,heading:1.2},camera:before.camera,location:'village'};
+  await act(async()=>mock.callbacks.onStegosaurus(snapshot));await settle();
+  const saved=await store.load();expect(saved?.flags[STEGOSAURUS_FLAG]).toBe(true);expect(saved?.flags['met-bruno']).toBe(true);
+  expect(saved?.player).toEqual(snapshot.player);expect(saved?.inventory).toEqual({apple:3});
+  expect(document.querySelector('.secret-notice')?.textContent).toContain('stegozaur');expect(document.querySelector('[role="dialog"]')).toBeNull();
+  await act(async()=>root.unmount());root=createRoot(container);await act(async()=>root.render(<App/>));await settle();
+  expect(mock.sessions.at(-1).state.flags[STEGOSAURUS_FLAG]).toBe(true);expect(document.querySelector('.secret-notice')).toBeNull();
+  await act(async()=>mock.callbacks.onAction('menu'));await click('Zacznij nową grę');await click('Tak, zacznij od nowa');
+  expect((await store.load())?.flags[STEGOSAURUS_FLAG]).toBeUndefined();expect(document.querySelector('.secret-notice')).toBeNull();
+ }finally{await act(async()=>root.unmount());container.remove();await store.close()}
+});
 it('menu zmienia i zapisuje odległość kamery, obsługuje suwak, przyciski i pad',async()=>{
  const before=prepareStorage(newSave(),DEFAULT_CONTENT);before.welcomed=true;before.camera.distance=3.5;before.flags['met-bruno']=true;
  const store=new SaveStore();await store.save(before);const container=document.createElement('div');document.body.append(container);let root=createRoot(container);

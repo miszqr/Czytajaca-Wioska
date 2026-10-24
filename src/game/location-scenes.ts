@@ -7,7 +7,7 @@ import {createVillage} from './world';
 import {createShapes} from './shapes';
 import {createStoryWorld,drawItem} from './story-world';
 
-type LocationWorld=Pick<ReturnType<typeof createVillage>,'kitek'|'npcs'|'solids'>&Partial<Pick<ReturnType<typeof createVillage>,'syncHarvest'|'syncEnvironment'|'updateEnvironment'>>;
+type LocationWorld=Pick<ReturnType<typeof createVillage>,'kitek'|'npcs'|'solids'>&Partial<Pick<ReturnType<typeof createVillage>,'syncHarvest'|'syncEnvironment'|'updateEnvironment'|'stegosaurus'>>;
 export type LocationScene={
  location:Location;
  scene:Scene;
