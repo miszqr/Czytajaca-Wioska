@@ -1,6 +1,6 @@
 {
-  "sourceCommit": "4da60d61a5fe37a13f9489d31548674a2a9d7f4c",
-  "sourceBranch": "feat/story-editor",
-  "release": "story-editor",
+  "sourceCommit": "48c5c14187b0e16455a460615300c47bf017c824",
+  "sourceBranch": "fix/home-exit-camera",
+  "release": "home-exit-camera",
   "date": "2026-10-24"
 }
