@@ -168,3 +168,32 @@ it('minimapa pokazuje zapis, ruch i kierunek Kitka, znika w dialogach oraz w dom
   expect(marker()?.getAttribute('transform')).toBe('translate(18,-4.2) rotate(0)');
  }finally{await act(async()=>root.unmount());container.remove();await store.close()}
 });
+
+it('story editor edits, validates, exports and reloads the world without touching the player save',async()=>{
+ const {DRAFT_KEY}=await import('../src/editor/model');localStorage.removeItem(DRAFT_KEY);history.replaceState(null,'','/?editor=story');
+ const player=new SaveStore(),before=prepareStorage(newSave(),DEFAULT_CONTENT);before.flags['met-bruno']=true;before.inventory.apple=3;await player.save(before);const saved=await player.load();
+ const testStore=new SaveStore('story-editor');await testStore.save(newSave());
+ const container=document.createElement('div');document.body.append(container);let root=createRoot(container);
+ async function text(label:string,value:string){const field=Array.from(document.querySelectorAll('label')).find(l=>l.firstChild?.textContent===label)?.querySelector('input,textarea') as HTMLTextAreaElement|HTMLInputElement;expect(field, label).toBeTruthy();await act(async()=>{Object.getOwnPropertyDescriptor(field instanceof HTMLTextAreaElement?HTMLTextAreaElement.prototype:HTMLInputElement.prototype,'value')!.set!.call(field,value);field.dispatchEvent(new Event('input',{bubbles:true}))})}
+ try{
+  await act(async()=>root.render(<App/>));await settle();
+  for(let i=0;i<40&&!document.querySelector('[data-story-editor]');i++)await settle();
+  expect(document.querySelector('[aria-label="Edytor fabuły"]')).not.toBeNull();expect(document.querySelector('.game-shell')?.hasAttribute('inert')).toBe(true);
+  await text('Tekst (każda linia to osobna wypowiedź)','Cześć z edytora!');
+  await click('Eksport');expect(document.querySelector('.se-export h3')?.textContent).toBe('public/content/story.json');expect(document.querySelector<HTMLTextAreaElement>('.se-export textarea')?.value).toContain('Cześć z edytora!');
+  await click('JSON');await text('Kod JSON','{');expect(button('Zastosuj i testuj').disabled).toBe(true);expect(document.querySelector('.se-status')?.textContent).toContain('niepoprawny JSON');
+  await click('Cofnij');expect(button('Zastosuj i testuj').disabled).toBe(false);
+  const previous=mock.sessions.at(-1);await click('Testuj od początku');expect(previous.disposed).toBe(true);expect(document.querySelector('[aria-label="Edytor fabuły"]')).toBeNull();expect(document.querySelector('.story-editor-launcher')).not.toBeNull();
+  await approach('bruno');expect(document.querySelector('.dialogue-text')?.textContent).toBe('Cześć z edytora!');await click('Rozejrzę się.');
+  expect(await player.load()).toEqual(saved);expect((await testStore.load())?.seen.length).toBeGreaterThan(0);
+  await act(async()=>document.querySelector<HTMLButtonElement>('.story-editor-launcher')!.click());await settle();await click('Zastosuj i testuj');expect(await player.load()).toEqual(saved);
+  await act(async()=>{window.dispatchEvent(new Event('pagehide'))});
+  await act(async()=>root.unmount());root=createRoot(container);await act(async()=>root.render(<App/>));await settle();await click('Eksport');expect(document.querySelector<HTMLTextAreaElement>('.se-export textarea')?.value).toContain('Cześć z edytora!');expect(await player.load()).toEqual(saved);
+ }finally{await act(async()=>root.unmount());container.remove();await player.close();await testStore.close();history.replaceState(null,'','/');localStorage.removeItem(DRAFT_KEY)}
+});
+it('normal game never exposes the story editor or loads its draft',async()=>{
+ history.replaceState(null,'','/');const store=new SaveStore();const before=newSave();before.welcomed=true;await store.save(before);
+ const container=document.createElement('div');document.body.append(container);const root=createRoot(container);
+ try{await act(async()=>root.render(<App/>));await settle();expect(document.querySelector('[data-story-editor]')).toBeNull();expect(document.querySelector('.story-editor-launcher')).toBeNull();await approach('bruno');expect(document.querySelector('.dialogue-text')?.textContent).toContain('Witaj, Kitku!')}
+ finally{await act(async()=>root.unmount());container.remove();await store.close()}
+});
