@@ -1,6 +1,6 @@
 {
-  "sourceCommit": "0b7a622a4d586f4b69e374cb29bf353d6d5b3010",
+  "sourceCommit": "75d6b3fca410d8ea7721796fde899cc4747871b5",
   "sourceBranch": "feat/stegosaurus-secret",
-  "release": "stegosaurus-secret",
-  "date": "2026-10-24"
+  "release": "stegosaurus-bank-fix",
+  "date": "2026-10-25"
 }
