@@ -281,3 +281,17 @@ it('minimapa śledzi ruch przed autozapisem i natychmiast otrzymuje pozycję po 
  expect(onMapPose).toHaveBeenLastCalledWith(outside.player);
  game.dispose();expect(loop.frame).toBeNull();
 });
+
+it('Shift przełącza bieg po puszczeniu, ignoruje powtórzenia i zachowuje tryb po pauzie',()=>{
+ input=new KeyboardInput();expect(input.poll().run).toBe(false);
+ key('ShiftLeft');key('ShiftLeft',false);expect(input.poll().run).toBe(true);
+ window.dispatchEvent(new KeyboardEvent('keydown',{code:'ShiftLeft',repeat:true}));
+ expect(input.poll().run).toBe(true);
+ input.clear();expect(input.poll().run).toBe(true);
+ key('ShiftRight');key('ShiftRight',false);expect(input.poll().run).toBe(false);
+ const field=document.createElement('input');document.body.append(field);
+ field.dispatchEvent(new KeyboardEvent('keydown',{code:'ShiftLeft',bubbles:true}));field.remove();
+ expect(input.poll().run).toBe(false);
+ input.setRun(true);expect(input.poll().run).toBe(true);
+ input.setRun(false);expect(input.poll().run).toBe(false);
+});

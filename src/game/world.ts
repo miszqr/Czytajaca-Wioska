@@ -61,7 +61,8 @@ export function createVillage(scene:Scene,characters:readonly CharacterDefinitio
     for(const y of [.35,.72])obstacle(shape('box','fence-rail','#C5AE80',g,0,y,0,length,.12,.09));
     solids.push({id:'fence',type:'box',x,z,halfX:angle? .12:length/2,halfZ:angle?length/2:.12});
   }
-  fence(-7,7.1,7);fence(-11,3.7,5.5,Math.PI/2);fence(8,-5,5);
+  // Keep the doorway at x=-10 and its approach clear, including collision bounds.
+  fence(-6,7.1,5);fence(-11,3.7,5.5,Math.PI/2);fence(8,-5,5);
   // Leave a walkable gap before the pond bank for the three-lap secret.
   fence(17,9,6,Math.PI/2);
   for(const x of [-7.9,-5.8]){

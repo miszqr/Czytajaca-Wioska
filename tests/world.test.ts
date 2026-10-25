@@ -18,7 +18,9 @@ import {GAS_LANTERNS,NIGHT_FLAG,VILLAGE_LIGHT_LIMIT,lanternLitFlag} from '../src
 it('buduje rzeczywistą scenę Babylon, bezpieczny start, pięć modeli i kolizje',async()=>{
   const engine=new NullEngine(),scene=new Scene(engine),homeScene=new Scene(engine);
   try{
-    const world=createVillage(scene,DEFAULT_CONTENT.characters);const camera=new FreeCamera('test',new Vector3(0,3,-8),scene);scene.activeCamera=camera;camera.setTarget(new Vector3(0,0,0));
+    const world=createVillage(scene,DEFAULT_CONTENT.characters);
+    for(let z=5.5;z<=7;z+=.1)for(const x of [-10.3,-10,-9.7])expect(blocked({x,z},world.solids,.35),`Bruno approach ${x},${z}`).toBe(false);
+    const camera=new FreeCamera('test',new Vector3(0,3,-8),scene);scene.activeCamera=camera;camera.setTarget(new Vector3(0,0,0));
     const road=scene.meshes.find(m=>m.material?.name==='#D7C396')!;expect(road).toBeDefined();const normals=road.getVerticesData(VertexBuffer.NormalKind)!;for(let i=1;i<normals.length;i+=3)expect(normals[i]).toBeGreaterThan(.9);
     // Inspect the final merged scene: ground decorations must receive real
     // shadows without being written back into the shadow map themselves.

@@ -2,12 +2,12 @@ import {deadzone} from './movement';
 export type Action='confirm'|'back'|'menu'|'left'|'right'|'up'|'down'|'rotate'|'hint';
 export type InputFrame={horizontal:number;forward:number;turn:number;characterForward:number;characterControls:boolean;lookX:number;lookY:number;run:boolean;actions:Action[];gamepad:boolean};
 export class Input {
-  private keys=new Set<string>();private actions:Action[]=[];private previous=new Set<string>();private touch={x:0,y:0};private runTouch=false;
+  private keys=new Set<string>();private actions:Action[]=[];private previous=new Set<string>();private touch={x:0,y:0};private runTouch=false;private runKeyboard=false;
   private keydown=(e:KeyboardEvent)=>{
     if(e.target instanceof HTMLElement&&e.target.closest('input,textarea,select,[data-story-editor]'))return;
     if(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code))e.preventDefault();
     this.keys.add(e.code);
-    if(!e.repeat){if(e.code==='KeyE')this.actions.push('confirm');if(e.code==='Escape')this.actions.push('back');if(e.code==='KeyM')this.actions.push('menu');if(e.code==='KeyR')this.actions.push('rotate');const direction=({ArrowLeft:'left',ArrowRight:'right',ArrowUp:'up',ArrowDown:'down'} as const)[e.code as 'ArrowLeft'];if(direction)this.actions.push(direction)}
+    if(!e.repeat){if(e.code==='ShiftLeft'||e.code==='ShiftRight')this.runKeyboard=!this.runKeyboard;if(e.code==='KeyE')this.actions.push('confirm');if(e.code==='Escape')this.actions.push('back');if(e.code==='KeyM')this.actions.push('menu');if(e.code==='KeyR')this.actions.push('rotate');const direction=({ArrowLeft:'left',ArrowRight:'right',ArrowUp:'up',ArrowDown:'down'} as const)[e.code as 'ArrowLeft'];if(direction)this.actions.push(direction)}
   };
   private keyup=(e:KeyboardEvent)=>this.keys.delete(e.code);
   private blur=()=>this.clear();
@@ -32,7 +32,7 @@ export class Input {
       characterForward:Number(keys.has('ArrowUp'))-Number(keys.has('ArrowDown')),
       characterControls:['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].some(key=>keys.has(key)),
       lookX:deadzone(pad?.axes[2]||0),lookY:deadzone(pad?.axes[3]||0),
-      run:keys.has('ShiftLeft')||keys.has('ShiftRight')||this.runTouch||!!pad?.buttons[7]?.pressed||!!pad?.buttons[10]?.pressed,actions,gamepad:!!pad,
+      run:this.runKeyboard||this.runTouch||!!pad?.buttons[7]?.pressed||!!pad?.buttons[10]?.pressed,actions,gamepad:!!pad,
     };
   }
   dispose(){window.removeEventListener('keydown',this.keydown);window.removeEventListener('keyup',this.keyup);window.removeEventListener('blur',this.blur)}
