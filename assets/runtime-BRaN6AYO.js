@@ -1,1 +1,0 @@
-import{n as e}from"./rolldown-runtime-B0fFmPBj.js";function t(e){return class extends e{constructor(){super(...arguments),this.MAINUV1=!1,this.MAINUV2=!1,this.MAINUV3=!1,this.MAINUV4=!1,this.MAINUV5=!1,this.MAINUV6=!1,this.UV1=!1,this.UV2=!1,this.UV3=!1,this.UV4=!1,this.UV5=!1,this.UV6=!1}}}function n(){return(n=e((()=>{})))()}export{n,t};

@@ -1,0 +1,23 @@
+Stegosaurus by Quaternius — Animated Dinosaur Pack (December 2018)
+License: Creative Commons CC0 1.0 Universal (public domain dedication)
+https://creativecommons.org/publicdomain/zero/1.0/
+
+Original creator and pack:
+https://quaternius.com/packs/animateddinosaurs.html
+https://quaternius.itch.io/animated-lowpoly-dinosaurs
+Original model listing, explicitly marked CC0:
+https://poly.pizza/m/eFcNbOlpvl
+
+GLB conversion obtained from the public Quaternius asset mirror:
+https://github.com/mur1ll0/chomp-3d-web
+https://raw.githubusercontent.com/mur1ll0/chomp-3d-web/main/public/models/dinos/Stegossaurus.glb
+The mirror's README credits Quaternius for the models and animations.
+Retrieved: 2026-10-25
+Source GLB SHA-256: a12cff4fd27a0428c3382945d02cd7d65caa1493b8227d587c91ead82cbd0d2d
+
+Changes in Czytająca Wioska:
+- Retained only Idle and Walk clips; repacked referenced binary data.
+- Kept the original geometry, skeleton, and keyframes of those clips.
+- Runtime uses matte ochre materials and scales the model to 9 metres.
+- Preparation script: scripts/prepare-stegosaurus.py
+No code from the mirror project is included.
