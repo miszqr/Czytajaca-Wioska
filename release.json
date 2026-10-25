@@ -1,6 +1,6 @@
 {
-  "sourceCommit": "663835bc603282a2edad8e31150a66662b52953e",
-  "sourceBranch": "feat/stegosaurus-secret",
-  "release": "stegosaurus-quaternius-hidden-counter",
+  "sourceCommit": "08faf2b088cb6a22b988338ef6f2af2958ccf468",
+  "sourceBranch": "fix/bruno-entry-run-toggle",
+  "release": "bruno-entry-run-toggle",
   "date": "2026-10-25"
 }
