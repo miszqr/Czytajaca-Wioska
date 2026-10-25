@@ -21,3 +21,13 @@ Przy jeziorku, z trzema jabłkami przed odkryciem sekretu, widoczne są licznik 
 - Testy sceny wykorzystują NullEngine; nie wykonano oceny wizualnej GPU, zgodnie z AGENTS.md.
 
 Format zapisu i zapisane postępy pozostają zgodne. Po aktualizacji wystarczy odświeżyć grę; nie trzeba zaczynać nowej gry. Niedokończone okrążenia, jak wcześniej, są postępem sesji i trzeba je wykonać ponownie.
+
+## Wdrożenie — 2026-10-25
+
+- Źródła: `feat/stegosaurus-secret`, commit `75d6b3fca410d8ea7721796fde899cc4747871b5`; drzewo `40e91b5d88c1e36e1a6c7133d748f13a28371bf1`, identyczne z przetestowanym lokalnym `c6da7e6`.
+- Wydanie: `gh-pages`, commit `3642efd0aa812367ebc467e4f04b59ec54638363`; drzewo `e400ac2b06255e6767b5a382373e63696db784f8`, identyczne z przygotowanym wydaniem.
+- GitHub Pages: https://github.com/miszqr/Czytajaca-Wioska/actions/runs/40168406217 — completed / success.
+- Gra: https://miszqr.github.io/Czytajaca-Wioska/ — publiczny `release.json` wskazuje `stegosaurus-bank-fix` i powyższy commit źródłowy.
+- Weryfikacja HTTP: 56/56 publicznych plików ma sumy SHA-256 zgodne z lokalnym wydaniem; pominięto znacznik `.nojekyll`.
+
+Publikację wznowiono po ponownej wyraźnej zgodzie użytkownika oraz ustąpieniu limitu systemu zatwierdzania. Źródła i gotowe wydanie zachowano w lokalnych commitach na czas przerwy. Poprzednie wydanie pozostaje w historii gałęzi `gh-pages`; nie zmieniano `main`.
