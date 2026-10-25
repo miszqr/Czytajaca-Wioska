@@ -1,4 +1,10 @@
-import {expect,it} from 'vitest';
+import {expect,it,vi} from 'vitest';
+vi.mock('../src/characters/stegosaurus',async importOriginal=>{
+ const original=await importOriginal<typeof import('../src/characters/stegosaurus')>();
+ const {readFileSync}=await import('node:fs');
+ const bytes=new Uint8Array(readFileSync('public/models/stegosaurus.glb'));
+ return {...original,createStegosaurus:(scene:import('../src/game/babylon').Scene,source?:string|Uint8Array)=>original.createStegosaurus(scene,source??bytes)};
+});
 import {PondSecret,STEGOSAURUS_FLAG,onPondBank} from '../src/game/pond-secret';
 import {ISLAND,POND,pondRadius,shoreDistance,terrainHeight} from '../src/game/island-terrain';
 import {newSave,validateSave} from '../src/persistence/state';
@@ -84,13 +90,15 @@ it('odkrycie przeżywa zapis v3 bez utraty fabuły i jabłek; nowa gra pozwala n
  expect(walk(new PondSecret(),loaded)).toBe(0);expect(walk(new PondSecret(),state())).toBe(1);
 });
 
-it('model ma dorosłe rozmiary, poprawną geometrię i niewielką liczbę ruchomych siatek',()=>{
+it('model Quaterniusa ma dorosłe rozmiary, ciągłą siatkę i autorskie animacje szkieletowe',async()=>{
  const engine=new NullEngine(),scene=new Scene(engine);
  try{
-  const actor=createStegosaurus(scene),meshes=actor.root.getChildMeshes();
+  const actor=createStegosaurus(scene);await actor.ready;
+  expect(actor.root.metadata.model).toBe('quaternius-stegosaurus');
+  const meshes=actor.root.getChildMeshes().filter(mesh=>mesh.getTotalVertices()>0);
   const min=new Vector3(Infinity,Infinity,Infinity),max=new Vector3(-Infinity,-Infinity,-Infinity);
   for(const mesh of meshes){
-   mesh.computeWorldMatrix(true);const bounds=mesh.getBoundingInfo().boundingBox;
+   mesh.computeWorldMatrix(true);mesh.refreshBoundingInfo({applySkeleton:true});const bounds=mesh.getBoundingInfo().boundingBox;
    min.minimizeInPlace(bounds.minimumWorld);max.maximizeInPlace(bounds.maximumWorld);
    for(const kind of [VertexBuffer.PositionKind,VertexBuffer.NormalKind])expect(mesh.getVerticesData(kind)!.every(Number.isFinite)).toBe(true);
    expect(mesh.metadata.cameraObstacle).toBe(true);expect(mesh.isPickable).toBe(true);
@@ -99,17 +107,44 @@ it('model ma dorosłe rozmiary, poprawną geometrię i niewielką liczbę ruchom
   expect(max.y-min.y).toBeGreaterThan(3.7);expect(max.y-min.y).toBeLessThan(4.3);
   expect(min.y).toBeCloseTo(0,1);expect(max.x-min.x).toBeLessThan(2.6);
   expect(meshes.length).toBeLessThan(30);
-  actor.animate(1,true);expect(scene.getTransformNodeByName('stegosaurus-front-leg')!.rotation.x).not.toBe(0);
-  actor.animate(1,true,true);expect(scene.getTransformNodeByName('stegosaurus-front-leg')!.rotation.x).toBe(0);
+  expect(meshes).toHaveLength(3);expect(scene.skeletons).toHaveLength(1);
+  const joint=scene.getTransformNodeByName('FrontUpLeg.R')!;expect(joint).not.toBeNull();
+  actor.animate(0,false,true);const rest=joint.rotationQuaternion!.asArray();
+  actor.animate(.7,true);expect(joint.rotationQuaternion!.asArray()).not.toEqual(rest);
+  actor.animate(1,true,true);expect(joint.rotationQuaternion!.asArray()).toEqual(rest);
+  // Sample the actual deformed mesh, not just the joints: an incorrectly baked
+  // rig can otherwise pass while stretching legs/tail far outside the body.
+  for(const moving of [false,true])for(let frame=0;frame<30;frame++){
+   actor.animate(frame*.1,moving);
+   for(const node of scene.transformNodes)node.computeWorldMatrix(true);
+   for(const skeleton of scene.skeletons)skeleton.prepare(true);
+   const low=new Vector3(Infinity,Infinity,Infinity),high=new Vector3(-Infinity,-Infinity,-Infinity);
+   for(const mesh of meshes){mesh.computeWorldMatrix(true);mesh.refreshBoundingInfo({applySkeleton:true});const b=mesh.getBoundingInfo().boundingBox;low.minimizeInPlace(b.minimumWorld);high.maximizeInPlace(b.maximumWorld)}
+   expect(high.z-low.z).toBeLessThan(10);expect(high.x-low.x).toBeLessThan(3);
+   expect(high.y).toBeLessThan(4.5);expect(low.y).toBeGreaterThan(-.2);
+  }
+  actor.root.dispose();expect(scene.skeletons).toHaveLength(0);expect(scene.animationGroups).toHaveLength(0);
  }finally{scene.dispose();engine.dispose()}
 });
-it('wychodzi spod morza, zatrzymuje się na plaży, pauzuje przy Kitku i odtwarza z zapisu',()=>{
+it('błąd pliku uruchamia model awaryjny; anulowane ładowanie nie odtwarza usuniętego dinozaura',async()=>{
+ const engine=new NullEngine(),scene=new Scene(engine),warning=vi.spyOn(console,'warn').mockImplementation(()=>{});
+ try{
+  const failed=createStegosaurus(scene,new Uint8Array([1,2,3,4]));expect(await failed.ready).toBe(true);
+  expect(failed.root.metadata.model).toBe('procedural-fallback');expect(failed.root.getChildMeshes().length).toBeGreaterThan(0);
+  failed.root.dispose();
+  const cancelled=createStegosaurus(scene);cancelled.root.dispose();expect(await cancelled.ready).toBe(false);
+  expect(scene.meshes).toHaveLength(0);expect(scene.skeletons).toHaveLength(0);
+ }finally{warning.mockRestore();scene.dispose();engine.dispose()}
+});
+it('wychodzi spod morza, zatrzymuje się na plaży, pauzuje przy Kitku i odtwarza z zapisu',async()=>{
  const engine=new NullEngine(),scene=new Scene(engine),solids:Solid[]=[];
  try{
   let shadowMeshes=0;const visitor=createSeaStegosaurus(scene,solids,meshes=>{shadowMeshes+=meshes.length}),s=state();
   visitor.sync(s);expect(visitor.actor).toBeNull();expect(solids).toHaveLength(0);
-  s.flags[STEGOSAURUS_FLAG]=true;visitor.sync(s);expect(visitor.progress).toBe(0);expect(shadowMeshes).toBeGreaterThan(0);
-  for(const mesh of visitor.actor!.root.getChildMeshes()){mesh.computeWorldMatrix(true);expect(mesh.getBoundingInfo().boundingBox.maximumWorld.y).toBeLessThan(ISLAND.seaLevel)}
+  s.flags[STEGOSAURUS_FLAG]=true;visitor.sync(s);
+  visitor.update(.05,{x:0,z:0},false);expect(visitor.progress).toBe(0);expect(solids).toHaveLength(0);
+  await visitor.actor!.ready;expect(visitor.progress).toBe(0);expect(shadowMeshes).toBeGreaterThan(0);
+  for(const mesh of visitor.actor!.root.getChildMeshes().filter(m=>m.getTotalVertices()>0)){mesh.computeWorldMatrix(true);expect(mesh.getBoundingInfo().boundingBox.maximumWorld.y).toBeLessThan(ISLAND.seaLevel)}
   visitor.update(.05,{x:0,z:0},true);expect(visitor.progress).toBe(0);
   for(let i=0;i<240;i++)visitor.update(.05,{x:0,z:0},false);
   const half=visitor.progress;expect(half).toBeCloseTo(.5);
@@ -119,7 +154,7 @@ it('wychodzi spod morza, zatrzymuje się na plaży, pauzuje przy Kitku i odtwarz
   const end=visitor.actor!.root.position;expect(shoreDistance(end.x,end.z)).toBeGreaterThan(4);
   expect(end.y).toBeCloseTo(terrainHeight(end.x,end.z));expect(blocked(end,solids)).toBe(true);
   visitor.sync(s);expect(visitor.progress).toBe(1);expect(solids).toHaveLength(4);
-  const restored=createSeaStegosaurus(scene,[],()=>{});restored.sync(s);expect(restored.progress).toBe(1);
+  const restored=createSeaStegosaurus(scene,[],()=>{});restored.sync(s);await restored.actor!.ready;expect(restored.progress).toBe(1);
   visitor.sync(newSave());expect(visitor.actor).toBeNull();expect(solids).toHaveLength(0);
  }finally{scene.dispose();engine.dispose()}
 });
@@ -143,7 +178,7 @@ function pathBetween(start:Point,end:Point,solids:Solid[]){
  for(let p:Point|null=goal!;p;p=previous.get(key(p))??null)path.unshift(p);
  return path;
 }
-it('sekret da się uruchomić w rzeczywistej wiosce, omijając płoty; stegozaur nie przecina drzew',()=>{
+it('sekret da się uruchomić w rzeczywistej wiosce, omijając płoty; stegozaur nie przecina drzew',async()=>{
  const engine=new NullEngine(),scene=new Scene(engine);
  try{
   const world=createVillage(scene,DEFAULT_CONTENT.characters),s=state();world.syncEnvironment(s);
@@ -156,7 +191,7 @@ it('sekret da się uruchomić w rzeczywistej wiosce, omijając płoty; stegozaur
   expect(closed.x).toBeCloseTo(route[0].x);expect(closed.z).toBeCloseTo(route[0].z);route.push(route[0]);
   const tracker=new PondSecret();let triggered=0;
   for(let lap=0;lap<3;lap++)for(const p of route)if(tracker.update(p,s)){triggered++;s.flags[STEGOSAURUS_FLAG]=true;world.syncEnvironment(s)}
-  expect(triggered).toBe(1);expect(world.stegosaurus.actor).not.toBeNull();
+  expect(triggered).toBe(1);expect(world.stegosaurus.actor).not.toBeNull();await world.stegosaurus.actor!.ready;
   const scenery=world.solids.filter(s=>!s.id.startsWith('stegosaurus-'));
   for(let i=0;i<500;i++){
    world.stegosaurus.update(.05,{x:0,z:0},false);

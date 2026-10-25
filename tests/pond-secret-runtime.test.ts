@@ -10,13 +10,18 @@ vi.mock('../src/game/babylon',async()=>{
   override stopRenderLoop(){loop.frame=null}
  }};
 });
+vi.mock('../src/characters/stegosaurus',async importOriginal=>{
+ const original=await importOriginal<typeof import('../src/characters/stegosaurus')>();
+ const {readFileSync}=await import('node:fs');const bytes=new Uint8Array(readFileSync('public/models/stegosaurus.glb'));
+ return {...original,createStegosaurus:(scene:import('../src/game/babylon').Scene)=>original.createStegosaurus(scene,bytes)};
+});
 import {VillageGame} from '../src/game/runtime';
 import {DEFAULT_CONTENT} from '../src/content/defaults';
 import {newSave} from '../src/persistence/state';
 import {POND,pondRadius} from '../src/game/island-terrain';
 import {STEGOSAURUS_FLAG} from '../src/game/pond-secret';
 
-it('ciągły spacer po suchym brzegu uruchamia sekret przez runtime, autozapis i aktualizację świata',()=>{
+it('ciągły spacer po suchym brzegu uruchamia sekret przez runtime, autozapis i aktualizację świata',async()=>{
  vi.stubGlobal('ResizeObserver',class{observe(){} disconnect(){}});
  vi.stubGlobal('matchMedia',()=>({matches:false}));
  vi.spyOn(document,'hidden','get').mockReturnValue(false);
@@ -49,6 +54,7 @@ it('ciągły spacer po suchym brzegu uruchamia sekret przez runtime, autozapis i
   expect(state.inventory.apple).toBe(3);expect(state.flags[STEGOSAURUS_FLAG]).toBe(true);
   expect(progress.mock.calls.some(([laps])=>laps>1&&laps<2)).toBe(true);
   expect(game.world.stegosaurus?.actor).not.toBeNull();expect(game.world.stegosaurus?.progress).toBeLessThan(.01);
+  await game.world.stegosaurus!.actor!.ready;
   game.moveTouch(0,0);for(let frame=0;frame<500;frame++)loop.frame!();
   expect(game.world.stegosaurus?.progress).toBe(1);expect(found).toHaveBeenCalledTimes(1);
   expect(progress.mock.calls.at(-1)?.[0]).toBeNull();expect(errors).not.toHaveBeenCalled();

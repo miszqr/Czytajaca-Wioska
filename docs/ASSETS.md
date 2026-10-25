@@ -9,7 +9,7 @@
 | Tola i Miluś 3D | Sowa z okularami i królik z torbą; prototypy | Oryginalny kod `characters/models.ts` |
 | Wnętrze i meble | Pokój, szafka, łóżko, stół oraz warianty lamp, krzeseł, dywanów i roślin | Oryginalne bryły w `game/story-world.ts`; 20 typów przedmiotów w danych |
 | Bruno 3D | Prototyp proceduralny: miś, fartuch i kapelusz | Oryginalny kod `characters/models.ts` |
-| Animacje | Zastępcze proceduralne: idle, walk, run, obrót, talk, pick-up, give, celebrate | Kod, bez rigu i klipów glTF |
+| Animacje | Mieszkańcy: proceduralne idle, walk, run, obrót, talk, pick-up, give, celebrate. Stegozaur: szkieletowe Idle / Walk | Kod mieszkańców i klipy glTF Quaterniusa (CC0) |
 | Domy, ogród i staw | Stylizowana geometria prototypowa | Oryginalny kod `game/world.ts` |
 | Dom / sklep Feli | Dopracowana drewniana chatka: bale ze słojami, gontowy dach z wygiętymi okapami, komin, ganek, okiennice, kwietniki i szyld | Proceduralny model `game/fela-house.ts`, inspirowany ilustracją dostarczoną przez użytkownika |
 | Biblioteka Toli | Dom w drzewie: pień z korą i korzeniami, okrągłe okna z książkami, ganek, balkon, gont, latarnie, bluszcz i szyld | Proceduralny model `game/tola-library.ts`; referencja użytkownika `references/tola-library-exterior.png` |
@@ -59,3 +59,13 @@ Eksport do kontroli geometrii: `node scripts/export-fela-house.mjs /tmp/fela-hou
 Model ma 42 436 trójkątów i współdzieli jeden materiał z otoczeniem. Pień, grube konary, korzenie, daszek i podest balkonu osłaniają kamerę; małe zdobienia pozostają dekoracją. Biblioteka nadal stoi w `(0, 23)`, a Tola w `(0, 18.2)`. Jej dialogi i postęp historii pozostają bez zmian. Drzwi, schodki i balkon należą do modelu zewnętrznego; ta zmiana nie dodaje wnętrza biblioteki ani wspinania.
 
 Eksport: `node scripts/export-fela-house.mjs /tmp/tola-library.json 'Biblioteka Toli'`. Render: `python scripts/render-house-preview.py before.json after.json preview.webp 'Biblioteka Toli — dom w drzewie'`. Eksporter przyjmuje opcjonalną nazwę domu, a renderer automatycznie dopasowuje wysokość kadru. Pomiary, testy i ograniczenie kontroli WebGL opisuje [raport](../reports/tola-library-detail.md).
+
+## Stegozaur
+
+Gotowy model Quaterniusa z pakietu Animated Dinosaur Pack, CC0 1.0: https://quaternius.com/packs/animateddinosaurs.html oraz https://poly.pizza/m/eFcNbOlpvl. Plik GLB konwersji pobrano z publicznego repozytorium `mur1ll0/chomp-3d-web`, którego README przypisuje modele i animacje Quaterniusowi. Pełna proweniencja i SHA-256 wejścia: `public/models/stegosaurus.LICENSE.txt`.
+
+Zachowano geometrię i szkielet, pozostawiając tylko klipy Idle i Walk. Model ma 2290 trójkątów, 3 siatki i plik 315600 bajtów. Materiały w grze są matowe, w kolorach ochry, a długość wynosi 9 m. Najniższa stopa jest korygowana do lokalnej płaszczyzny gruntu podczas animacji.
+
+Plik jest dołączony do gry i pobierany z tej samej strony dopiero po odkryciu. Odtworzenie istniejącego zapisu również używa nowego modelu. Przy błędzie pobrania działa poprzedni proceduralny model awaryjny. Ładowanie nie przesuwa animacji wyjścia z morza, a zamknięcie świata podczas ładowania nie odtwarza usuniętych obiektów.
+
+Przygotowanie GLB: `python scripts/prepare-stegosaurus.py input.glb public/models/stegosaurus.glb`. Eksport realnej geometrii po deformacji szkieletu: `node scripts/export-stegosaurus.mjs output.json idle` (lub `walk 0.7`). To kontrola programowa bez WebGL.

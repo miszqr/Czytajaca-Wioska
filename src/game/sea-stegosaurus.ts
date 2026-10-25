@@ -29,7 +29,7 @@ export function createSeaStegosaurus(scene:Scene,solids:Solid[],addShadows:(mesh
  const occupied:Solid[]=[];
  function clearSolids(){for(const solid of occupied){const index=solids.indexOf(solid);if(index>=0)solids.splice(index,1)}occupied.length=0}
  function place(){
-  if(!actor)return;
+  if(!actor?.loaded)return;
   const pose=stegosaurusPose(progress);actor.root.position.set(pose.x,pose.y,pose.z);actor.root.rotation.y=pose.heading;
   // Follow the gentle shoreline slope instead of walking horizontally above it.
   const dx=Math.sin(pose.heading)*1.2,dz=Math.cos(pose.heading)*1.2;
@@ -38,12 +38,15 @@ export function createSeaStegosaurus(scene:Scene,solids:Solid[],addShadows:(mesh
  }
  function sync(state:SaveState){
   if(state.flags[STEGOSAURUS_FLAG]){
-   if(!actor){actor=createStegosaurus(scene);progress=initialized?0:1;addShadows(actor.root.getChildMeshes());place()}
+   if(!actor){
+    const created=createStegosaurus(scene);actor=created;progress=initialized?0:1;
+    void created.ready.then(loaded=>{if(loaded&&actor===created&&!scene.isDisposed){addShadows(created.root.getChildMeshes());place()}});
+   }
   }else if(actor){clearSolids();actor.root.dispose();actor=null;progress=0;time=0}
   initialized=true;
  }
  function update(dt:number,player:Point,paused:boolean,reducedMotion=false){
-  if(!actor||paused||!Number.isFinite(dt)||dt<=0)return;
+  if(!actor?.loaded||paused||!Number.isFinite(dt)||dt<=0)return;
   const step=Math.min(dt,.05);time+=step;
   let moving=false;
   if(progress<1){

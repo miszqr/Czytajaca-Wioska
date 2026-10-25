@@ -38,11 +38,7 @@ it('odkrycie stegozaura zapisuje się natychmiast z pozycją, zachowuje jabłka 
  try{
   await act(async()=>root.render(<App/>));await settle();
   expect(document.querySelector('.pond-progress')).toBeNull();
-  await act(async()=>mock.callbacks.onPondProgress(1.4));
-  expect(document.querySelector('.pond-progress')?.textContent).toContain('1 / 3');
-  expect(document.querySelector('progress')?.value).toBe(1.4);
-  await act(async()=>mock.callbacks.onPondProgress(null));expect(document.querySelector('.pond-progress')).toBeNull();
-  await act(async()=>mock.callbacks.onPondProgress(2.9));
+  expect(mock.callbacks.onPondProgress).toBeUndefined();
   const snapshot={player:{x:30,z:17,heading:1.2},camera:before.camera,location:'village'};
   await act(async()=>mock.callbacks.onStegosaurus(snapshot));await settle();
   const saved=await store.load();expect(saved?.flags[STEGOSAURUS_FLAG]).toBe(true);expect(saved?.flags['met-bruno']).toBe(true);

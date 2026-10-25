@@ -16,7 +16,7 @@ import {QuestHint} from './QuestHint';
 import {NightSettings} from './NightSettings';
 import {NIGHT_FLAG} from '../game/lantern-layout';
 import {MiniMap} from './MiniMap';
-import {STEGOSAURUS_FLAG,SECRET_LAPS} from '../game/pond-secret';
+import {STEGOSAURUS_FLAG} from '../game/pond-secret';
 const StoryEditor=lazy(()=>import('../editor/StoryEditor'));
 type Overlay='welcome'|'dialogue'|'journal'|'document'|'menu'|'new-game'|'inventory'|'housing'|null;
 export function App(){
@@ -28,7 +28,6 @@ export function App(){
  const [saveMode,setSaveMode]=useState<'indexeddb'|'localStorage'|'memory'>('indexeddb'),[pad,setPad]=useState(false);
  const [session,setSession]=useState(0);
  const [secretNotice,setSecretNotice]=useState(false);
- const [pondProgress,setPondProgress]=useState<number|null>(null);
  const [mapPosition,setMapPosition]=useState<PlayerPose|null>(null);
  const [near,setNear]=useState<NearInfo>({targetId:null,label:'',near:false,distance:99,x:0,y:0,visible:false});
  const housingActions=useRef<((a:Action)=>void)|null>(null),[housingItem,setHousingItem]=useState<string|undefined>();
@@ -36,9 +35,9 @@ export function App(){
  const actions=useRef<(a:Action)=>void>(()=>{});
  const update=useCallback((change:(s:SaveState)=>SaveState)=>{const next=change(stateRef.current);stateRef.current=next;setState(next);game.current?.syncState(next);void store.save(next).then(()=>setSaveMode(store.mode));return next},[store]);
  useEffect(()=>{let alive=true;void Promise.all([loadContent(),store.load()]).then(([pack,saved])=>{if(!alive)return;const initial=prepareStorage(saved??newSave(),pack);stateRef.current=initial;setState(initial);setSaveMode(store.mode);setOverlay(initial.welcomed?null:'welcome');setBaseContent(pack);setContent(pack)}).catch(error=>{if(alive)setError(error instanceof Error?error.message:'Nie udało się wczytać wioski.')});return()=>{alive=false}},[store]);
- useEffect(()=>{if(!content||!canvas.current)return;try{game.current=new VillageGame(canvas.current,stateRef.current,{onReady:()=>setReady(true),onError:()=>{setError('Nie udało się wyświetlić świata 3D. Sprawdź obsługę WebGL i odśwież stronę.');setReady(false)},onNear:setNear,onMapPose:setMapPosition,onPondProgress:setPondProgress,onGamepad:setPad,onAction:a=>actions.current(a),onSave:snapshot=>update(s=>({...s,...snapshot})),onStegosaurus:snapshot=>{update(s=>({...s,...snapshot,flags:{...s.flags,[STEGOSAURUS_FLAG]:true}}));setSecretNotice(true)}},content)}catch(error){console.error('Village initialization failed:',error);setError(error instanceof Error?error.message:'Nie udało się uruchomić grafiki 3D.')}return()=>{game.current?.dispose();game.current=null}},[content,update,session]);
+ useEffect(()=>{if(!content||!canvas.current)return;try{game.current=new VillageGame(canvas.current,stateRef.current,{onReady:()=>setReady(true),onError:()=>{setError('Nie udało się wyświetlić świata 3D. Sprawdź obsługę WebGL i odśwież stronę.');setReady(false)},onNear:setNear,onMapPose:setMapPosition,onGamepad:setPad,onAction:a=>actions.current(a),onSave:snapshot=>update(s=>({...s,...snapshot})),onStegosaurus:snapshot=>{update(s=>({...s,...snapshot,flags:{...s.flags,[STEGOSAURUS_FLAG]:true}}));setSecretNotice(true)}},content)}catch(error){console.error('Village initialization failed:',error);setError(error instanceof Error?error.message:'Nie udało się uruchomić grafiki 3D.')}return()=>{game.current?.dispose();game.current=null}},[content,update,session]);
  useEffect(()=>{if(!secretNotice)return;const timer=window.setTimeout(()=>setSecretNotice(false),18000);return()=>window.clearTimeout(timer)},[secretNotice]);
- useEffect(()=>{setSecretNotice(false);setPondProgress(null)},[session,content]);
+ useEffect(()=>{setSecretNotice(false)},[session,content]);
  useEffect(()=>{game.current?.editHome(overlay==='housing')},[overlay,ready]);
  useEffect(()=>{game.current?.setPaused(!ready||overlay!==null||!!error||editorOpen)},[overlay,ready,error,editorOpen]);
  const scene=content?currentScene(content,state):undefined,doc=content?.story.documents.find(d=>d.id===documentId),speaker=content?.characters.find(c=>c.id===node?.speaker);
@@ -117,11 +116,6 @@ export function App(){
    <button className="icon-button camera-button" aria-label="Ustaw kamerę za Kitkiem" onClick={()=>game.current?.recenter()}><Icon name="camera" size={23}/></button>
    {state.location==='home'&&!state.flags.hosting&&<button className="home-edit-button secondary" onClick={()=>{setHousingItem(undefined);setOverlay('housing')}}>Urządź dom</button>}
    <TouchControls move={(x,y)=>game.current?.moveTouch(x,y)} run={value=>game.current?.runTouch(value)} interact={interact} near={near.near}/>
-   {showMap&&pondProgress!==null&&state.inventory.apple===3&&!state.flags[STEGOSAURUS_FLAG]&&<div className="pond-progress">
-    <span role="status">Okrążenia jeziorka: {Math.floor(pondProgress+1e-9)} / {SECRET_LAPS}</span>
-    <progress value={pondProgress} max={SECRET_LAPS} aria-label="Postęp okrążeń jeziorka"/>
-    <small>Trzymaj wodę po lewej stronie.</small>
-   </div>}
    {showMap&&<MiniMap player={mapPosition??state.player} night={!!state.flags[NIGHT_FLAG]}/>}
    {secretNotice&&state.location==='village'&&<div className="secret-notice" role="status"><strong>Spójrz na morze za jeziorkiem!</strong><span>Z wody wychodzi stegozaur.</span></div>}
   </>}

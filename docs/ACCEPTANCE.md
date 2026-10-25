@@ -14,7 +14,7 @@ NullEngine i jsdom nie potwierdzają obrazu na GPU ani działania fizycznego urz
 
 ## Sekret stegozaura
 
-- [ ] Zbierz 3 jabłka i obejdź jeziorko trzy razy z wodą po lewej. Przy płocie koło domu Kitka przejdź przez nowy prześwit. Idź również tuż przy widocznej wodzie: licznik powinien rosnąć i pokazać 1/3 oraz 2/3 bez zerowania na suchym brzegu. Dinozaur nie powinien pojawić się przed końcem trzeciego okrążenia.
+- [ ] Zbierz 3 jabłka i obejdź jeziorko trzy razy z wodą po lewej. Przy płocie koło domu Kitka przejdź przez nowy prześwit. Idź również tuż przy widocznej wodzie: okrążenia mają zaliczać się bez zerowania na suchym brzegu. Licznik i pasek postępu mają być niewidoczne. Dinozaur nie powinien pojawić się przed końcem trzeciego okrążenia.
 - [ ] Sprawdź wyjście z morza po wschodniej stronie jeziorka: stegozaur stopniowo wynurza się i dochodzi do plaży, bez nagłego przeskoku i przenikania drzew.
 - [ ] Podejdź do zwierzęcia. Nie można wejść w jego tułów; jeśli Kitek stanie na drodze, stegozaur czeka, aż odejdzie.
 - [ ] Przy 2 lub 4 jabłkach oraz okrążeniach zgodnych z ruchem wskazówek zegara sekret się nie uruchamia.
