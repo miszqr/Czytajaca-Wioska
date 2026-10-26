@@ -9,9 +9,10 @@ import {matches,findNode} from '../story/engine';
 import {advanceNpc} from './npc';
 import {Input,type Action} from './input';
 import type {SaveState,PlayerPose,CameraPose} from '../persistence/state';
+import {PondSecret} from './pond-secret';
 export type WorldSnapshot={player:PlayerPose;camera:CameraPose;location:SaveState['location']};
 export type NearInfo={targetId:string|null;label:string;near:boolean;distance:number;x:number;y:number;visible:boolean};
-export type RuntimeCallbacks={onReady:()=>void;onError:(error:unknown)=>void;onNear:(info:NearInfo)=>void;onSave:(snapshot:WorldSnapshot)=>void;onAction:(action:Action)=>void;onGamepad:(connected:boolean)=>void};
+export type RuntimeCallbacks={onReady:()=>void;onError:(error:unknown)=>void;onNear:(info:NearInfo)=>void;onMapPose?:(pose:PlayerPose)=>void;onPondProgress?:(laps:number|null)=>void;onSave:(snapshot:WorldSnapshot)=>void;onStegosaurus?:(snapshot:WorldSnapshot)=>void;onAction:(action:Action)=>void;onGamepad:(connected:boolean)=>void};
 export class VillageGame {
   readonly engine:Engine;
   private locations:LocationScenes;private view:LocationScene;
@@ -23,6 +24,7 @@ export class VillageGame {
   private pointer:{id:number;x:number;y:number}|null=null;private observer:ResizeObserver;private pad=false;
   private followHeading=false;private gesture:'idle'|'pick-up'|'give'='idle';private gestureUntil=0;private talkingNpc='';private editing=false;private guestSpots:Record<string,{x:number;z:number}>={};private guestKey='';private state:SaveState;
   private reduced=window.matchMedia('(prefers-reduced-motion: reduce)');
+  private pondSecret=new PondSecret();
   constructor(private canvas:HTMLCanvasElement,state:SaveState,private callbacks:RuntimeCallbacks,private content:ContentPack){
     this.state=state;
     try{this.engine=new Engine(canvas,true,{powerPreference:'low-power',preserveDrawingBuffer:false,stencil:true},false)}catch(e){this.input.dispose();throw e}
@@ -34,6 +36,7 @@ export class VillageGame {
     this.pose={...state.player};if(blocked(this.pose,this.solids))this.pose=state.location==='home'?{x:0,z:-2.5,heading:0}:{...CONFIG.spawn};
     this.cameraPose={...state.camera};this.cameraLength=state.camera.distance;
     this.placePlayer();this.updateCamera(1);
+    this.callbacks.onMapPose?.({...this.pose});
     this.observer=new ResizeObserver(()=>{this.engine.resize();if(this.editing)this.updateCamera(1)});this.observer.observe(canvas);this.engine.resize();
     canvas.addEventListener('pointerdown',this.down);canvas.addEventListener('pointermove',this.move);canvas.addEventListener('pointerup',this.up);canvas.addEventListener('pointercancel',this.up);canvas.addEventListener('wheel',this.wheel,{passive:false});canvas.addEventListener('contextmenu',this.context);canvas.addEventListener('webglcontextlost',this.contextLost);
     window.addEventListener('blur',this.blur);window.addEventListener('pagehide',this.flush);document.addEventListener('visibilitychange',this.visibility);
@@ -99,6 +102,7 @@ export class VillageGame {
           this.cameraPose.yaw+=offset*(1-Math.exp(-CONFIG.cameraFollowSpeed*dt));
         }
         this.pose.x=next.x;this.pose.z=next.z;this.placePlayer();this.world.kitek.animate(this.time,actualSpeed,this.time<this.celebrateUntil,this.reduced.matches,this.time<this.gestureUntil?this.gesture:'idle');this.updateCamera(dt);
+        if(this.pondSecret.update(this.pose,this.state))this.callbacks.onStegosaurus?.(this.snapshot());
         this.saveTime+=dt;if(this.saveTime>2){this.saveTime=0;this.flush()}
       }else this.world.kitek.animate(this.time,0,this.time<this.celebrateUntil,this.reduced.matches,this.time<this.gestureUntil?this.gesture:'idle');
       for(const npc of this.world.npcs){
@@ -110,8 +114,14 @@ export class VillageGame {
         npc.character.root.position.set(motion.x,terrainHeight(motion.x,motion.z),motion.z);npc.character.root.rotation.y=motion.heading;
         npc.character.animate(this.time+.5,speed,false,this.reduced.matches,this.paused&&this.talkingNpc===npc.definition.id?'talk':'idle');
       }
+      // Twilight also progresses while the menu is open and movement is paused.
+      this.world.updateEnvironment?.(dt,this.reduced.matches);
+      this.world.stegosaurus?.update(dt,this.pose,this.paused,this.reduced.matches);
       this.scene.render();
       this.infoTime+=dt;if(this.infoTime>.12){
+        // A small HUD update follows movement independently of the save timer.
+        this.callbacks.onMapPose?.({...this.pose});
+        this.callbacks.onPondProgress?.(this.pondSecret.progress);
         this.infoTime=0;const target=this.nearestTarget();
         if(target){const distance=Math.hypot(this.pose.x-target.x,this.pose.z-target.z),point=new Vector3(target.x,this.height(target.x,target.z)+1.7,target.z),p=Vector3.Project(point,Matrix.Identity(),this.camera.getTransformationMatrix(),new Viewport(0,0,this.canvas.clientWidth,this.canvas.clientHeight));this.callbacks.onNear({targetId:target.id,label:target.label,near:distance<=CONFIG.interactionRadius,distance,x:p.x,y:p.y,visible:p.z>0&&p.z<1&&p.x>0&&p.x<this.canvas.clientWidth&&p.y>0&&p.y<this.canvas.clientHeight})}
         else this.callbacks.onNear({targetId:null,label:'',near:false,distance:99,x:0,y:0,visible:false});
@@ -142,12 +152,14 @@ export class VillageGame {
       this.input.clear();this.pointer=null;this.vx=this.vz=0;this.followHeading=false;this.talkingNpc='';
     }
     this.state=state;this.view=nextView;
+    this.pondSecret.sync(state);
     const guestKey=JSON.stringify([state.flags.hosting,state.furniture]);
     if(guestKey!==this.guestKey){this.guestKey=guestKey;this.guestSpots=guestPositions(state,this.content)}
     this.syncActors();
     if(travel){
       this.pose={...state.player};this.cameraPose={...state.camera};this.cameraLength=this.cameraPose.distance;
       this.placePlayer();this.updateCamera(1);this.infoTime=1;
+      this.callbacks.onMapPose?.({...this.pose});
       this.callbacks.onNear({targetId:null,label:'',near:false,distance:99,x:0,y:0,visible:false});
     }
   }
@@ -160,7 +172,14 @@ export class VillageGame {
   celebrate(){this.celebrateUntil=this.time+2.5}
   moveTouch(x:number,y:number){this.input.setTouch(x,y)}
   runTouch(value:boolean){this.input.setRun(value)}
-  recenter(){this.cameraPose.yaw=this.pose.heading;this.cameraPose.pitch=.3;this.cameraPose.distance=CONFIG.cameraDistance}
+  setCameraDistance(distance:number){
+    if(!Number.isFinite(distance))return;
+    this.cameraPose.distance=Math.max(CONFIG.cameraMinDistance,Math.min(CONFIG.cameraMaxDistance,distance));
+    // Update even while the menu pauses movement; save the requested distance,
+    // not the temporary shorter distance imposed by walls or trees.
+    this.updateCamera(1);this.flush();
+  }
+  recenter(){this.cameraPose.yaw=this.pose.heading;this.cameraPose.pitch=.3;this.updateCamera(1);this.flush()}
   dispose(){
     if(this.disposed)return;this.flush();this.disposed=true;this.engine.stopRenderLoop(this.frame);this.input.dispose();this.observer.disconnect();
     this.canvas.removeEventListener('pointerdown',this.down);this.canvas.removeEventListener('pointermove',this.move);this.canvas.removeEventListener('pointerup',this.up);this.canvas.removeEventListener('pointercancel',this.up);this.canvas.removeEventListener('wheel',this.wheel);this.canvas.removeEventListener('contextmenu',this.context);this.canvas.removeEventListener('webglcontextlost',this.contextLost);

@@ -20,7 +20,7 @@ export function HousingEditor({state,content,initialItem,onChange,onClose,onPrev
  function take(itemId:string){const result=takeFromStorage(state,itemId);if(result.message){setMessage(result.message);return}onChange(result.state);select(itemId)}
  function store(itemId:string,id?:string){const result=storeDecoration(state,content,itemId,id);setMessage(result.message);if(!result.message)onChange(result.state)}
  actions.current=action=>{
-  if(draft){if(action==='left')move(-.5,0);else if(action==='right')move(.5,0);else if(action==='up')move(0,.5);else if(action==='down')move(0,-.5);else if(action==='listen')rotate();else if(action==='confirm')commit();else if(action==='back')back();return}
+  if(draft){if(action==='left')move(-.5,0);else if(action==='right')move(.5,0);else if(action==='up')move(0,.5);else if(action==='down')move(0,-.5);else if(action==='rotate')rotate();else if(action==='confirm')commit();else if(action==='back')back();return}
   if(action==='back'){back();return}const buttons=Array.from(document.querySelectorAll<HTMLButtonElement>('[role="dialog"] button:not([disabled])'));if(action==='confirm'){const focus=document.activeElement as HTMLButtonElement;if(buttons.includes(focus))focus.click();else buttons[0]?.focus()}else if(['left','right','up','down'].includes(action)){const i=buttons.indexOf(document.activeElement as HTMLButtonElement),d=action==='left'||action==='up'?-1:1;buttons[(i+d+buttons.length)%buttons.length]?.focus()}
  };
  return <div className="housing-wrap"><Dialog label={draft?`Ustaw: ${name(draft.itemId)}`:'Urządzanie domu'} onBack={back}>

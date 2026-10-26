@@ -45,7 +45,21 @@ P1: po liście odwiedź Felę. Przynieś lampę do domu i ustaw przy łóżku w 
 
 P2: przycisk „Urządź dom” działa także przed ukończeniem historii. Wybierz mebel ze schowka lub plecaka, przesuń podgląd, obróć i postaw. Meble można przenosić i chować. Gości można pożegnać dzwonkiem i zaprosić ponownie. Nie ma końcowego ekranu blokującego świat.
 
+Na dwóch jabłoniach, przy placu i przy drodze do domu, rośnie po sześć czerwonych jabłek. Podejdź do drzewa, wybierz „Zbierz jabłko”, przeczytaj opis i wybierz „Zrywam jabłko.”. Każdy owoc znika z gałęzi i zwiększa licznik jabłek w jednym miejscu plecaka. Pełny plecak bez stosu jabłek pozostawia owoc na drzewie. Zbiory zapisują się wraz z grą; wejście do domu i odświeżenie strony nie odnawiają owoców. Nowa gra przywraca wszystkie jabłka.
+
+Przy ścieżkach stoi osiem latarni gazowych. Podejdź do wybranej latarni, użyj „Zapal latarnię” (E / A na padzie / przycisk działania), przeczytaj krótki opis i wybierz „Zapalam latarnię.”. Każda zapala się osobno i oświetla otoczenie ciepłym światłem. W menu przełącznik **Zapada noc** płynnie przyciemnia wioskę, niebo i morze; wyłączenie przywraca dzień. Ustawienie oraz zapalone latarnie zapisują się razem z postępem. Nowa gra rozpoczyna się za dnia ze zgaszonymi latarniami.
+
+## Sekret jeziorka
+
+Zbierz **dokładnie 3 jabłka** i z nimi w plecaku obejdź jeziorko **trzy pełne razy przeciwnie do ruchu wskazówek zegara** (patrząc z góry; woda po lewej stronie podczas marszu do przodu). Możesz zacząć w dowolnym miejscu brzegu. Omijaj drzewa i przejdź przez prześwit między płotem przy domu Kitka a jeziorkiem. Cofanie odejmuje postęp; stanie i obracanie się nie liczą się. Przejście przez głębszą wodę, odejście daleko od jeziorka, wejście do domu, zmiana liczby jabłek i ponowne wczytanie gry przerywają rozpoczętą serię. Menu i dialogi tylko ją pauzują. Okrążenia liczą się w tle, bez licznika ani paska w interfejsie. Liczy się rzeczywisty suchy brzeg; niewielkie wejście w płyciznę nie zeruje serii.
+
+Po trzecim okrążeniu pojawia się krótka wskazówka „Spójrz na morze za jeziorkiem!”. Od wschodniej strony wyspy z morza wychodzi stegozaur: gotowy model Quaterniusa (CC0) o długości około 9 m, z płytami grzbietowymi, kolcami ogona oraz szkieletowymi animacjami chodu i odpoczynku. Wyjście trwa około 24 sekund; zwierzę zatrzymuje się przed Kitkiem oraz podczas pauzy, po czym pozostaje na plaży. Jabłka nie są zużywane. Odkrycie zapisuje się natychmiast pod flagą `stegosaurus-awakened`; po odświeżeniu stegozaur stoi już na plaży. Nowa gra usuwa odkrycie i pozwala powtórzyć sekret. Edytor fabuły używa własnego zapisu także dla tego zdarzenia.
+
+Skala dorosłego modelu: [Natural History Museum — Stegosaurus (9 m)](https://www.nhm.ac.uk/discover/dino-directory/Stegosaurus.html). Model jest własną geometrią proceduralną, bez pobieranych tekstur i zewnętrznych modeli.
+
 ## Sterowanie
+
+W prawym dolnym rogu jest minimapa wyspy: pokazuje ścieżki, domki i staw. Pomarańczowa strzałka wskazuje bieżącą pozycję i kierunek Kitka. Na telefonie mapa jest domyślnie zwinięta do ikonki nad przyciskami działania. Dotknięcie ikonki rozwija mapę; ponowne dotknięcie lub dotknięcie poza mapą ją chowa. Na komputerze mapa jest stale widoczna. We wnętrzu domu i podczas dialogów jest ukryta.
 
 | Czynność | Klawiatura / mysz | Pad | Dotyk |
 | --- | --- | --- | --- |
@@ -58,9 +72,9 @@ P2: przycisk „Urządź dom” działa także przed ukończeniem historii. Wybi
 | Powrót | Esc | B | Przycisk powrotu |
 | Menu | M / Esc | Start | Przycisk menu |
 | Edytor: miejsce / obrót / postaw | Strzałki / R / E | D-pad / X / A | Przyciski edytora |
-| Odsłuch / dziennik | Przyciski na ekranie | X / Y | Przyciski na ekranie |
+| Dziennik | Przycisk na ekranie | Y | Przycisk na ekranie |
 
-Dialog zatrzymuje kamerę i ruch. Wypowiedzi przewija się ręcznie; nie ma automatycznego odsłuchu ani presji czasu. Dziennik przypomina cel, bez rysowania dokładnej trasy.
+Dialog zatrzymuje kamerę i ruch. Dziecko samodzielnie czyta tekst i ręcznie przewija wypowiedzi, bez presji czasu. Gra nie odczytuje tekstu na głos. Dziennik przypomina cel, bez rysowania dokładnej trasy.
 
 ## Treści i stan gry
 

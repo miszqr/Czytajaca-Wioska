@@ -1,8 +1,10 @@
 import {CONFIG} from './config';
+import {onDryLand} from './island-terrain';
+export {terrainHeight} from './island-terrain';
 export type Point={x:number;z:number};
 export type Solid=({type:'circle';x:number;z:number;radius:number}|{type:'box';x:number;z:number;halfX:number;halfZ:number}) & {id:string};
 export function blocked(p:Point,solids:readonly Solid[],radius:number=CONFIG.playerRadius){
-  if(Math.abs(p.x)>CONFIG.worldHalfSize-radius||Math.abs(p.z)>CONFIG.worldHalfSize-radius)return true;
+  if(!onDryLand(p.x,p.z,radius))return true;
   return solids.some(s=>s.type==='circle'?Math.hypot(p.x-s.x,p.z-s.z)<s.radius+radius:Math.hypot(Math.max(Math.abs(p.x-s.x)-s.halfX,0),Math.max(Math.abs(p.z-s.z)-s.halfZ,0))<radius);
 }
 export function moveWithSlide(p:Point,delta:Point,solids:readonly Solid[],radius:number=CONFIG.playerRadius):Point{
@@ -20,4 +22,3 @@ export function movementVector(horizontal:number,forward:number,yaw:number):Poin
 }
 export function turnTowards(current:number,target:number,maxDelta:number){const delta=Math.atan2(Math.sin(target-current),Math.cos(target-current));return current+Math.max(-maxDelta,Math.min(maxDelta,delta))}
 export function deadzone(value:number,threshold=.18){return Math.abs(value)<threshold?0:Math.sign(value)*(Math.abs(value)-threshold)/(1-threshold)}
-export function terrainHeight(x:number,z:number){const edge=Math.min(1,Math.max(0,(Math.hypot(x,z)-12)/18));return edge*(.4*Math.sin(x*.11)*Math.cos(z*.09)+.15*Math.sin(z*.2))}

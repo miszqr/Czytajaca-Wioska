@@ -16,9 +16,11 @@ import {VillageGame} from '../src/game/runtime';
 import {newSave,validateSave} from '../src/persistence/state';
 import type {SaveState} from '../src/persistence/state';
 import {Input as KeyboardInput} from '../src/game/input';
-import {Vector3} from '../src/game/babylon';
+import {Ray,Vector3} from '../src/game/babylon';
 import {CONFIG} from '../src/game/config';
 import {choose,findNode} from '../src/story/engine';
+import {POND,terrainHeight} from '../src/game/island-terrain';
+import {GAS_LANTERNS,NIGHT_FLAG,lanternLitFlag} from '../src/game/lantern-layout';
 
 let game:VillageGame|undefined,input:Input|undefined;
 const errors=vi.fn();
@@ -27,12 +29,13 @@ function frames(count=1){for(let i=0;i<count;i++)loop.frame!();expect(errors).no
 function start(state:SaveState=newSave()){
   const canvas=document.createElement('canvas');canvas.width=800;canvas.height=600;
   canvas.setPointerCapture=vi.fn();
-  game=new VillageGame(canvas,state,{onReady:vi.fn(),onError:errors,onNear:vi.fn(),onSave:vi.fn(),onAction:vi.fn(),onGamepad:vi.fn()},DEFAULT_CONTENT);
+  const onMapPose=vi.fn(),onSave=vi.fn();
+  game=new VillageGame(canvas,state,{onReady:vi.fn(),onError:errors,onNear:vi.fn(),onMapPose,onSave,onAction:vi.fn(),onGamepad:vi.fn()},DEFAULT_CONTENT);
   // Exercise the real input, frame loop, collision rays and camera transforms;
   // only GPU rendering is skipped in this deterministic control test.
   vi.spyOn(game.scene,'render').mockImplementation(()=>{});
   game.setPaused(false);
-  return {game,canvas};
+  return {game,canvas,onMapPose,onSave};
 }
 function angleDifference(a:number,b:number){return Math.atan2(Math.sin(a-b),Math.cos(a-b))}
 beforeEach(()=>{
@@ -131,6 +134,41 @@ it('wnętrze w osobnej scenie nie przybliża kamery na placu, ale ściany dział
  expect(game.world.kitek.root.isEnabled()).toBe(true);
 });
 
+it('ustawienie kamery działa w pauzie, zachowuje odległość przy centrowaniu i kolizjach',()=>{
+ const saved=newSave(),{game}=start(saved);game.setPaused(true);
+ const before=game.snapshot(),distance=()=>Vector3.Distance(game.camera.position,game.world.kitek.root.position.add(new Vector3(0,CONFIG.cameraTargetHeight,0)));
+ game.setCameraDistance(8);expect(game.snapshot().camera.distance).toBe(8);expect(distance()).toBeCloseTo(8,2);
+ expect(game.snapshot().player).toEqual(before.player);expect(game.snapshot().camera.yaw).toBe(before.camera.yaw);
+ game.recenter();expect(game.snapshot().camera.distance).toBe(8);
+ game.setCameraDistance(99);expect(game.snapshot().camera.distance).toBe(CONFIG.cameraMaxDistance);
+ game.setCameraDistance(-1);expect(game.snapshot().camera.distance).toBe(CONFIG.cameraMinDistance);
+ game.setCameraDistance(NaN);expect(game.snapshot().camera.distance).toBe(CONFIG.cameraMinDistance);
+ game.setCameraDistance(8);
+ const inside={...saved,location:'home' as const,player:{x:0,z:-3,heading:0},camera:game.snapshot().camera};game.syncState(inside);
+ expect(distance()).toBeLessThan(1.2);expect(game.snapshot().camera.distance).toBe(8);
+ game.syncState({...saved,camera:game.snapshot().camera});expect(distance()).toBeCloseTo(8,2);
+ // Save validation accepts the extended range without changing the save format.
+ expect(validateSave({...saved,...game.snapshot()})?.camera.distance).toBe(8);
+});
+
+it('Kitek wchodzi do stawu po dnie, wznawia zapis w wodzie i wychodzi na brzeg',()=>{
+ const saved=newSave();saved.player={x:POND.x,z:POND.z+POND.radiusZ,heading:Math.PI};saved.camera.yaw=Math.PI;
+ let {game}=start(saved);
+ expect(game.world.kitek.root.position.y).toBeGreaterThan(POND.waterLevel);
+ key('ArrowUp');key('ShiftLeft');frames(100);key('ArrowUp',false);key('ShiftLeft',false);
+ const middle=game.snapshot(),position=game.world.kitek.root.position;
+ expect(Math.abs(middle.player.z-POND.z)).toBeLessThan(.6);
+ expect(position.y).toBeCloseTo(terrainHeight(position.x,position.z));
+ expect(position.y).toBeLessThan(POND.waterLevel-.45);expect(game.camera.position.y).toBeGreaterThan(POND.waterLevel);
+ const restored=validateSave(JSON.parse(JSON.stringify({...saved,...middle})))!;
+ game.dispose();({game}=start(restored));
+ expect(game.snapshot().player).toEqual(middle.player);
+ expect(game.world.kitek.root.position.y).toBeLessThan(POND.waterLevel-.45);
+ key('ArrowDown');key('ShiftLeft');frames(105);key('ArrowDown',false);key('ShiftLeft',false);
+ expect(game.snapshot().player.z).toBeGreaterThan(POND.z+POND.radiusZ);
+ expect(game.world.kitek.root.position.y).toBeGreaterThan(POND.waterLevel);
+},15000);
+
 it('drzwi przełączają scenę i kamerę, zachowują fabułę oraz właściwe punkty wejścia',()=>{
  let state=newSave();const {game}=start(state),village=game.scene,villageCamera=game.camera,villageKitek=game.world.kitek;
  expect(game.engine.scenes).toHaveLength(1);
@@ -146,6 +184,41 @@ it('drzwi przełączają scenę i kamerę, zachowują fabułę oraz właściwe p
  expect(game.snapshot().player).toEqual({x:18,z:4.2,heading:3.14159});expect(state.read).toEqual(['fela-letter']);
  act('home-door');expect(game.scene).toBe(home);expect(game.camera).toBe(homeCamera);expect(game.engine.scenes).toHaveLength(2);
  expect(state.read).toEqual(['fela-letter']);expect(state.completed).toContain('home');
+});
+
+it.each([CONFIG.cameraMinPitch,.3,CONFIG.cameraMaxPitch])('po wyjściu drzwi nie zasłaniają kamery przy nachyleniu %s',pitch=>{
+ let state=newSave();state.location='home';state.player={x:0,z:-2.5,heading:Math.PI};state.camera.pitch=pitch;
+ const {game}=start(state);
+ state=choose(DEFAULT_CONTENT,state,'exit-home','out').state;game.syncState(state);
+ vi.spyOn(game.scene,'render').mockImplementation(()=>{});
+ const scenery=game.scene.getTransformNodeByName('village')!;
+ function expectClearView(){
+  const target=game.world.kitek.root.position.add(new Vector3(0,CONFIG.cameraTargetHeight,0));
+  const sight=game.camera.position.subtract(target),length=sight.length();
+  // Check rendered scenery, including geometry NOT registered as an obstacle.
+  // Otherwise a missing obstacle flag would make this regression invisible.
+  const hit=game.scene.pickWithRay(new Ray(target,sight.normalize(),length+.08),mesh=>mesh.isDescendantOf(scenery)&&mesh.isEnabled()&&mesh.isVisible);
+  expect(hit?.hit,`Camera ${game.camera.position}, obstruction ${hit?.pickedPoint}`).toBe(false);expect(game.world.kitek.root.isEnabled()).toBe(true);
+ }
+ for(const distance of [CONFIG.cameraMinDistance,CONFIG.cameraMaxDistance]){game.setCameraDistance(distance);expectClearView()}
+ const exitDistance=Vector3.Distance(game.camera.position,game.world.kitek.root.position.add(new Vector3(0,CONFIG.cameraTargetHeight,0)));
+ key('ArrowUp');frames(90);key('ArrowUp',false);
+ const walkingDistance=Vector3.Distance(game.camera.position,game.world.kitek.root.position.add(new Vector3(0,CONFIG.cameraTargetHeight,0)));
+ expect(walkingDistance).toBeGreaterThan(exitDistance);
+ expect(game.snapshot().player.z).toBeLessThan(state.player.z-2);
+ // Collision changes actual camera placement, not the user's chosen distance.
+ expect(game.snapshot().camera.distance).toBe(CONFIG.cameraMaxDistance);
+});
+
+it('zmierzch postępuje w otwartym menu, a powrót z domu zachowuje zapaloną latarnię',()=>{
+ const state=newSave(),{game}=start(state),village=game.scene,sun=village.getLightByName('golden-hour-sun')!,day=sun.intensity;
+ game.setPaused(true);const night=structuredClone(state);night.flags[NIGHT_FLAG]=true;night.flags[lanternLitFlag(GAS_LANTERNS[0].id)]=true;
+ game.syncState(night);frames(90);expect(sun.intensity).toBeLessThan(day);expect(sun.intensity).toBeGreaterThan(.14);
+ expect(village.getLightByName(`${GAS_LANTERNS[0].id}-light`)!.isEnabled()).toBe(true);
+ expect(village.getLightByName(`${GAS_LANTERNS[1].id}-light`)!.isEnabled()).toBe(false);
+ game.syncState({...night,location:'home'});expect(game.scene).not.toBe(village);expect(game.scene.getLightByName(`${GAS_LANTERNS[0].id}-light`)).toBeNull();
+ game.syncState(night);expect(game.scene).toBe(village);frames(360);
+ expect(sun.intensity).toBeCloseTo(.14);expect(village.getLightByName(`${GAS_LANTERNS[0].id}-light`)!.isEnabled()).toBe(true);
 });
 
 it('renderuje i aktualizuje tylko aktywną scenę, powroty nie mnożą zasobów, dispose sprząta obie',()=>{
@@ -190,4 +263,35 @@ it('goście mają osobne modele we wnętrzu i nie przenoszą mieszkańców z wio
  expect(villagers.map(n=>n.character.root.position.asArray())).toEqual(before);
  game.syncState({...inside,flags:{hosting:false}});expect(guests.every(n=>!n.character.root.isEnabled())).toBe(true);
  game.syncState(outside);expect(game.world.npcs).toBe(villagers);expect(villagers.every(n=>n.character.root.isEnabled())).toBe(true);
+});
+
+
+it('minimapa śledzi ruch przed autozapisem i natychmiast otrzymuje pozycję po przejściu drzwiami',()=>{
+ const saved=newSave(),{game,onMapPose,onSave}=start(saved);
+ expect(onMapPose).toHaveBeenLastCalledWith(saved.player);
+ key('ArrowUp');key('ArrowRight');frames(32);key('ArrowUp',false);key('ArrowRight',false);
+ const shown=onMapPose.mock.lastCall![0],actual=game.snapshot().player;
+ expect(shown.x).toBeGreaterThan(saved.player.x);expect(shown.z).toBeGreaterThan(saved.player.z);expect(shown.heading).toBeGreaterThan(0);
+ expect(Math.hypot(shown.x-actual.x,shown.z-actual.z)).toBeLessThan(.35);
+ expect(onSave).not.toHaveBeenCalled();expect(onMapPose.mock.calls.length).toBeLessThan(10);
+ shown.x=999;expect(game.snapshot().player.x).not.toBe(999);
+ const inside={...saved,location:'home' as const,player:{x:0,z:-2.5,heading:0}};game.syncState(inside);
+ expect(onMapPose).toHaveBeenLastCalledWith(inside.player);
+ const outside={...saved,player:{x:18,z:4.2,heading:Math.PI}};game.syncState(outside);
+ expect(onMapPose).toHaveBeenLastCalledWith(outside.player);
+ game.dispose();expect(loop.frame).toBeNull();
+});
+
+it('Shift przełącza bieg po puszczeniu, ignoruje powtórzenia i zachowuje tryb po pauzie',()=>{
+ input=new KeyboardInput();expect(input.poll().run).toBe(false);
+ key('ShiftLeft');key('ShiftLeft',false);expect(input.poll().run).toBe(true);
+ window.dispatchEvent(new KeyboardEvent('keydown',{code:'ShiftLeft',repeat:true}));
+ expect(input.poll().run).toBe(true);
+ input.clear();expect(input.poll().run).toBe(true);
+ key('ShiftRight');key('ShiftRight',false);expect(input.poll().run).toBe(false);
+ const field=document.createElement('input');document.body.append(field);
+ field.dispatchEvent(new KeyboardEvent('keydown',{code:'ShiftLeft',bubbles:true}));field.remove();
+ expect(input.poll().run).toBe(false);
+ input.setRun(true);expect(input.poll().run).toBe(true);
+ input.setRun(false);expect(input.poll().run).toBe(false);
 });

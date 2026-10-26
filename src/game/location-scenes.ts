@@ -7,7 +7,7 @@ import {createVillage} from './world';
 import {createShapes} from './shapes';
 import {createStoryWorld,drawItem} from './story-world';
 
-type LocationWorld=Pick<ReturnType<typeof createVillage>,'kitek'|'npcs'|'solids'>;
+type LocationWorld=Pick<ReturnType<typeof createVillage>,'kitek'|'npcs'|'solids'>&Partial<Pick<ReturnType<typeof createVillage>,'syncHarvest'|'syncEnvironment'|'updateEnvironment'|'stegosaurus'>>;
 export type LocationScene={
  location:Location;
  scene:Scene;
@@ -46,7 +46,7 @@ export class LocationScenes{
    const world=location==='village'?createVillage(scene,this.content.characters):createHomeActors(scene,this.content);
    const story=createStoryWorld(scene,this.content,location);
    const camera=new FreeCamera('behind-kitek',new Vector3(0,2,-4),scene);
-   camera.minZ=.08;camera.maxZ=160;camera.fov=.92;scene.activeCamera=camera;
+   camera.minZ=.08;camera.maxZ=location==='village'?500:160;camera.fov=.92;scene.activeCamera=camera;
    let carriedCrate:TransformNode|null=null;
    const item=this.content.items.find(i=>i.id==='crate');
    if(item){carriedCrate=drawItem(createShapes(scene),world.kitek.root,item,0,.42);carriedCrate.scaling.setAll(.65);carriedCrate.position.y=.4;carriedCrate.setEnabled(false)}
@@ -55,7 +55,7 @@ export class LocationScenes{
  }
 
  prepare(state:SaveState):LocationScene{
-  const view=this.get(state.location);view.story.sync(state);view.carriedCrate?.setEnabled(!!state.inventory.crate);return view;
+  const view=this.get(state.location);view.story.sync(state);view.world.syncHarvest?.(state);view.world.syncEnvironment?.(state);view.carriedCrate?.setEnabled(!!state.inventory.crate);return view;
  }
 
  dispose(){for(const view of this.cache.values())view.scene.dispose();this.cache.clear()}

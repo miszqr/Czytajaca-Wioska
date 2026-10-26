@@ -15,7 +15,6 @@ Babylon.js + TypeScript + React + Vite. Świat i grafika pozostają niezależne 
 | `characters/` | Proceduralne prototypy modeli i animacji |
 | `ui/` | Dialogi, listy, dziennik, plecak, menu i dotyk |
 | `persistence/` | SaveState v3, migracja, kopia starszego zapisu, kolejka IndexedDB/fallback |
-| `audio/` | Odsłuch tekstu na żądanie, bez rozpoznawania mowy |
 
 Nie ma ReadingEngine ani komponentów quizowych. Silnik sprawdza działania w świecie, nigdy wpisaną odpowiedź dziecka.
 

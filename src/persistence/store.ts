@@ -1,13 +1,16 @@
 import {validateSave,type SaveState} from './state';
 const DB_NAME='czytajaca-wioska',KEY='p0',FALLBACK='czytajaca-wioska-p0';
 export class SaveStore {
+  constructor(private readonly scope:'player'|'story-editor'='player'){}
+  private get key(){return this.scope==='player'?KEY:'story-editor-v1'}
+  private get fallback(){return this.scope==='player'?FALLBACK:'czytajaca-wioska-story-editor-save-v1'}
   private database:Promise<IDBDatabase>|null=null;
   private queue:Promise<void>=Promise.resolve();
   mode:'indexeddb'|'localStorage'|'memory'='indexeddb';
   private open(){
     return this.database??=(new Promise<IDBDatabase>((resolve,reject)=>{
       if(typeof indexedDB==='undefined'){reject(new Error('IndexedDB unavailable'));return}
-      const request=indexedDB.open(DB_NAME,1);
+      const request=indexedDB.open(this.scope==='player'?DB_NAME:DB_NAME+'-story-editor',1);
       request.onupgradeneeded=()=>request.result.createObjectStore('saves');
       request.onsuccess=()=>{request.result.onversionchange=()=>request.result.close();resolve(request.result)};
       request.onerror=()=>reject(request.error);request.onblocked=()=>reject(new Error('Database blocked'));
@@ -17,11 +20,11 @@ export class SaveStore {
     let value:unknown;
     try{
       const db=await this.open();
-      value=await new Promise<unknown>((resolve,reject)=>{const r=db.transaction('saves').objectStore('saves').get(KEY);r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)});
+      value=await new Promise<unknown>((resolve,reject)=>{const r=db.transaction('saves').objectStore('saves').get(this.key);r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)});
       this.mode='indexeddb';
     }catch{
       let raw:string|null;
-      try{raw=localStorage.getItem(FALLBACK);this.mode='localStorage'}catch{this.mode='memory';return null}
+      try{raw=localStorage.getItem(this.fallback);this.mode='localStorage'}catch{this.mode='memory';return null}
       try{value=JSON.parse(raw||'null')}catch{throw new Error('Zapis gry jest uszkodzony. Nie został nadpisany.')}
     }
     if(value==null)return null;
@@ -31,7 +34,7 @@ export class SaveStore {
       const backupKey=`legacy-v${value.version}`;
       try{
         if(this.mode==='indexeddb'){const db=await this.open();await new Promise<void>((resolve,reject)=>{const tx=db.transaction('saves','readwrite'),store=tx.objectStore('saves'),get=store.get(backupKey);get.onsuccess=()=>{if(get.result===undefined)store.put(value,backupKey)};tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error)})}
-        else if(this.mode==='localStorage'&&!localStorage.getItem(`${FALLBACK}-${backupKey}`))localStorage.setItem(`${FALLBACK}-${backupKey}`,JSON.stringify(value));
+        else if(this.mode==='localStorage'&&!localStorage.getItem(`${this.fallback}-${backupKey}`))localStorage.setItem(`${this.fallback}-${backupKey}`,JSON.stringify(value));
       }catch{throw new Error('Nie udało się zachować kopii starszego zapisu. Oryginał nie został nadpisany.')}
     }
     return state;
@@ -40,9 +43,9 @@ export class SaveStore {
     const snapshot=structuredClone(state);snapshot.updatedAt=Date.now();
     this.queue=this.queue.catch(()=>{}).then(async()=>{
       try{
-        const db=await this.open();await new Promise<void>((resolve,reject)=>{const tx=db.transaction('saves','readwrite');tx.objectStore('saves').put(snapshot,KEY);tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error)});this.mode='indexeddb';
+        const db=await this.open();await new Promise<void>((resolve,reject)=>{const tx=db.transaction('saves','readwrite');tx.objectStore('saves').put(snapshot,this.key);tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error)});this.mode='indexeddb';
       }catch{
-        try{localStorage.setItem(FALLBACK,JSON.stringify(snapshot));this.mode='localStorage'}catch{this.mode='memory'}
+        try{localStorage.setItem(this.fallback,JSON.stringify(snapshot));this.mode='localStorage'}catch{this.mode='memory'}
       }
     });
     return this.queue;

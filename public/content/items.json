@@ -31,11 +31,11 @@
   },
   {
     "id": "apple",
-    "name": "Jabłko od Feli",
-    "description": "Pamiątka ze sklepiku.",
+    "name": "Jabłko",
+    "description": "Dojrzałe jabłko zerwane w wiosce.",
     "kind": "usable",
     "model": "apple",
-    "color": "#BA7665",
+    "color": "#C94C3C",
     "width": 0.3,
     "depth": 0.3
   },

@@ -15,7 +15,7 @@ Przejmij projekt **Czytająca Wioska**. Najpierw przejrzyj istniejące pliki/rep
 - Swobodne odkrywanie wioski bez walki, przegrywania, presji czasu i kar za błędy.
 - Czytanie służy do realizowania naturalnych celów w świecie: rozmowy, zakupy, listy, pomaganie mieszkańcom.
 - Czytanie nie blokuje każdej aktywności: dziecko może spacerować, dekorować dom i odkrywać świat bez zadań.
-- Dialogi z dużym tekstem, ręcznym przewijaniem i opcją odsłuchania.
+- Dialogi z dużym tekstem i ręcznym przewijaniem. Dziecko czyta samodzielnie, bez odsłuchu.
 - Sterowanie: WASD + mysz + E (interakcja), gamepad (w tym 8BitDo przez Gamepad API), ekran dotykowy (joystick + kamera + przycisk interakcji).
 - Docelowo działanie na desktopie i Androidzie (m.in. Pixel 8); responsywne UI.
 - Gra po polsku, zapisywana lokalnie, bez wymogu konta.
@@ -69,7 +69,7 @@ NPC mają proste stany: idle, spacer, dostępność do rozmowy; nie muszą od ra
 - Dziennik Kitka z krótkim przypomnieniem aktualnego celu, bez automatycznego wskazywania dokładnej trasy.
 - Wybory dialogowe służące wyrażaniu intencji, nie testowaniu wiedzy.
 
-**Zasady pisania:** krótkie, naturalne zdania; proste, powtarzające się słownictwo; duży czytelny font, wysoki kontrast, brak presji czasu; ręczne przejście do następnej kwestii. Odsłuch na żądanie, nie automatycznie. Nie blokować gry bez dźwięku/mikrofonu. Postać odpowiada na zachowanie dziecka naturalnym dialogiem: błędny przedmiot skutkuje wskazówką, a nie komunikatem „Źle”. Nie wymagać czytania do swobodnej eksploracji.
+**Zasady pisania:** krótkie, naturalne zdania; proste, powtarzające się słownictwo; duży czytelny font, wysoki kontrast, brak presji czasu; ręczne przejście do następnej kwestii. Bez syntezy mowy i przycisków odsłuchu — dziecko samo czyta tekst. Nie wymagać dźwięku ani mikrofonu. Postać odpowiada na zachowanie dziecka naturalnym dialogiem: błędny przedmiot skutkuje wskazówką, a nie komunikatem „Źle”. Nie wymagać czytania do swobodnej eksploracji.
 
 **Mechanika historii:** zadania oparte na warunkach świata (odkrycie listu, rozmowa, podniesienie przedmiotu, dostarczenie go, ustawienie mebla, odwiedzenie miejsca). Tekst przekazuje wskazówkę; sukces weryfikuje wykonane działanie, nie odpowiedź w quizie.
 
@@ -105,7 +105,7 @@ Każda scena: trigger, warunki wejścia, krótki tekst, akcja gracza, warunek za
 - React + HTML/CSS: dialogi, listy, dziennik, menu, ekwipunek.
 - JSON / typowane definicje: mieszkańcy, dialogi, przedmioty, sceny fabularne, warunki i skutki.
 - IndexedDB: stan świata, ekwipunek, wygląd Kitka, flagi fabularne, przeczytane listy, ustawienie mebli.
-- Web Speech API: opcjonalny odsłuch tekstu na żądanie, z fallbackiem; rozpoznawanie mowy nie jest wymaganiem MVP.
+- Bez Web Speech API i odczytywania tekstu na głos; rozpoznawanie mowy nie jest wymaganiem MVP.
 - Gamepad API i obsługa dotyku.
 
 Proponowane moduły: `game`, `characters`, `story`, `dialogue`, `quests`, `interactions`, `journal`, `reading-assist`, `inventory`, `housing`, `ui`, `audio`, `persistence`, `data`. Bez `ReadingEngine` i komponentów quizowych.
@@ -128,7 +128,7 @@ Wszystkie parametry konfigurowalne; kalibracja po testach z dzieckiem. Kamera au
 
 **P1 — pełna pierwsza opowieść:** Fela i sklep, lampa, ustawienie jej w domu, notatka o kluczu, Bruno i skrzynka, szafka, Tola, Miluś, zaproszenia, spotkanie. Odbiór: wszystkie 8 scen możliwe do przejścia bez quizów; dialogi reagują na stan; zadania nie duplikują nagród.
 
-**P2 — swobodna zabawa i oprawa:** dopracowanie NPC, przedmiotów, domu, dodatkowe dekoracje, animacje, opcjonalny odsłuch, gamepad i mobilne sterowanie, optymalizacja. Odbiór: dziecko może bawić się poza główną historią; po ukończeniu opowieści świat nadal działa.
+**P2 — swobodna zabawa i oprawa:** dopracowanie NPC, przedmiotów, domu, dodatkowe dekoracje, animacje, gamepad i mobilne sterowanie, optymalizacja. Odbiór: dziecko może bawić się poza główną historią; po ukończeniu opowieści świat nadal działa.
 
 Po każdym etapie: `npm run build`, dostępne testy automatyczne i ręczny scenariusz przejścia; uaktualnić README i TODO; zgłosić ograniczenia. Nie publikować bez zgody.
 
@@ -142,7 +142,7 @@ Po każdym etapie: `npm run build`, dostępne testy automatyczne i ręczny scena
 - W każdej chwili można przerwać główną historię i swobodnie eksplorować wioskę.
 - Dialogi zależą od etapu historii, a ukończone zadania nie uruchamiają się ponownie ani nie duplikują przedmiotów.
 - Zapis/odczyt IndexedDB przywraca stan scen, pozycję, ekwipunek, listy i meble.
-- Opcjonalny odsłuch tekstu działa, jeśli jest dostępny; brak głosu lub mikrofonu nie blokuje gry.
+- W całej grze nie ma odsłuchu tekstu. Dziecko czyta dialogi, listy i cele samodzielnie; nie potrzeba głosu ani mikrofonu.
 - Podstawowe sterowanie gamepadem i dotykiem, czytelny interfejs na telefonie.
 - Brak publicznego deployu bez zgody.
 

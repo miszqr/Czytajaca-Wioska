@@ -50,6 +50,7 @@ export function createVegetation(scene:Scene,{shape,group,material}:Shapes){
   }
   function tree(parent:TransformNode,x:number,y:number,z:number,scale:number,kind:TreeKind){
     const random=randomAt(x,z),g=group('tree',parent,x,y,z);g.scaling.setAll(scale);g.rotation.y=random()*Math.PI*2;g.metadata={treeKind:kind};
+    const fruits:TransformNode[]=[];
     const bark=kind==='birch'?'#E8D8B6':'#8D7254';
     const tall=kind==='birch'?1.18:1;
     branch(g,[0,0,0],[.06,1.5,0],.22,bark,true);branch(g,[.06,1.5,0],[-.08,3.4*tall,.04],.15,bark,true);
@@ -79,10 +80,14 @@ export function createVegetation(scene:Scene,{shape,group,material}:Shapes){
         canopy(g,'leaf-edge',[tip[0]*1.28,y+.1,tip[2]*1.28],[size*.43,.36,size*.48],LEAVES[kind],a+2);
         if(kind==='apple'&&i%2===0){
           for(let j=0;j<2;j++){
-            const ax=tip[0]+(j-.5)*.34,az=tip[2]-.45,ay=y-.46;
-            shape('ball','apple','#D88B6E',g,ax,ay,az,.13,.14,.13);
-            branch(g,[ax,ay+.11,az],[ax+.015,ay+.20,az],.014,bark);
-            canopy(g,'apple-leaf',[ax+.06,ay+.19,az],[.10,.026,.045],'#72945E',a);
+            const ax=tip[0]+(j-.5)*.48,az=tip[2]*1.2,ay=y-.78,fruit=group('ripe-apple',g,ax,ay,az);
+            shape('ball','apple','#C94C3C',fruit,0,0,0,.19,.20,.19);
+            branch(fruit,[0,.16,0],[.015,.29,0],.018,bark);
+            canopy(fruit,'apple-leaf',[.09,.26,0],[.13,.03,.055],'#72945E',a);
+            // Keep each complete fruit separate so collecting it also removes
+            // its stem and leaf, without rebuilding or hiding the tree.
+            for(const mesh of fruit.getChildMeshes())mesh.metadata={...mesh.metadata,dynamicScenery:true};
+            fruits.push(fruit);
           }
         }
       }
@@ -93,7 +98,7 @@ export function createVegetation(scene:Scene,{shape,group,material}:Shapes){
       }
     }
     for(let i=0;i<3;i++){const a=random()*Math.PI*2;grass(g,Math.cos(a)*.5,.025,Math.sin(a)*.5,.85)}
-    return g;
+    return {root:g,fruits};
   }
   function shrub(parent:TransformNode,x:number,y:number,z:number,size:number){
     const g=group('shrub',parent,x,y,z),random=randomAt(x,z);
