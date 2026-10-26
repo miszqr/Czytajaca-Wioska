@@ -1,3 +1,4 @@
+import {advanceGraph,type Graph,type GraphStep} from '../editor/graph';
 import {lazy,Suspense,useCallback,useEffect,useRef,useState} from 'react';
 import {VillageGame,type NearInfo} from '../game/runtime';
 import type {Action} from '../game/input';
@@ -20,12 +21,13 @@ import {STEGOSAURUS_FLAG} from '../game/pond-secret';
 const StoryEditor=lazy(()=>import('../editor/StoryEditor'));
 type Overlay='welcome'|'dialogue'|'journal'|'document'|'menu'|'new-game'|'inventory'|'housing'|null;
 export function App(){
- const [editorMode]=useState(()=>new URLSearchParams(window.location.search).get('editor')==='story');
+ const [editorMode]=useState(()=>new URLSearchParams(window.location.search).get('editor')==='story'&&(!window.matchMedia||window.matchMedia('(min-width: 900px) and (pointer: fine)').matches));
  const [editorOpen,setEditorOpen]=useState(editorMode),[baseContent,setBaseContent]=useState<ContentPack|null>(null);
  const canvas=useRef<HTMLCanvasElement>(null),game=useRef<VillageGame|null>(null),[store]=useState(()=>new SaveStore(editorMode?'story-editor':'player'));
  const [state,setState]=useState(newSave),stateRef=useRef(state),[content,setContent]=useState<ContentPack|null>(null),[ready,setReady]=useState(false),[error,setError]=useState('');
  const [overlay,setOverlay]=useState<Overlay>('welcome'),[node,setNode]=useState<StoryNode|null>(null),[documentId,setDocumentId]=useState(''),[line,setLine]=useState(0),[message,setMessage]=useState('');
  const [saveMode,setSaveMode]=useState<'indexeddb'|'localStorage'|'memory'>('indexeddb'),[pad,setPad]=useState(false);
+ const activeGraph=useRef<Graph|null>(null),graphStep=useRef<GraphStep|null>(null),beforeGraph=useRef<{pack:ContentPack;state:SaveState}|null>(null);
  const [session,setSession]=useState(0);
  const [secretNotice,setSecretNotice]=useState(false);
  const [mapPosition,setMapPosition]=useState<PlayerPose|null>(null);
@@ -43,7 +45,7 @@ export function App(){
  const scene=content?currentScene(content,state):undefined,doc=content?.story.documents.find(d=>d.id===documentId),speaker=content?.characters.find(c=>c.id===node?.speaker);
  const gatheringApples=node?.choices.some(c=>c.effects.some(e=>e.type==='giveItem'&&e.itemId==='apple'));
  const lightingLantern=node?.target.startsWith('lantern-');
- function close(){setOverlay(overlay==='new-game'?'menu':null);setMessage('')}
+ function close(){graphStep.current=null;setOverlay(overlay==='new-game'?'menu':null);setMessage('')}
  function openEditor(){
   const snapshot=game.current?.snapshot();
   if(snapshot){const next={...stateRef.current,...snapshot};stateRef.current=next;setState(next)}
@@ -59,6 +61,20 @@ export function App(){
   setOverlay(testState.welcomed?null:'welcome');setHousingItem(undefined);
   setContent(pack);setEditorOpen(false);
  }
+ function showGraphStep(cursor?:string|null){
+  if(!content||!activeGraph.current)return;
+  const result=advanceGraph(activeGraph.current,content,stateRef.current,cursor);
+  graphStep.current=result;update(()=>result.state);
+  if(result.dialogue){setNode(result.dialogue);setLine(0);setMessage('');setOverlay('dialogue')}
+  else if(result.message){setMessage(result.message)}else close();
+ }
+ function testGraph(graph:Graph,testState:SaveState){
+  if(!content)return;
+  beforeGraph.current??={pack:structuredClone(content),state:structuredClone(stateRef.current)};
+  activeGraph.current=graph;graphStep.current=null;
+  applyStory(structuredClone(content),{...testState,welcomed:true});
+ }
+ function restoreGraph(){if(!beforeGraph.current)return;const previous=beforeGraph.current;beforeGraph.current=null;activeGraph.current=null;graphStep.current=null;applyStory(structuredClone(previous.pack),structuredClone(previous.state))}
  function openMenu(){
   const snapshot=game.current?.snapshot();
   if(snapshot){const next={...stateRef.current,...snapshot};stateRef.current=next;setState(next)}
@@ -77,8 +93,8 @@ export function App(){
   setNode(null);setDocumentId('');setLine(0);setMessage('');setHousingItem(undefined);
   setOverlay('welcome');setSession(value=>value+1);
  }
- function interact(){if(!ready||overlay||!content||!near.targetId||!game.current?.faceTarget(near.targetId))return;if(near.targetId==='bedside'){setHousingItem('lamp');setOverlay('housing');return}const next=findNode(content,stateRef.current,near.targetId);if(next){setNode(next);setLine(0);setMessage('');setOverlay('dialogue')}}
- function select(id:string){if(!content||!node)return;const result=choose(content,stateRef.current,node.id,id);if(result.message){setMessage(result.message);return}update(()=>result.state);game.current?.playStoryAction(node,id);close()}
+ function interact(){if(!ready||overlay||!content||!near.targetId||!game.current?.faceTarget(near.targetId))return;if(activeGraph.current?.nodes.some(n=>n.type==='start'&&n.data.target===near.targetId)){showGraphStep();return}if(near.targetId==='bedside'){setHousingItem('lamp');setOverlay('housing');return}const next=findNode(content,stateRef.current,near.targetId);if(next){setNode(next);setLine(0);setMessage('');setOverlay('dialogue')}}
+ function select(id:string){if(!content||!node)return;if(graphStep.current){showGraphStep(graphStep.current.cursor);return}const result=choose(content,stateRef.current,node.id,id);if(result.message){setMessage(result.message);return}update(()=>result.state);game.current?.playStoryAction(node,id);close()}
  function openDocument(id:string){setDocumentId(id);setLine(0);setOverlay('document')}
  actions.current=action=>{
   if(!ready||error||editorOpen)return;
@@ -132,6 +148,6 @@ export function App(){
   :overlay==='new-game'?<Dialog label="Zacząć nową grę?" onBack={close}><span className="eyebrow">Nowa przygoda</span><h2>Zacząć nową grę?</h2><p>Dotychczasowy postęp zostanie usunięty. Kitek zacznie przygodę od początku.</p><div className="quest-list"><button className="primary" onClick={close}>Nie, wróć do menu</button><button className="secondary" onClick={startNewGame}>Tak, zacznij od nowa</button></div></Dialog>:null}
  </main>
  {editorMode&&!editorOpen&&<button className="story-editor-launcher" onClick={openEditor}>Edytor fabuły<span>Tryb testowy</span></button>}
- {editorMode&&baseContent&&<Suspense fallback={<div className="loading">Otwieranie edytora…</div>}><StoryEditor base={baseContent} state={state} open={editorOpen} onClose={()=>setEditorOpen(false)} onApply={applyStory}/></Suspense>}
+ {editorMode&&baseContent&&<Suspense fallback={<div className="loading">Otwieranie edytora…</div>}><StoryEditor base={baseContent} state={state} open={editorOpen} onClose={()=>setEditorOpen(false)} onApply={(pack,state)=>{activeGraph.current=null;graphStep.current=null;applyStory(pack,state)}} onGraphTest={testGraph} onRestore={restoreGraph}/></Suspense>}
  </>;
 }

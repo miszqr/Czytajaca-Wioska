@@ -3,6 +3,7 @@ import {it,expect,vi} from 'vitest';
 import {act} from 'react';
 import {createRoot} from 'react-dom/client';
 import 'fake-indexeddb/auto';
+globalThis.ResizeObserver=class {observe(){} unobserve(){} disconnect(){}};
 const mock=vi.hoisted(()=>({callbacks:null as any,nearId:'bruno',loadError:false,sessions:[] as any[]}));
 vi.mock('../src/game/runtime',()=>({VillageGame:class{
  state:any;disposed=false;
@@ -199,7 +200,7 @@ it('story editor edits, validates, exports and reloads the world without touchin
   await act(async()=>root.render(<App/>));await settle();
   for(let i=0;i<40&&!document.querySelector('[data-story-editor]');i++)await settle();
   expect(document.querySelector('[aria-label="Edytor fabuły"]')).not.toBeNull();expect(document.querySelector('.game-shell')?.hasAttribute('inert')).toBe(true);
-  await text('Tekst (każda linia to osobna wypowiedź)','Cześć z edytora!');
+  await click('Formularze');await text('Tekst (każda linia to osobna wypowiedź)','Cześć z edytora!');
   await click('Eksport');expect(document.querySelector('.se-export h3')?.textContent).toBe('public/content/story.json');expect(document.querySelector<HTMLTextAreaElement>('.se-export textarea')?.value).toContain('Cześć z edytora!');
   await click('JSON');await text('Kod JSON','{');expect(button('Zastosuj i testuj').disabled).toBe(true);expect(document.querySelector('.se-status')?.textContent).toContain('niepoprawny JSON');
   await click('Cofnij');expect(button('Zastosuj i testuj').disabled).toBe(false);
@@ -208,7 +209,7 @@ it('story editor edits, validates, exports and reloads the world without touchin
   expect(await player.load()).toEqual(saved);expect((await testStore.load())?.seen.length).toBeGreaterThan(0);
   await act(async()=>document.querySelector<HTMLButtonElement>('.story-editor-launcher')!.click());await settle();await click('Zastosuj i testuj');expect(await player.load()).toEqual(saved);
   await act(async()=>{window.dispatchEvent(new Event('pagehide'))});
-  await act(async()=>root.unmount());root=createRoot(container);await act(async()=>root.render(<App/>));await settle();await click('Eksport');expect(document.querySelector<HTMLTextAreaElement>('.se-export textarea')?.value).toContain('Cześć z edytora!');expect(await player.load()).toEqual(saved);
+  await act(async()=>root.unmount());root=createRoot(container);await act(async()=>root.render(<App/>));await settle();await click('Formularze');await click('Eksport');expect(document.querySelector<HTMLTextAreaElement>('.se-export textarea')?.value).toContain('Cześć z edytora!');expect(await player.load()).toEqual(saved);
  }finally{await act(async()=>root.unmount());container.remove();await player.close();await testStore.close();history.replaceState(null,'','/');localStorage.removeItem(DRAFT_KEY)}
 });
 it('normal game never exposes the story editor or loads its draft',async()=>{
@@ -216,4 +217,20 @@ it('normal game never exposes the story editor or loads its draft',async()=>{
  const container=document.createElement('div');document.body.append(container);const root=createRoot(container);
  try{await act(async()=>root.render(<App/>));await settle();expect(document.querySelector('[data-story-editor]')).toBeNull();expect(document.querySelector('.story-editor-launcher')).toBeNull();await approach('bruno');expect(document.querySelector('.dialogue-text')?.textContent).toContain('Witaj, Kitku!')}
  finally{await act(async()=>root.unmount());container.remove();await store.close()}
+});
+it('graph playtest uses real inventory, restores its snapshot and preserves the player save',async()=>{
+ history.replaceState(null,'','/?editor=story');localStorage.removeItem('czytajaca-wioska-graph-v1');
+ const player=new SaveStore(),testStore=new SaveStore('story-editor');const original=newSave();original.inventory.apple=8;await player.save(original);const saved=await player.load();
+ const sandbox=newSave();sandbox.welcomed=true;sandbox.inventory.apple=3;await testStore.save(sandbox);
+ const container=document.createElement('div');document.body.append(container);const root=createRoot(container);
+ try{
+  await act(async()=>root.render(<App/>));await settle();await click('Testuj graf w grze');await approach('bruno');expect(document.querySelector('.dialogue-text')?.textContent).toContain('Przynieś mi trzy jabłka.');
+  await click('Dalej');expect(document.querySelector('.dialogue-text')?.textContent).toContain('Dziękuję!');expect(mock.sessions.at(-1).state.inventory.apple).toBeUndefined();await click('Dalej');
+  await act(async()=>document.querySelector<HTMLButtonElement>('.story-editor-launcher')!.click());await settle();await click('Przywróć stan sprzed testu');expect(mock.sessions.at(-1).state.inventory.apple).toBe(3);expect(mock.sessions.at(-1).state.completed).toEqual([]);expect(await player.load()).toEqual(saved);
+ }finally{await act(async()=>root.unmount());container.remove();await player.close();await testStore.close();history.replaceState(null,'','/')}
+});
+it('mobile query parameter does not expose author tools',async()=>{
+ vi.stubGlobal('matchMedia',()=>({matches:false}));history.replaceState(null,'','/?editor=story');const container=document.createElement('div');document.body.append(container);const root=createRoot(container);
+ try{await act(async()=>root.render(<App/>));await settle();expect(document.querySelector('[data-story-editor]')).toBeNull();expect(document.querySelector('.story-editor-launcher')).toBeNull()}
+ finally{await act(async()=>root.unmount());container.remove();history.replaceState(null,'','/');vi.unstubAllGlobals()}
 });

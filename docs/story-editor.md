@@ -61,3 +61,55 @@ Testy modelu obejmują eksport, walidację, szkice, diagnozę reguł i izolację
 obu sposobów zapisu. Testy UI sprawdzają zmianę tekstu, blokowanie błędnego
 JSON, cofnięcie, eksport, odtworzenie świata, wznowienie szkicu i ochronę
 zapisu dziecka. Istniejące testy gry obejmują logikę, UI oraz Babylon NullEngine.
+
+## Graficzny edytor (wersja 1)
+
+Na komputerze otwórz `?editor=story`. Nowa domyślna zakładka „Graf bloczków”
+korzysta z React Flow. Stare narzędzia są pod przyciskiem „Formularze”.
+Na ekranach poniżej 900 px lub bez precyzyjnego wskaźnika parametr nie otwiera edytora.
+
+- Przeciągnij bloczek z palety albo kliknij jego nazwę. Przeciągaj bloczki,
+  łącz kropki wyjść z wejściami. Warunki mają osobne wyjścia TAK/NIE.
+- Kliknij bloczek, aby zmienić właściwości. Delete/Backspace usuwa zaznaczony
+  bloczek; kliknięty przewód usuwa przycisk „Usuń zaznaczone połączenie”.
+- Przesuwaj tło, używaj kółka myszy, kontrolek powiększenia i minimapy.
+- „Przykład: jabłka Bruna” przywraca demonstracyjny graf. W jego akcji końcowej
+  wybierz etap, który rozmowa ma zakończyć (domyślnie pierwszy etap fabuły).
+- Podgląd rozmowy używa kopii bieżącego stanu. Można też wczytać kopię zapisu
+  gracza i ustawić testową liczbę jabłek. Po gałęzi NIE rozpocznij rozmowę
+  ponownie po zdobyciu jabłek. Nie jest do tego potrzebny cykl w grafie.
+- „Testuj graf w grze” zastępuje rozmowę wskazanego celu w odizolowanej sesji.
+  Podejdź do Bruna i rozmawiaj jak zwykle. „Przywróć stan sprzed testu” odtwarza
+  stan i fabułę sprzed pierwszego testu grafu w tej sesji. Po przeładowaniu
+  strony nadal zachowany jest osobny zapis dziecka, ale pamięciowa migawka testu znika.
+- Szkic zapisuje się pod kluczem `czytajaca-wioska-graph-v1`. Pobierz JSON jako
+  kopię, także przy nieukończonym grafie. Import wymaga kompletnego, poprawnego
+  grafu i nie zmienia bieżącego szkicu w razie błędu.
+
+Eksport grafu jest osobnym dokumentem autora; można go przechowywać w repozytorium
+(np. `docs/story-graphs/`) i importować do testów. Nie zastępuje `story.json`
+i nie aktywuje się automatycznie w zwykłej grze. MVP nie konwertuje dowolnej
+istniejącej fabuły do grafu i nie publikuje szkiców z poziomu przeglądarki.
+
+### Format i rozszerzanie
+
+Dokument: `{version:1,id,nodes,edges}`. Węzeł: `{id,type,position:{x,y},data}`.
+Połączenie: `{id,source,target,sourceHandle}`. Porty: `next` albo `yes`/`no`.
+ID są stabilne podczas edycji, zapisu i importu. Import odrzuca obce pola,
+nieznane typy, błędne referencje, duplikaty, cykle, nieosiągalne węzły i brakujące
+wyjścia. Limit: 1 MB, 200 węzłów, 400 połączeń. Każdy port ma najwyżej jeden
+cel; wiele gałęzi może prowadzić do wspólnego węzła końcowego.
+
+`src/editor/graph.ts` zawiera schemat, walidację i adapter przepływu.
+`advanceGraph` zatrzymuje się na dialogu, zwracając zwykły `StoryNode` dla
+istniejącego UI. Nie implementuje ponownie skutków gry: korzysta z `matches`
+i `applyEffects` z `src/story/engine.ts`. Błędy skutków nie zatwierdzają części
+zmian bieżącego kroku. Akcje świata korzystają z istniejącego typu `Effect`
+i walidatora `validatePack`; nie wykonują kodu użytkownika.
+
+Aby dodać bloczek, rozszerz `Kind`/`labels`, dozwolone pola w walidatorze,
+`createNode`, formularz właściwości i adapter przepływu oraz jego testy.
+Aby dodać nową akcję świata, najpierw rozszerz wspólny `Effect`, walidator
+zawartości i `applyEffects`, potem formularz. Nowy wyzwalacz (np. licznik
+okrążeń jeziorka) powinien dostarczać zdarzenie z istniejącej mechaniki do
+adaptera. MVP uruchamia graf przez rozmowę; nie ingeruje w sekret stegozaura.
